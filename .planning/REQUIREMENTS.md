@@ -84,4 +84,35 @@
 
 | REQ-ID | Phase | Plan |
 |--------|-------|------|
-| *(populated by roadmapper)* | | |
+| UI-01 | Phase 1 | TBD |
+| UI-02 | Phase 1 | TBD |
+| UI-06 | Phase 1 | TBD |
+| UI-07 | Phase 1 | TBD |
+| UI-08 | Phase 1 | TBD |
+| PRIV-01 | Phase 1 | TBD |
+| PERF-04 | Phase 1 | TBD |
+| PERF-01 | Phase 2 | TBD |
+| PERF-02 | Phase 2 | TBD |
+| PERF-03 | Phase 2 | TBD |
+| OPT-01 | Phase 3 | TBD |
+| SNIP-01 | Phase 3 | TBD |
+| SNIP-03 | Phase 3 | TBD |
+| SNIP-04 | Phase 3 | TBD |
+| PIPE-01 | Phase 3 | TBD |
+| PIPE-04 | Phase 4 | TBD |
+| OPT-06 | Phase 4 | TBD |
+| OPT-02 | Phase 5 | TBD |
+| OPT-03 | Phase 5 | TBD |
+| OPT-04 | Phase 5 | TBD |
+| OPT-05 | Phase 5 | TBD |
+| PIPE-02 | Phase 5 | TBD |
+| PIPE-03 | Phase 5 | TBD |
+| UI-03 | Phase 5 | TBD |
+| UI-04 | Phase 5 | TBD |
+| UI-05 | Phase 5 | TBD |
+| SNIP-02 | Phase 6 | TBD |
+| PIPE-05 | Phase 7 | TBD |
+| PIPE-06 | Phase 7 | TBD |
+| PRIV-02 | Phase 7 | TBD |
+| PRIV-03 | Phase 7 | TBD |
+| PRIV-04 | Phase 7 | TBD |
