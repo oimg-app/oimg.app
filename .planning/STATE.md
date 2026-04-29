@@ -69,8 +69,14 @@ None yet.
 | v2+ | Butteraugli auto-mode | Deferred | Project init |
 | v2+ | JPEG XL | Deferred | Project init |
 
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 260429-rud | add usage of shadcn component library to project | 2026-04-29 | 3f69cba | [260429-rud-add-usage-of-shadcn-component-library-to](./quick/260429-rud-add-usage-of-shadcn-component-library-to/) |
+
 ## Session Continuity
 
 Last session: 2026-04-29
-Stopped at: Roadmap created; no plans written yet
+Stopped at: Quick task 260429-rud complete — shadcn/ui + Vite + React + TS scaffolded with OIMG design tokens
 Resume file: None
