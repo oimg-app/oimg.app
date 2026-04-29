@@ -30,7 +30,7 @@ If everything else fails, the upload → adjust → download-with-snippets pipel
 - [ ] SVG optimization via SVGO browser bundle (preset-default + per-plugin toggles)
 - [ ] PNG optimization via jSquash OxiPNG (lossless levels 0-6)
 - [ ] WebP optimization via jSquash WebP (lossy/lossless, quality, method)
-- [ ] JPEG optimization via jSquash MozJPEG (quality, progressive)
+- [ ] JPEG optimization via jSquash `@jsquash/jpeg` (MozJPEG-based encoder; quality, progressive)
 - [ ] AVIF optimization via jSquash AVIF (quality, lossless)
 - [ ] Metadata stripping (EXIF/XMP/IPTC) with optional ICC-profile preservation
 
@@ -42,6 +42,7 @@ If everything else fails, the upload → adjust → download-with-snippets pipel
 
 #### UI/UX
 - [ ] Port `example-ui/` (UMD React + HTML prototype) to Vite + TypeScript + JSX modules — preserve layout, components, design tokens, theme system
+- [ ] Use ui.shadcn.com/docs/components for sliders, checkboxes, etc. Adapt components to ui from `example-ui/`
 - [ ] File list view with thumbnail before/after, size delta (bytes + %)
 - [ ] Click a file to open detail view with Squoosh-style split slider (original ↔ optimized) and per-file overrides
 - [ ] Accordion-style settings panel (per format, plus Global, Resize/Variants, Snippet output)
@@ -105,7 +106,7 @@ These are reference material only — not vendored, not copied. Inspect for patt
 ## Constraints
 
 - **Tech stack**: React + Vite + TypeScript — chosen over Svelte for ecosystem depth and component reusability across the four workflow modes; Vite for WASM-friendly dev/build
-- **Codec source**: jSquash (`@jsquash/*` packages) — actively maintained replacement for archived `@squoosh/lib`; per-codec packages enable bundle splitting
+- **Codec source**: jSquash — actual packages: `@jsquash/jpeg` (MozJPEG-based), `@jsquash/webp`, `@jsquash/avif`, `@jsquash/oxipng`, `@jsquash/png`, `@jsquash/resize`. Per-codec packages enable bundle splitting. Replaces archived `@squoosh/lib`. Note: there is no `@jsquash/mozjpeg` package — JPEG encoding lives in `@jsquash/jpeg`.
 - **SVG engine**: `svgo` v3+ ESM browser bundle — direct import, no Node shims
 - **License**: MIT — matches dep licenses (jSquash MIT, SVGO MIT, Squoosh code Apache 2.0 used as reference only)
 - **Privacy**: Zero-server, zero-telemetry — non-negotiable, drives every architectural decision (no error tracking SaaS, no analytics, no remote feature flags)
