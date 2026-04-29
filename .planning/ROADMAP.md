@@ -27,7 +27,15 @@ Eight phases take oimg.app from an empty Vite scaffold to a fully-deployed, prod
   3. A runtime console assertion `crossOriginIsolated === true` passes in Chrome, Firefox, and Safari without errors
   4. shadcn/ui components (slider, checkbox, accordion) render with example-ui/ visual language — correct radius, spacing, and color tokens
   5. Keyboard navigation cycles through all interactive shell elements; ARIA roles are present on landmark regions
-**Plans**: TBD
+**Plans**: 5 plans
+
+Plans:
+- [ ] 01-01-PLAN.md — Security foundation: COOP/COEP headers, fontsource self-hosted fonts, 5-stop oklch design tokens
+- [ ] 01-02-PLAN.md — Test scaffold: vitest + @testing-library/react, ARIA landmark stubs, bundle size test
+- [ ] 01-03-PLAN.md — Foundation atoms: TypeScript types, data defaults, custom SVG icons, useTheme hook
+- [ ] 01-04-PLAN.md — Shell components: AppShell grid, TitleBar (theme toggle), Toolbar, StatusBar + ARIA tests activated
+- [ ] 01-05-PLAN.md — Panel components: FilePanel, DetailPanel, TweaksPanel accordion + visual checkpoint
+
 **UI hint**: yes
 
 ### Phase 2: Worker Harness + State
@@ -116,7 +124,7 @@ Eight phases take oimg.app from an empty Vite scaffold to a fully-deployed, prod
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Shell + Foundation | 0/TBD | Not started | - |
+| 1. Shell + Foundation | 0/5 | Not started | - |
 | 2. Worker Harness + State | 0/TBD | Not started | - |
 | 3. SVG Pipeline | 0/TBD | Not started | - |
 | 4. Decode + Resize + Memory Model | 0/TBD | Not started | - |
