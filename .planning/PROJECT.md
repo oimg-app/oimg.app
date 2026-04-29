@@ -41,6 +41,7 @@ If everything else fails, the upload → adjust → download-with-snippets pipel
 - [ ] URL-encoded data URI for SVG (cross-browser CSS-safe), Base64 for raster
 
 #### UI/UX
+- [ ] Port `example-ui/` (UMD React + HTML prototype) to Vite + TypeScript + JSX modules — preserve layout, components, design tokens, theme system
 - [ ] File list view with thumbnail before/after, size delta (bytes + %)
 - [ ] Click a file to open detail view with Squoosh-style split slider (original ↔ optimized) and per-file overrides
 - [ ] Accordion-style settings panel (per format, plus Global, Resize/Variants, Snippet output)
@@ -93,6 +94,12 @@ If everything else fails, the upload → adjust → download-with-snippets pipel
 
 These are reference material only — not vendored, not copied. Inspect for patterns, write our own.
 
+**UI prototype in `example-ui/`:**
+- High-fidelity working React prototype (~2.5K LOC): `OIMG.html` (standalone HTML with full design system), `app.jsx`, `panels.jsx`, `tweaks-panel.jsx`, `icons.jsx`, `data.jsx`.
+- UMD-React, no build step (renders directly in browser via script tags). Demonstrates the target layout, component structure, accordion settings panel, popover/tooltip primitives, and visual language.
+- **Design tokens already defined**: oklch-based palette with dark (default) + light themes, Inter (sans) + JetBrains Mono (mono) typography, accent green (~145°), warn amber, error red.
+- **Treated as the visual + component contract for v1.** The Vite + TS migration must preserve the look, the component shapes, and the design tokens.
+
 **User profile:** Frontend developer producing site assets. Typical session: drop ~5–30 files, configure once, export. They care about: bytes saved, paste-ready output, no friction, no surprises, no cloud upload.
 
 ## Constraints
@@ -106,6 +113,7 @@ These are reference material only — not vendored, not copied. Inspect for patt
 - **Hosting**: Cloudflare Pages — free tier, edge CDN, WASM-friendly headers (COOP/COEP for threading), custom domain (oimg.app)
 - **Performance**: Initial route < 200KB JS gzipped (lazy-load codecs); per-file optimize < 100ms for files ≤ 2MB
 - **Accessibility**: WCAG AA — keyboard navigation, ARIA, contrast — required, not optional
+- **Visual identity**: Design tokens from `example-ui/OIMG.html` are locked (oklch palette, Inter + JetBrains Mono, accent green ~145°, dark default + light theme) — must port verbatim to the Vite/TS app
 
 ## Key Decisions
 
@@ -122,6 +130,8 @@ These are reference material only — not vendored, not copied. Inspect for patt
 | MIT license | Matches deps; permissive enough for any user; standard for dev tools | ✓ Locked |
 | Cloudflare Pages hosting | Free tier, fast edge, native COOP/COEP header config for WASM threading, oimg.app DNS already there | — Pending |
 | English-only v1 | Ship faster; structure strings for i18n but no translations until traffic justifies | — Pending |
+| Reuse `example-ui/` as React UI base | Working high-fidelity prototype with design system already exists — port to Vite + TS rather than redesign | — Pending |
+| Preserve `OIMG.html` design tokens (oklch palette, Inter/JBMono, accent green) | Visual identity already defined; freezing it prevents bikeshedding and yields a coherent v1 | — Pending |
 
 ## Evolution
 
