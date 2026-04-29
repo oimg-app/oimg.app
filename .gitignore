@@ -4,6 +4,7 @@ inspired/
 # Editor
 .idea/
 .vscode/
+.claude/settings.local.json
 
 # OS
 .DS_Store
@@ -18,6 +19,9 @@ node_modules/
 dist/
 build/
 .vite/
+
+# TypeScript incremental build info
+*.tsbuildinfo
 
 # Env
 .env
