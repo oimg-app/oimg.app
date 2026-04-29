@@ -5,6 +5,7 @@ status: draft
 nyquist_compliant: false
 wave_0_complete: false
 created: 2026-04-29
+updated: 2026-04-29
 ---
 
 # Phase 1 — Validation Strategy
@@ -17,20 +18,22 @@ created: 2026-04-29
 
 | Property | Value |
 |----------|-------|
-| **Framework** | vitest |
-| **Config file** | vite.config.ts (vitest inline) or vitest.config.ts |
-| **Quick run command** | `npm run test` |
-| **Full suite command** | `npm run test -- --run` |
-| **Estimated runtime** | ~10 seconds |
+| **Framework** | @playwright/test (real Chromium — no jsdom) |
+| **Config file** | playwright.config.ts |
+| **Quick run command** | `npx playwright test` |
+| **Full suite command** | `npx playwright test --reporter=list` |
+| **Bundle size check** | `node src/tests/build.test.ts` (standalone Node, no browser) |
+| **Estimated runtime** | ~15–30 seconds (Playwright starts Vite dev server) |
 
 ---
 
 ## Sampling Rate
 
-- **After every task commit:** Run `npm run test`
-- **After every plan wave:** Run `npm run test -- --run`
+- **After every task commit (Wave 3+):** Run `npx playwright test`
+- **After every plan wave:** Run `npx playwright test`
 - **Before `/gsd-verify-work`:** Full suite must be green
-- **Max feedback latency:** 15 seconds
+- **Bundle check:** Run `node src/tests/build.test.ts` after each `npm run build`
+- **Max feedback latency:** 30 seconds
 
 ---
 
@@ -42,10 +45,12 @@ created: 2026-04-29
 | 01-01-02 | 01 | 1 | PRIV-01 | — | crossOriginIsolated === true | manual | Browser console assertion + DevTools Security tab | ✅ | ⬜ pending |
 | 01-01-03 | 01 | 1 | UI-01 | — | oklch palette matches example-ui/ | manual | Visual comparison in browser | ✅ | ⬜ pending |
 | 01-01-04 | 01 | 1 | UI-02 | — | Inter + JetBrains Mono render correctly | manual | Browser DevTools Fonts panel | ✅ | ⬜ pending |
-| 01-01-05 | 01 | 1 | UI-06 | — | Keyboard navigation cycles all interactive elements | manual | Tab key navigation test | ✅ | ⬜ pending |
-| 01-01-06 | 01 | 1 | UI-07 | — | ARIA roles present on landmark regions | unit | `npm run test -- --run` | ❌ W0 | ⬜ pending |
-| 01-01-07 | 01 | 1 | UI-08 | — | shadcn components match example-ui/ visual language | manual | Visual regression check | ✅ | ⬜ pending |
-| 01-01-08 | 01 | 1 | PERF-04 | — | Initial route < 200KB JS gzipped | unit | `npm run build && npx vite-bundle-visualizer` | ❌ W0 | ⬜ pending |
+| 01-02-01 | 02 | 1 | UI-08 | — | ARIA landmark specs runnable (stubs skip gracefully) | e2e | `npx playwright test src/tests/shell.spec.ts` | ✅ W0 | ⬜ pending |
+| 01-02-02 | 02 | 1 | PERF-04 | — | Initial route < 200KB JS gzipped | node | `node src/tests/build.test.ts` (after build) | ✅ W0 | ⬜ pending |
+| 01-04-01 | 04 | 3 | UI-08 | — | All 5 ARIA landmarks visible in real Chromium | e2e | `npx playwright test src/tests/shell.spec.ts` | ✅ | ⬜ pending |
+| 01-05-01 | 05 | 4 | UI-01 | — | Panels render with correct ARIA roles and empty-state copy | e2e | `npx playwright test` | ✅ | ⬜ pending |
+| 01-05-02 | 05 | 4 | UI-06 | — | Keyboard navigation cycles all interactive elements | manual | Tab key navigation test | ✅ | ⬜ pending |
+| 01-05-03 | 05 | 4 | UI-07 | — | ARIA roles present on landmark regions | e2e | `npx playwright test` | ✅ | ⬜ pending |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
@@ -53,11 +58,12 @@ created: 2026-04-29
 
 ## Wave 0 Requirements
 
-- [ ] `src/tests/shell.test.tsx` — stubs for ARIA/a11y assertions (UI-07)
-- [ ] `src/tests/build.test.ts` — bundle size check (PERF-04)
-- [ ] vitest + @testing-library/react installed — if not already present
+- [x] `src/tests/shell.spec.ts` — ARIA landmark specs (conditional skips until Plan 04)
+- [x] `src/tests/build.test.ts` — bundle size check (standalone Node script, exits 1 if over budget)
+- [x] `@playwright/test` installed — real Chromium, no jsdom
+- [ ] Chromium browser downloaded: `npx playwright install chromium`
 
-*Existing COOP/COEP and visual checks are manual-only — browser automation required for full automation.*
+*No vitest, @testing-library/react, or jsdom — Playwright uses real browsers.*
 
 ---
 
@@ -73,13 +79,25 @@ created: 2026-04-29
 
 ---
 
+## Playwright vs jsdom: Why
+
+| Capability | Playwright | jsdom |
+|------------|-----------|-------|
+| Real ARIA tree | Real Chromium accessibility tree | Simulated; may miss CSS-driven visibility |
+| Real CSS rendering | Full Tailwind/CSS computed styles | No CSS applied |
+| COOP/COEP header inspection | CDP / Network tab | Not applicable |
+| Performance API | CDP DevTools protocol | Not available |
+| `crossOriginIsolated` | Real value from browser | Always false |
+
+---
+
 ## Validation Sign-Off
 
 - [ ] All tasks have `<automated>` verify or Wave 0 dependencies
 - [ ] Sampling continuity: no 3 consecutive tasks without automated verify
 - [ ] Wave 0 covers all MISSING references
-- [ ] No watch-mode flags
-- [ ] Feedback latency < 15s
+- [ ] No watch-mode flags in automated commands
+- [ ] Feedback latency < 30s
 - [ ] `nyquist_compliant: true` set in frontmatter
 
 **Approval:** pending
