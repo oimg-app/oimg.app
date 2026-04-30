@@ -410,6 +410,13 @@ input[type=range]::-moz-range-thumb { width: 12px; height: 12px; border-radius: 
 .progbar > div { height: 100%; background: var(--info); animation: ind 1.4s linear infinite; }
 @keyframes ind { 0% { transform: translateX(-100%); } 100% { transform: translateX(0); } }
 
+/* Phase 2 plan 02-04 — UI-SPEC §4 + §9: reduced-motion guard.
+   Disables the file-status pulse and progbar slide for users with prefers-reduced-motion: reduce. */
+@media (prefers-reduced-motion: reduce) {
+  .file-status.processing { animation: none; opacity: 0.7; }
+  .progbar > div { animation: none; transform: translateX(0); }
+}
+
 /* Row context button */
 .file-row .ctxbtn { appearance: none; border: 0; background: transparent; color: var(--fg-3); width: 18px; height: 18px; display: none; place-items: center; border-radius: 3px; cursor: default; flex-shrink: 0; }
 .file-row:hover .ctxbtn { display: grid; }

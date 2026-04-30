@@ -5,17 +5,26 @@
 // Visual contract: classNames and ARIA roles must NOT change. The outer
 // container's role="toolbar" aria-label="Actions" is asserted by
 // src/tests/shell.spec.ts.
+//
+// Phase 2 (plan 02-04): Toolbar subscribes directly to useRuntimeStore
+// (D-09 narrow selectors) so the Workers pill + Optimize button reflect
+// the live worker pool state. App.tsx still owns batch orchestration —
+// onStartOptimize stays as a callback prop.
 
 import { Icons } from '@/components/icons'
 import { Popover } from '@/components/ui/Popover'
 import { Tooltip } from '@/components/ui/Tooltip'
 import type { ThemeMode } from '@/types'
+import { useRuntimeStore } from '@/stores'
 
 type View = 'Batch' | 'Compare' | 'Report'
 
 interface ToolbarProps {
-  // Optimize state
-  running: boolean
+  /** @deprecated Phase 2 plan 02-04 — Toolbar reads `running` from useRuntimeStore directly.
+   *  Prop retained transitionally so App.tsx can still pass it during the staged migration;
+   *  the value is ignored. Will be removed once App.tsx drops the local `running` useState. */
+  running?: boolean
+  // Optimize trigger — App.tsx owns the worker pool reference.
   onStartOptimize: () => void
   onExportZip: () => void
   // View segmented control
@@ -36,7 +45,6 @@ interface ToolbarProps {
 
 export function Toolbar(props: ToolbarProps) {
   const {
-    running,
     onStartOptimize,
     onExportZip,
     view,
@@ -49,8 +57,29 @@ export function Toolbar(props: ToolbarProps) {
     onOpenKey,
     onToast,
   } = props
+
+  // Phase 2 plan 02-04: narrow selectors from runtime store (D-09 convention).
+  const running = useRuntimeStore((s) => s.running)
+  const busy = useRuntimeStore((s) => s.inFlight.size)
+  const poolSize = useRuntimeStore((s) => s.poolSize)
+  const errorCount = useRuntimeStore((s) => s.errorCount)
+  const queueDepth = useRuntimeStore((s) => s.queue.length)
+
   const isPopOpen = (key: string) => openKey === key
   const togglePop = (key: string) => onOpenKey(openKey === key ? null : key)
+
+  // Workers pill copy + ARIA label, per UI-SPEC §1 (lines 109-114).
+  const pillCopy = !running && busy === 0 && poolSize > 0
+    ? (errorCount > 0 ? `${poolSize} idle · errors` : `${poolSize} idle`)
+    : running
+      ? `${busy}/${poolSize} busy`
+      : 'Workers idle'
+  const pillAria = !running && busy === 0
+    ? (errorCount > 0 ? `${poolSize} workers idle, last batch had errors` : `${poolSize} workers idle`)
+    : running
+      ? `${busy} of ${poolSize} workers busy`
+      : 'Worker pool idle'
+  const pillClass = (!running && busy === 0 && errorCount === 0 && poolSize > 0) ? 'pill acc' : 'pill'
 
   return (
     <div role="toolbar" aria-label="Actions" className="toolbar">
@@ -74,7 +103,7 @@ export function Toolbar(props: ToolbarProps) {
         </Popover>
       </button>
 
-      <button className="tbtn" onClick={onStartOptimize} disabled={running}>
+      <button className="tbtn" onClick={onStartOptimize} disabled={running || queueDepth === 0}>
         {running ? <><Icons.Pause size={13} /> Optimizing…</> : <><Icons.Play size={13} /> Optimize all</>}
       </button>
 
@@ -113,6 +142,12 @@ export function Toolbar(props: ToolbarProps) {
       </div>
       <div className="tdiv" />
 
+      {/* Workers pill — UI-SPEC §1. aria-live="off" because the dedicated live region in
+          App.tsx owns announcements; the pill is a passive informational status surface. */}
+      <div className={pillClass} aria-label={pillAria} role="status" aria-live="off">
+        <span style={{ fontFamily: 'var(--mono)', fontVariantNumeric: 'tabular-nums' }}>{pillCopy}</span>
+      </div>
+
       <div className="search">
         <Icons.Search size={12} />
         <input
@@ -138,7 +173,7 @@ export function Toolbar(props: ToolbarProps) {
           <Icons.Settings size={13} />
           <Popover open={isPopOpen('settings')} onClose={() => onOpenKey(null)} anchor="br" style={{ minWidth: 240 }}>
             <div className="lbl">Workers</div>
-            <div className="pi"><span>Pool size</span><span className="kbd mono">5</span></div>
+            <div className="pi"><span>Pool size</span><span className="kbd mono">{poolSize}</span></div>
             <div className="pi"><span>WASM threading</span><span className="kbd">on</span></div>
             <div className="div" />
             <div className="lbl">Privacy</div>
