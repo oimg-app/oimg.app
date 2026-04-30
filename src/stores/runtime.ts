@@ -86,12 +86,23 @@ export const useRuntimeStore = create<RuntimeState>()(
         }
       }),
 
-    markError: (jobId, _message) =>
+    markError: (jobId, message) =>
       set((s) => {
         if (!s.inFlight.has(jobId)) return {}
         const inFlight = new Set(s.inFlight)
         inFlight.delete(jobId)
-        const errorCount = s.errorCount + 1
+        // WR-06: cancel-induced AbortError fan-out from WorkerPool.cancel()
+        // hits markError for every in-flight job. Bumping errorCount in that
+        // path makes the App-level "Batch complete" subscriber see
+        // doneCount + errorCount === totalJobs and announce a misleading
+        // partial-success toast on user cancel. Discriminate the cancel
+        // message so cancelled jobs are removed from inFlight without
+        // counting as real adapter failures.
+        const isCancel =
+          message === 'Batch cancelled' ||
+          message === 'Batch canceled' ||
+          message.includes('AbortError')
+        const errorCount = isCancel ? s.errorCount : s.errorCount + 1
         const stillRunning = inFlight.size > 0 || s.queue.length > 0
         return {
           inFlight,
