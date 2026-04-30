@@ -51,7 +51,7 @@ Plans:
 
 Plans:
 - [x] 02-01-PLAN.md — Wave 0: test scaffolds + fixtures (synthetic blobs, instrument-blob-urls, failing-stub specs for VR-01..VR-05)
-- [ ] 02-02-PLAN.md — Stores: useFilesStore + useSettingsStore + useRuntimeStore (urlCache lifecycle), object-url + live-region helpers
+- [x] 02-02-PLAN.md — Stores: useFilesStore + useSettingsStore + useRuntimeStore (urlCache lifecycle), object-url + live-region helpers
 - [ ] 02-03-PLAN.md — Worker harness: Comlink worker entry + stub adapter + WorkerPool class (FIFO, cancel via terminate-and-respawn, AbortSignal cancel correctness)
 - [ ] 02-04-PLAN.md — UI wiring: Toolbar Workers pill + Optimize button + ARIA live region + sonner Toaster + Cmd+Enter/Cmd+. shortcuts + window.__OIMG_STORES__ test exposure
 - [ ] 02-05-PLAN.md — Cleanup: delete src/data/mock.ts, full Playwright regression sweep, bundle budget verification
