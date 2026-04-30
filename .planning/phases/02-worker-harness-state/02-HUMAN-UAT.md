@@ -20,14 +20,14 @@ result: [pending]
 
 ### 3. Decide on open code-review findings (02-REVIEW.md: CR-01..CR-04, WR-03, WR-06)
 expected: Reviewer flagged 4 critical (cancel/respawn race, settled-state race, hidden markStarted contract, swallowed adapter errors) + 2 warnings (quartile flooding for batches <4, "Batch complete" toast firing on cancel). Decide accept-and-track vs fix-now. Concurrency races are time-bombs for Phase 3 when real codecs land.
-result: [pending]
+result: passed — fix-now applied via /gsd-code-review-fix 02 (12/12 findings fixed, see 02-REVIEW-FIX.md). 17/17 tests pass post-fix. CR-04 race coverage acknowledged as best-effort per fixer note.
 
 ## Summary
 
 total: 3
-passed: 0
+passed: 1
 issues: 0
-pending: 3
+pending: 2
 skipped: 0
 blocked: 0
 
