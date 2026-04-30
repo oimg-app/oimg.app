@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { Section } from '@/components/ui/Section';
 import { Icons } from '@/components/icons';
 import { tokenize } from '@/lib/tokenize';
@@ -13,10 +14,22 @@ interface OutputPanelProps {
 export function OutputPanel({ file }: OutputPanelProps) {
   const [copied, setCopied] = useState<CopyKey>(null);
 
-  const copy = (key: Exclude<CopyKey, null>, text: string) => {
-    navigator.clipboard?.writeText(text).catch(() => {});
-    setCopied(key);
-    setTimeout(() => setCopied((c) => (c === key ? null : c)), 1100);
+  // WR-04: do NOT flip the button to "copied" until the clipboard write
+  // actually resolves. Iframe / permissions contexts and missing clipboard
+  // API previously surfaced as a silent UI lie ("copied" with nothing in
+  // the buffer). On failure, surface a toast so the user knows to retry.
+  const copy = async (key: Exclude<CopyKey, null>, text: string) => {
+    if (!navigator.clipboard?.writeText) {
+      toast.error('Clipboard unavailable');
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(key);
+      setTimeout(() => setCopied((c) => (c === key ? null : c)), 1100);
+    } catch {
+      toast.error('Copy failed');
+    }
   };
 
   const targetMime = file.target === 'svg' ? 'svg+xml' : file.target;
