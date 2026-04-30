@@ -47,7 +47,14 @@ Plans:
   2. The stub adapter returns the original file unchanged; the file list updates with "0 bytes saved"
   3. Cancelling a queued batch before completion stops in-flight jobs and clears the file list cleanly
   4. Worker pool respects `min(hardwareConcurrency, 4)` concurrency — simultaneous jobs never exceed this cap (visible in DevTools Performance tab)
-**Plans**: TBD
+**Plans**: 5 plans
+
+Plans:
+- [ ] 02-01-PLAN.md — Wave 0: test scaffolds + fixtures (synthetic blobs, instrument-blob-urls, failing-stub specs for VR-01..VR-05)
+- [ ] 02-02-PLAN.md — Stores: useFilesStore + useSettingsStore + useRuntimeStore (urlCache lifecycle), object-url + live-region helpers
+- [ ] 02-03-PLAN.md — Worker harness: Comlink worker entry + stub adapter + WorkerPool class (FIFO, cancel via terminate-and-respawn, AbortSignal cancel correctness)
+- [ ] 02-04-PLAN.md — UI wiring: Toolbar Workers pill + Optimize button + ARIA live region + sonner Toaster + Cmd+Enter/Cmd+. shortcuts + window.__OIMG_STORES__ test exposure
+- [ ] 02-05-PLAN.md — Cleanup: delete src/data/mock.ts, full Playwright regression sweep, bundle budget verification
 
 ### Phase 3: SVG Pipeline
 **Goal**: Users can optimize SVG files with SVGO and immediately copy snippet output, with XSS risk fully neutralized
