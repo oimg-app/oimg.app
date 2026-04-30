@@ -4,14 +4,14 @@ milestone: v1.0
 milestone_name: milestone
 status: executing
 stopped_at: Phase 2 plans verified (5 plans, 4 waves)
-last_updated: "2026-04-30T13:51:32.655Z"
+last_updated: "2026-04-30T15:53:47.164Z"
 last_activity: 2026-04-30
 progress:
   total_phases: 8
   completed_phases: 1
   total_plans: 10
-  completed_plans: 5
-  percent: 50
+  completed_plans: 6
+  percent: 60
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-29)
 
 **Core value:** Developer drops a folder of source assets, picks output settings once, and walks away with a ZIP of optimized files plus copy-paste HTML/CSS snippets — without anything leaving the browser.
-**Current focus:** Phase 01 — shell-foundation
+**Current focus:** Phase 02 — worker-harness-state
 
 ## Current Position
 
-Phase: 01 (shell-foundation) — EXECUTING
-Plan: 5 of 5
+Phase: 02 (worker-harness-state) — EXECUTING
+Plan: 2 of 5
 Status: Ready to execute
 Last activity: 2026-04-30
 
-Progress: [██████████] 100%
+Progress: [██████░░░░] 60%
 
 ## Performance Metrics
 
@@ -55,6 +55,7 @@ Progress: [██████████] 100%
 | Phase 01-shell-foundation P03 | 2min | 2 tasks | 2 files |
 | Phase 01-shell-foundation P04 | 25min | 2 tasks | 9 files |
 | Phase 01-shell-foundation P05 | 15min | 3 tasks | 7 files |
+| Phase 02-worker-harness-state P01 | 4min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -71,6 +72,7 @@ Recent decisions affecting current work:
 - [Phase 01]: Foundation surface area locked at end of Wave 2 — 13 type/interface exports, 7 default constants, 5 mock constants, 26 icons, useTheme contract are grep-asserted; Plans 04 and 05 may import by name without spelunking (plan 01-03).
 - [Phase 01-shell-foundation]: Vite downgraded 8→7 to drop rolldown's broken native binding loader on Apple Silicon; postinstall script ensure-rollup-binding.mjs force-installs both arm64 and x64 rollup bindings (plan 01-04)
 - [Phase 01-shell-foundation]: Shell decomposed — App.tsx (552 LOC) is now the composition root and state owner; chrome lives in src/components/shell/{AppShell,TitleBar,Toolbar,StatusBar,CommandPalette}.tsx (plan 01-04)
+- [Phase ?]: Phase 02 Plan 01 (Wave 0): test.fail() failing-stub markers chosen over sentinel-string comparisons — Playwright reports expected failures as PASS, giving green CI signal that scaffolds are correctly red-but-interpretable
 
 ### Pending Todos
 
@@ -102,6 +104,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-30T13:51:32.649Z
+Last session: 2026-04-30T15:53:38.992Z
 Stopped at: Phase 2 plans verified (5 plans, 4 waves)
-Resume file: .planning/phases/02-worker-harness-state/02-01-PLAN.md
+Resume file: None
