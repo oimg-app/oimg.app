@@ -1,0 +1,56 @@
+// Phase 2 — Settings store (codec configs + global settings + preset stub).
+// Source: 02-CONTEXT.md D-07; 02-PATTERNS.md lines 206-242.
+// Persistent in spirit (Phase 7 wires IndexedDB).
+
+import { create } from 'zustand'
+import { subscribeWithSelector } from 'zustand/middleware'
+import type {
+  CodecSettingsSvg,
+  CodecSettingsPng,
+  CodecSettingsJpeg,
+  CodecSettingsWebp,
+  CodecSettingsAvif,
+  GlobalSettings,
+} from '@/types'
+import {
+  DEFAULT_CODEC_SVG,
+  DEFAULT_CODEC_PNG,
+  DEFAULT_CODEC_JPEG,
+  DEFAULT_CODEC_WEBP,
+  DEFAULT_CODEC_AVIF,
+  DEFAULT_GLOBAL_SETTINGS,
+} from '@/data/defaults'
+
+interface SettingsState {
+  svg: CodecSettingsSvg
+  png: CodecSettingsPng
+  jpeg: CodecSettingsJpeg
+  webp: CodecSettingsWebp
+  avif: CodecSettingsAvif
+  global: GlobalSettings
+
+  setSvg: (next: Partial<CodecSettingsSvg>) => void
+  setPng: (next: Partial<CodecSettingsPng>) => void
+  setJpeg: (next: Partial<CodecSettingsJpeg>) => void
+  setWebp: (next: Partial<CodecSettingsWebp>) => void
+  setAvif: (next: Partial<CodecSettingsAvif>) => void
+  setGlobal: (next: Partial<GlobalSettings>) => void
+}
+
+export const useSettingsStore = create<SettingsState>()(
+  subscribeWithSelector((set) => ({
+    svg: DEFAULT_CODEC_SVG,
+    png: DEFAULT_CODEC_PNG,
+    jpeg: DEFAULT_CODEC_JPEG,
+    webp: DEFAULT_CODEC_WEBP,
+    avif: DEFAULT_CODEC_AVIF,
+    global: DEFAULT_GLOBAL_SETTINGS,
+
+    setSvg: (next) => set((s) => ({ svg: { ...s.svg, ...next } })),
+    setPng: (next) => set((s) => ({ png: { ...s.png, ...next } })),
+    setJpeg: (next) => set((s) => ({ jpeg: { ...s.jpeg, ...next } })),
+    setWebp: (next) => set((s) => ({ webp: { ...s.webp, ...next } })),
+    setAvif: (next) => set((s) => ({ avif: { ...s.avif, ...next } })),
+    setGlobal: (next) => set((s) => ({ global: { ...s.global, ...next } })),
+  })),
+)
