@@ -1,10 +1,11 @@
 ---
 phase: 2
 slug: worker-harness-state
-status: draft
+status: approved
 shadcn_initialized: false
 preset: none
 created: 2026-04-30
+reviewed_at: 2026-04-30
 ---
 
 # Phase 2 — UI Design Contract
