@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactNode } from 'react';
+import { useEffect, type CSSProperties, type ReactNode } from 'react';
 
 type Anchor = 'bl' | 'br' | 'tr';
 
@@ -16,7 +16,23 @@ const POSITIONS: Record<Anchor, CSSProperties> = {
   tr: { bottom: '100%', right: 0, marginBottom: 4 },
 };
 
+// Hand-rolled popover — Phase 1 deviation D-06 (see deferred-items.md).
+// When closed we return null, so invisible items are removed from the tab
+// order. While open, the backdrop swallows outside clicks and a window-
+// level keydown listener closes on Escape.
 export function Popover({ open, onClose, children, anchor = 'bl', style = {} }: PopoverProps) {
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.stopPropagation();
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [open, onClose]);
+
   if (!open) return null;
   const pos = POSITIONS[anchor];
   return (
@@ -31,6 +47,7 @@ export function Popover({ open, onClose, children, anchor = 'bl', style = {} }: 
       />
       <div
         className="popover"
+        role="menu"
         style={{ ...pos, ...style }}
         onMouseDown={(e) => e.stopPropagation()}
       >

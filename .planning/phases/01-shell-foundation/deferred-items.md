@@ -35,3 +35,20 @@ Plan 01-03 (or any subsequent plan that touches the Vite dev server) MUST fix th
 3. Set `NAPI_RS_NATIVE_LIBRARY_PATH` env var to the explicit arm64 binding `.node` file.
 
 **Reference:** https://github.com/npm/cli/issues/4828
+
+### shadcn primitive migration (deferred to Phase 8 polish)
+
+**Status:** Phase 1 ships hand-rolled `Popover`, `Tooltip`, `Slider`, `Toggle`, `Seg`, and `Section` primitives under `src/components/ui/`. CONTEXT.md D-06 calls for shadcn primitives.
+
+**Why deferred from Phase 1:** Replacing all primitives now is invasive (every panel + App.tsx menu/popover usage), risks visual regression against the locked example-ui visual contract (D-07), and burns time without changing user-visible behavior. Phase 1 success criteria (shell, COOP/COEP, theme toggle, keyboard/ARIA) are all satisfied by hand-rolled primitives once Plan 05's audit closes the ARIA gaps.
+
+**Phase 8 acceptance:** During the WCAG AA audit (Phase 8), evaluate each hand-rolled primitive against its shadcn/Radix equivalent. Replace any primitive that fails axe-core or that has a known accessibility regression vs. Radix.
+
+**Files affected when migrated:**
+- src/components/ui/Popover.tsx -> shadcn popover (Radix)
+- src/components/ui/Tooltip.tsx -> shadcn tooltip (Radix)
+- src/components/ui/Slider.tsx -> shadcn slider (Radix)
+- src/components/ui/Toggle.tsx -> shadcn switch (Radix)
+- src/components/ui/Seg.tsx -> shadcn toggle-group (Radix)
+- All consumers in src/App.tsx, src/components/shell/TitleBar.tsx, src/components/shell/Toolbar.tsx, src/components/shell/CommandPalette.tsx, src/components/panels/*.tsx
+
