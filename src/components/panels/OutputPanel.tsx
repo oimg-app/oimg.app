@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Section } from '@/components/ui/Section';
 import { Icons } from '@/components/icons';
 import { tokenize } from '@/lib/tokenize';
-import type { MockFile } from '@/data/mock';
+import type { MockFile } from '@/types';
 
 type CopyKey = 'b64' | 'url' | 'pic' | null;
 

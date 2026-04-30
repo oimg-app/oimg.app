@@ -2,7 +2,8 @@ import { Section } from '@/components/ui/Section';
 import { Slider } from '@/components/ui/Slider';
 import { Seg } from '@/components/ui/Seg';
 import { Toggle } from '@/components/ui/Toggle';
-import { CODECS, RESIZE_ALG, FIT_MODES, type CodecLabel, type ResizeAlg, type FitMode } from '@/data/mock';
+import { CODECS, RESIZE_ALG, FIT_MODES } from '@/data/defaults';
+import type { CodecLabel, ResizeAlg, FitMode } from '@/types';
 
 interface CodecPanelProps {
   codec: CodecLabel; setCodec: (v: CodecLabel) => void;

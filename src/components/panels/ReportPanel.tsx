@@ -1,6 +1,6 @@
 import { Section } from '@/components/ui/Section';
 import { fmtBytes } from '@/lib/format';
-import type { MockFile } from '@/data/mock';
+import type { MockFile } from '@/types';
 
 interface ReportPanelProps {
   files: MockFile[];

@@ -1,6 +1,6 @@
 import { Section } from '@/components/ui/Section';
 import { Toggle } from '@/components/ui/Toggle';
-import type { SvgoPlugin } from '@/data/mock';
+import type { SvgoPlugin } from '@/types';
 
 interface SvgoPanelProps {
   plugins: SvgoPlugin[];

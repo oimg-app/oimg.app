@@ -20,16 +20,19 @@ import { CommandPalette } from '@/components/shell/CommandPalette'
 import type { CmdGroup } from '@/components/shell/CommandPalette'
 import { useTheme } from '@/hooks/useTheme'
 import { fmtBytes, fmtPct } from '@/lib/format'
-import {
-  MOCK_FILES,
-  SVGO_PLUGINS,
-  CODECS,
-  type CodecLabel,
-  type ResizeAlg,
-  type FitMode,
-  type SvgoPlugin,
-  type MockFile,
-} from '@/data/mock'
+// Phase 2 plan 02-05 (cleanup wave): src/data/mock.ts deleted.
+// Types moved to @/types; data constants (CODECS, SVGO_PLUGINS) moved to
+// @/data/defaults. MOCK_FILES is no longer needed — the queue starts empty
+// and is populated by addFile() into useFilesStore (drag-drop / file-picker
+// in Phase 5).
+import { CODECS, SVGO_PLUGINS } from '@/data/defaults'
+import type {
+  CodecLabel,
+  ResizeAlg,
+  FitMode,
+  SvgoPlugin,
+  MockFile,
+} from '@/types'
 // Phase 2 plan 02-04 — store + worker pool + ARIA live wiring.
 import { useFilesStore, useSettingsStore, useRuntimeStore } from '@/stores'
 import { getWorkerPool } from '@/workers/pool'
@@ -43,10 +46,12 @@ export default function App() {
   const { theme, setTheme } = useTheme()
 
   // Phase 2 plan 02-04: selectedId migrated to useFilesStore.
-  // selectedId in the files store starts at null; we keep the visual default
-  // pointing at the first MOCK_FILE for the Phase 1 shell preview.
+  // Phase 2 plan 02-05: MOCK_FILES gone, so the legacy 'f1' fallback is now
+  // 'placeholder' to keep aria-activedescendant resolving to the
+  // PLACEHOLDER_FILE when nothing is selected (Phase 5 will switch this to
+  // the first FileEntry once real uploads land).
   const filesSelectedId = useFilesStore((s) => s.selectedId)
-  const selectedId = filesSelectedId ?? 'f1'
+  const selectedId = filesSelectedId ?? 'placeholder'
   const setSelectedId = (id: string) => useFilesStore.getState().setSelected(id)
 
   const [tab, setTab] = useState<Tab>('codec')
@@ -197,16 +202,59 @@ export default function App() {
     }
   }, [])
 
+  // Phase 2 plan 02-05 — MOCK_FILES is gone. The queue is now driven by
+  // useFilesStore: derive a MockFile-shaped view model on the fly so the
+  // existing Phase 1 row-renderer keeps working without a wholesale rewrite.
+  // Phase 5 will replace MockFile with a FileEntry-derived view model and
+  // delete the placeholder branch below.
+  const filesById = useFilesStore((s) => s.byId)
+  const filesOrder = useFilesStore((s) => s.order)
+  const PLACEHOLDER_FILE: MockFile = {
+    id: 'placeholder',
+    name: 'No file selected',
+    type: 'png',
+    orig: 0,
+    opt: 0,
+    status: 'queued',
+    target: 'webp',
+    dim: '— × —',
+    q: null,
+  }
+
+  // Derive a MockFile array from the store. Status maps from the FileEntry
+  // shape's wider FileStatus to the narrower visual MockFile status set
+  // ('idle' folds to 'queued' for the visual contract).
+  const SHELL_FILES: MockFile[] = useMemo(() => {
+    return filesOrder.map((id) => {
+      const entry = filesById[id]
+      const fmtToType = (fmt: string): MockFile['type'] =>
+        fmt === 'jpeg' ? 'jpg' : (fmt as MockFile['type'])
+      const status: MockFile['status'] =
+        entry.status === 'idle' ? 'queued' : (entry.status as MockFile['status'])
+      return {
+        id: entry.id,
+        name: entry.name,
+        type: fmtToType(entry.format),
+        orig: entry.originalSize,
+        opt: entry.optimizedSize ?? entry.originalSize,
+        status,
+        target: fmtToType(entry.format),
+        dim: '—',
+        q: null,
+      }
+    })
+  }, [filesById, filesOrder])
+
   const file: MockFile = useMemo(
-    () => MOCK_FILES.find((f) => f.id === selectedId) ?? MOCK_FILES[0],
-    [selectedId]
+    () => SHELL_FILES.find((f) => f.id === selectedId) ?? PLACEHOLDER_FILE,
+    [SHELL_FILES, selectedId]
   )
 
   const filteredFiles = useMemo(() => {
     const fq = filterQuery.trim().toLowerCase()
-    if (!fq) return MOCK_FILES
-    return MOCK_FILES.filter((f) => f.name.toLowerCase().includes(fq))
-  }, [filterQuery])
+    if (!fq) return SHELL_FILES
+    return SHELL_FILES.filter((f) => f.name.toLowerCase().includes(fq))
+  }, [SHELL_FILES, filterQuery])
 
   // SVG files don't have a Codec tab; auto-flip to SVGO.
   useEffect(() => {
@@ -231,10 +279,12 @@ export default function App() {
   }
 
   const totals = useMemo(() => {
-    const orig = MOCK_FILES.reduce((s, f) => s + f.orig, 0)
-    const opt = MOCK_FILES.reduce((s, f) => s + f.opt, 0)
-    return { orig, opt, saved: orig - opt, pct: ((orig - opt) / orig) * 100 }
-  }, [])
+    // Phase 2 plan 02-05 — derived from SHELL_FILES (which is store-driven).
+    const orig = SHELL_FILES.reduce((s, f) => s + f.orig, 0)
+    const opt = SHELL_FILES.reduce((s, f) => s + f.opt, 0)
+    const pct = orig === 0 ? 0 : ((orig - opt) / orig) * 100
+    return { orig, opt, saved: orig - opt, pct }
+  }, [SHELL_FILES])
 
   const toggleTheme = () => setTheme(theme === 'dark' ? 'light' : 'dark')
 
@@ -703,7 +753,7 @@ export default function App() {
             />
           )}
           {tab === 'output' && <OutputPanel file={file} />}
-          {tab === 'report' && <ReportPanel files={MOCK_FILES} />}
+          {tab === 'report' && <ReportPanel files={SHELL_FILES} />}
         </div>
       </div>
     </main>
@@ -777,7 +827,7 @@ export default function App() {
       statusBar={
         <StatusBar
           running={running}
-          filesCount={MOCK_FILES.length}
+          filesCount={SHELL_FILES.length}
           origTotal={totals.orig}
           optTotal={totals.opt}
           compressionPct={totals.pct}

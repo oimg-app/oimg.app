@@ -80,15 +80,48 @@ test.describe('Shell interactions (UI-06, UI-08)', () => {
     await expect(page.locator('.cmdk-back')).toHaveCount(0)
   })
 
-  test('queue renders a listbox with options', async ({ page }) => {
+  test('queue listbox renders option rows seeded from useFilesStore', async ({ page }) => {
+    // Phase 2 plan 02-05: MOCK_FILES deleted; the queue starts empty. We seed
+    // 3 synthetic FileEntries via the dev-only window.__OIMG_STORES__ surface
+    // (exposed by App.tsx in dev/test mode) so this test asserts on store-driven
+    // counts instead of the old 12-row mock fixture.
     const queue = page.getByRole('listbox', { name: /Files/i })
     await expect(queue).toBeVisible()
 
-    // 12 file rows from MOCK_FILES
-    const options = page.getByRole('option')
-    await expect(options).toHaveCount(12)
+    // Wait for the dev-only stores to mount.
+    await page.waitForFunction(() =>
+      typeof (window as unknown as { __OIMG_STORES__?: unknown }).__OIMG_STORES__ === 'object'
+    )
 
-    // First file is selected by default (selectedId='f1' in App.tsx)
+    await page.evaluate(() => {
+      const stores = (window as unknown as {
+        __OIMG_STORES__?: { files: { getState: () => { addFile: (f: unknown) => void; setSelected: (id: string) => void } } }
+      }).__OIMG_STORES__
+      if (!stores) throw new Error('__OIMG_STORES__ not exposed (DEV-only)')
+      const filesApi = stores.files.getState()
+      for (let i = 0; i < 3; i++) {
+        const blob = new Blob([new Uint8Array(1024)], { type: 'image/png' })
+        filesApi.addFile({
+          id: `seed-${i}`,
+          name: `seed-${i}.png`,
+          format: 'png',
+          originalSize: 1024,
+          optimizedSize: null,
+          status: 'idle',
+          sourceDensity: '1x',
+          thumbnail: null,
+          sourceBlob: blob,
+          optimizedBlob: null,
+        })
+      }
+      // Select the first row so aria-selected has a deterministic target.
+      filesApi.setSelected('seed-0')
+    })
+
+    const options = page.getByRole('option')
+    await expect(options).toHaveCount(3)
+
+    // First seeded row is selected.
     await expect(options.first()).toHaveAttribute('aria-selected', 'true')
   })
 

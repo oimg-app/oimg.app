@@ -9,6 +9,43 @@ export type FileStatus = 'idle' | 'queued' | 'processing' | 'done' | 'error'
 
 export type SourceDensity = '1x' | '2x' | '3x'
 
+// UI types — moved from src/data/mock.ts in Phase 2 plan 02-05 (cleanup wave).
+// `FileType` and `MockFile` describe the visual-shell row shape used by the
+// inspector OutputPanel/ReportPanel during the Phase 1→2 transition. Phase 5
+// raster encoders will replace MockFile with FileEntry-derived view models.
+export type FileType = 'png' | 'jpg' | 'svg' | 'webp' | 'avif'
+export type FileStatusMock = 'queued' | 'processing' | 'done' | 'error'
+
+export interface MockFile {
+  id: string
+  name: string
+  type: FileType
+  orig: number
+  opt: number
+  status: FileStatusMock
+  target: FileType
+  dim: string
+  q: number | null
+  prog?: number
+}
+
+// Codec UI label set + resize/fit enums — moved from src/data/mock.ts in
+// Phase 2 plan 02-05. Lives here because the Toolbar codec menu and CodecPanel
+// segmented controls are still wired to local-state useState (full migration
+// to useSettingsStore deferred to Phase 5 panel work).
+export type CodecLabel = 'SVG' | 'PNG' | 'WebP' | 'JPEG' | 'AVIF'
+export type ResizeAlg = 'lanczos3' | 'mitchell' | 'catrom' | 'triangle'
+export type FitMode = 'cover' | 'contain' | 'fill'
+
+// SVGO plugin row shape (visual-shell list of toggleable plugins).
+// Moved from src/data/mock.ts in Phase 2 plan 02-05. Phase 3 SVG pipeline
+// replaces this with a real SVGO plugin registry derived from svgo v4 config.
+export interface SvgoPlugin {
+  id: string
+  on: boolean
+  saves: string
+}
+
 export interface FormatDefinition {
   id: FormatId
   label: string

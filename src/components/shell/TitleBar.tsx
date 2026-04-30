@@ -8,8 +8,8 @@
 import { Icons } from '@/components/icons'
 import { Popover } from '@/components/ui/Popover'
 import { Tooltip } from '@/components/ui/Tooltip'
-import type { ThemeMode } from '@/types'
-import { CODECS, type CodecLabel } from '@/data/mock'
+import type { ThemeMode, CodecLabel } from '@/types'
+import { CODECS } from '@/data/defaults'
 
 type View = 'Batch' | 'Compare' | 'Report'
 
