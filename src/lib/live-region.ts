@@ -24,13 +24,18 @@ export function announce(message: string): void {
 }
 
 /**
- * Quartile boundary check — returns true on each Nth completion (N=Math.max(1, Math.floor(total/4))).
+ * Quartile boundary check — returns true on each Nth completion (N=Math.floor(total/4)).
  * Caller decides what message to announce.
+ *
+ * WR-03: small batches (totalJobs < 4) yield stride=1 under the old formula,
+ * which fires an interior announcement on every single completion — exactly
+ * the screen-reader flooding Pitfall 5 forbids. For batches under 4 files we
+ * announce only start + final; no interior strides.
  */
 export function isQuartileBoundary(doneCount: number, totalJobs: number): boolean {
-  if (totalJobs <= 0) return false
+  if (totalJobs < 4) return false // WR-03: small batches → start + final only
   if (doneCount === 0) return false
   if (doneCount === totalJobs) return false // caller handles "final" separately
-  const stride = Math.max(1, Math.floor(totalJobs / 4))
+  const stride = Math.floor(totalJobs / 4)
   return doneCount % stride === 0
 }
