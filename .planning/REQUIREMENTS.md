@@ -35,7 +35,7 @@
 
 ### UI/UX
 
-- [ ] **UI-01**: Port `example-ui/` (UMD React prototype) to Vite + TypeScript — preserve layout, components, design tokens, theme system
+- [x] **UI-01**: Port `example-ui/` (UMD React prototype) to Vite + TypeScript — preserve layout, components, design tokens, theme system
 - [ ] **UI-02**: Use shadcn/ui components (sliders, checkboxes, etc.) adapted from `example-ui/` visual language
 - [ ] **UI-03**: File list view with thumbnail before/after, size delta (bytes + %)
 - [ ] **UI-04**: Click a file to open detail view with Squoosh-style split slider (original ↔ optimized) and per-file overrides

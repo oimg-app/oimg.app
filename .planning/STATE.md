@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 1 UI-SPEC approved
-last_updated: "2026-04-29T21:17:16.466Z"
-last_activity: 2026-04-29 -- Phase 01 planning complete
+stopped_at: Completed 01-03-PLAN.md (foundation ratification)
+last_updated: "2026-04-30T10:15:08.971Z"
+last_activity: 2026-04-30
 progress:
   total_phases: 8
   completed_phases: 0
   total_plans: 5
-  completed_plans: 1
-  percent: 20
+  completed_plans: 3
+  percent: 60
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-04-29)
 ## Current Position
 
 Phase: 01 (shell-foundation) — EXECUTING
-Plan: 1 of 5
+Plan: 2 of 5
 Status: Ready to execute
-Last activity: 2026-04-29 -- Phase 01 planning complete
+Last activity: 2026-04-30
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [██████░░░░] 60%
 
 ## Performance Metrics
 
@@ -52,6 +52,7 @@ Progress: [░░░░░░░░░░] 0%
 - Trend: -
 
 *Updated after each plan completion*
+| Phase 01-shell-foundation P03 | 2min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -64,6 +65,8 @@ Recent decisions affecting current work:
 - Phase 1: COOP/COEP headers and runtime `crossOriginIsolated` sentinel ship on day 1 — not deferred to polish
 - Phase 3: SVG goes first among codecs — text-in/text-out, no WASM, validates orchestrator/adapter contract cheaply
 - Phase 4: Memory model (streaming concurrency cap, Blob-only state, revoke discipline) designed in before raster encoders — retrofitting is HIGH-cost
+- [Phase 01]: mock.ts and defaults.ts coexist by design — defaults.ts is the typed contract for Phase 2 pipeline; mock.ts mirrors example-ui/data.jsx 1:1 for Phase 1 visual shell and is deleted in Phase 2. Header comments lock the split (plan 01-03).
+- [Phase 01]: Foundation surface area locked at end of Wave 2 — 13 type/interface exports, 7 default constants, 5 mock constants, 26 icons, useTheme contract are grep-asserted; Plans 04 and 05 may import by name without spelunking (plan 01-03).
 
 ### Pending Todos
 
@@ -95,6 +98,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-29T20:03:02.306Z
-Stopped at: Phase 1 UI-SPEC approved
-Resume file: .planning/phases/01-shell-foundation/01-UI-SPEC.md
+Last session: 2026-04-30T10:14:55.243Z
+Stopped at: Completed 01-03-PLAN.md (foundation ratification)
+Resume file: None

@@ -30,9 +30,9 @@ Eight phases take oimg.app from an empty Vite scaffold to a fully-deployed, prod
 **Plans**: 5 plans
 
 Plans:
-- [ ] 01-01-PLAN.md — Security foundation: COOP/COEP headers, fontsource self-hosted fonts, 5-stop oklch design tokens
-- [ ] 01-02-PLAN.md — Test scaffold: Playwright E2E runner, ARIA landmark stubs (real browser), bundle size test
-- [ ] 01-03-PLAN.md — Foundation atoms: TypeScript types, data defaults, custom SVG icons, useTheme hook
+- [x] 01-01-PLAN.md — Security foundation: COOP/COEP headers, fontsource self-hosted fonts, 5-stop oklch design tokens
+- [x] 01-02-PLAN.md — Test scaffold: Playwright E2E runner, ARIA landmark stubs (real browser), bundle size test
+- [x] 01-03-PLAN.md — Foundation atoms: TypeScript types, data defaults, custom SVG icons, useTheme hook
 - [ ] 01-04-PLAN.md — Shell components: AppShell grid, TitleBar (theme toggle), Toolbar, StatusBar + Playwright ARIA tests activated
 - [ ] 01-05-PLAN.md — Panel components: FilePanel, DetailPanel, TweaksPanel accordion + visual checkpoint
 
