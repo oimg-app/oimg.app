@@ -53,8 +53,8 @@
 
 ### Performance
 
-- [ ] **PERF-01**: WASM codecs run in Web Worker pool (non-blocking UI)
-- [ ] **PERF-02**: Lazy-load codecs on first use
+- [x] **PERF-01**: WASM codecs run in Web Worker pool (non-blocking UI)
+- [x] **PERF-02**: Lazy-load codecs on first use
 - [ ] **PERF-03**: Progress UI for batch operations
 - [ ] **PERF-04**: Codec bundle splitting (don't ship AVIF WASM if user only processes SVG/PNG)
 
