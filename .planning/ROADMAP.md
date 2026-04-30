@@ -7,7 +7,7 @@ Eight phases take oimg.app from an empty Vite scaffold to a fully-deployed, prod
 ## Phases
 
 - [ ] **Phase 1: Shell + Foundation** - Vite + TS scaffold, design tokens ported from example-ui/, COOP/COEP headers, CI smoke test
-- [ ] **Phase 2: Worker Harness + State** - PipelineOrchestrator, generic worker pool, Comlink RPC, Zustand stores, stub adapter
+- [x] **Phase 2: Worker Harness + State** - PipelineOrchestrator, generic worker pool, Comlink RPC, Zustand stores, stub adapter
 - [ ] **Phase 3: SVG Pipeline** - SVGO integration, DOMPurify wrap, plugin toggle UI, SVG snippet output
 - [ ] **Phase 4: Decode + Resize + Memory Model** - @jsquash/png decode, @jsquash/resize, streaming concurrency cap, source-density UI
 - [ ] **Phase 5: Raster Encoders** - OxiPNG, WebP, JPEG (MozJPEG), AVIF adapters + per-codec settings panels
@@ -54,7 +54,7 @@ Plans:
 - [x] 02-02-PLAN.md — Stores: useFilesStore + useSettingsStore + useRuntimeStore (urlCache lifecycle), object-url + live-region helpers
 - [x] 02-03-PLAN.md — Worker harness: Comlink worker entry + stub adapter + WorkerPool class (FIFO, cancel via terminate-and-respawn, AbortSignal cancel correctness)
 - [x] 02-04-PLAN.md — UI wiring: Toolbar Workers pill + Optimize button + ARIA live region + sonner Toaster + Cmd+Enter/Cmd+. shortcuts + window.__OIMG_STORES__ test exposure
-- [ ] 02-05-PLAN.md — Cleanup: delete src/data/mock.ts, full Playwright regression sweep, bundle budget verification
+- [x] 02-05-PLAN.md — Cleanup: delete src/data/mock.ts, full Playwright regression sweep, bundle budget verification
 
 ### Phase 3: SVG Pipeline
 **Goal**: Users can optimize SVG files with SVGO and immediately copy snippet output, with XSS risk fully neutralized
@@ -131,8 +131,8 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Shell + Foundation | 4/5 | In Progress|  |
-| 2. Worker Harness + State | 1/5 | In Progress|  |
+| 1. Shell + Foundation | 5/5 | Complete | 2026-04-30 |
+| 2. Worker Harness + State | 5/5 | Complete | 2026-04-30 |
 | 3. SVG Pipeline | 0/TBD | Not started | - |
 | 4. Decode + Resize + Memory Model | 0/TBD | Not started | - |
 | 5. Raster Encoders | 0/TBD | Not started | - |
