@@ -1,5 +1,8 @@
-// Mock fixtures used by the visual shell while the codec pipeline is wired.
-// Replaces example-ui/data.jsx — typed for TS.
+// Visual-shell fixtures for Phase 1.
+// Static mock data the App.tsx prototype renders today (12 fake files, 22 SVGO plugin
+// entries, codec/resize/fit enums). This file will be deleted in Phase 2 when the
+// real codec pipeline replaces it. For PRODUCTION codec defaults that the Phase 2
+// pipeline reads, see src/data/defaults.ts.
 
 export type FileType = 'png' | 'jpg' | 'svg' | 'webp' | 'avif';
 export type FileStatusMock = 'queued' | 'processing' | 'done' | 'error';

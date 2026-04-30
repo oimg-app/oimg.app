@@ -1,3 +1,8 @@
+// Production codec defaults consumed by the Phase 2+ pipeline.
+// Single source of truth for "what should this codec do by default."
+// For the static visual-shell fixtures the Phase 1 prototype renders, see
+// src/data/mock.ts (mock.ts is deleted in Phase 2).
+
 import type {
   FormatDefinition,
   CodecSettingsSvg,
