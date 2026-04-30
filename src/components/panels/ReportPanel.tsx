@@ -12,7 +12,8 @@ export function ReportPanel({ files }: ReportPanelProps) {
   const total = files.reduce((s, f) => s + f.orig, 0);
   const optTotal = files.reduce((s, f) => s + f.opt, 0);
   const saved = total - optTotal;
-  const pct = (saved / total) * 100;
+  // WR-01: empty queue → total=0 → NaN%. Guard with explicit zero.
+  const pct = total === 0 ? 0 : (saved / total) * 100;
 
   return (
     <>
@@ -29,7 +30,8 @@ export function ReportPanel({ files }: ReportPanelProps) {
         </div>
         <div className="chart">
           {files.map((f) => {
-            const localPct = ((f.orig - f.opt) / f.orig) * 100;
+            // WR-01: per-file guard — placeholder + zero-byte sources don't divide.
+            const localPct = f.orig === 0 ? 0 : ((f.orig - f.opt) / f.orig) * 100;
             const h = Math.max(4, localPct * 0.9);
             return (
               <div
