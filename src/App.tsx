@@ -238,10 +238,25 @@ export default function App() {
         </div>
 
         <div className="pane-body" style={{ borderTop: '1px solid var(--line)' }}>
-          <div className="filelist">
+          <div
+            className="filelist"
+            role="listbox"
+            aria-label="Files"
+            aria-activedescendant={`file-${selectedId}`}
+          >
             {filteredFiles.map((f) => (
               <div
                 key={f.id}
+                id={`file-${f.id}`}
+                role="option"
+                aria-selected={selectedId === f.id}
+                tabIndex={selectedId === f.id ? 0 : -1}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault()
+                    setSelectedId(f.id)
+                  }
+                }}
                 className={
                   'file-row' +
                   (selectedId === f.id ? ' selected' : '') +
@@ -380,10 +395,22 @@ export default function App() {
               </div>
               <div
                 className="split-handle"
+                role="slider"
+                aria-label="Compare split position"
+                aria-valuemin={2}
+                aria-valuemax={98}
+                aria-valuenow={Math.round(split)}
+                tabIndex={0}
                 style={{ left: split + '%' }}
                 onMouseDown={(e) => {
                   e.preventDefault()
                   onSplitDrag()
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'ArrowLeft') setSplit((s) => Math.max(2, s - 5))
+                  if (e.key === 'ArrowRight') setSplit((s) => Math.min(98, s + 5))
+                  if (e.key === 'Home') setSplit(2)
+                  if (e.key === 'End') setSplit(98)
                 }}
               />
             </div>
@@ -450,16 +477,57 @@ export default function App() {
             </Popover>
           </div>
         </div>
-        <div className="tabs">
+        <div className="tabs" role="tablist" aria-label="Inspector">
           {file.type === 'svg' ? (
-            <button className={tab === 'svgo' ? 'on' : ''} onClick={() => setTab('svgo')}>SVGO</button>
+            <button
+              role="tab"
+              aria-selected={tab === 'svgo'}
+              aria-controls="inspector-panel"
+              id="inspector-tab-svgo"
+              className={tab === 'svgo' ? 'on' : ''}
+              onClick={() => setTab('svgo')}
+            >
+              SVGO
+            </button>
           ) : (
-            <button className={tab === 'codec' ? 'on' : ''} onClick={() => setTab('codec')}>Codec</button>
+            <button
+              role="tab"
+              aria-selected={tab === 'codec'}
+              aria-controls="inspector-panel"
+              id="inspector-tab-codec"
+              className={tab === 'codec' ? 'on' : ''}
+              onClick={() => setTab('codec')}
+            >
+              Codec
+            </button>
           )}
-          <button className={tab === 'output' ? 'on' : ''} onClick={() => setTab('output')}>Output</button>
-          <button className={tab === 'report' ? 'on' : ''} onClick={() => setTab('report')}>Report</button>
+          <button
+            role="tab"
+            aria-selected={tab === 'output'}
+            aria-controls="inspector-panel"
+            id="inspector-tab-output"
+            className={tab === 'output' ? 'on' : ''}
+            onClick={() => setTab('output')}
+          >
+            Output
+          </button>
+          <button
+            role="tab"
+            aria-selected={tab === 'report'}
+            aria-controls="inspector-panel"
+            id="inspector-tab-report"
+            className={tab === 'report' ? 'on' : ''}
+            onClick={() => setTab('report')}
+          >
+            Report
+          </button>
         </div>
-        <div className="pane-body">
+        <div
+          className="pane-body"
+          role="tabpanel"
+          id="inspector-panel"
+          aria-labelledby={`inspector-tab-${tab}`}
+        >
           {tab === 'codec' && (
             <CodecPanel
               codec={codec} setCodec={setCodec}
