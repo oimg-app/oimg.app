@@ -189,11 +189,13 @@ export default function App() {
     return unsub
   }, [])
 
-  // Phase 2 plan 02-04 — Dev/test-only store exposure on window for Playwright
+  // Phase 2 plan 02-04 — Dev-only store exposure on window for Playwright
   // store inspection (PATTERNS.md §"Page-context store inspection"). Gated
-  // behind import.meta.env so Vite tree-shakes the assignment out of prod.
+  // strictly on import.meta.env.DEV — WR-05: building with `vite build --mode
+  // test` would leak this to production. Playwright runs against `vite dev`
+  // (DEV=true), so DEV-only is sufficient.
   useEffect(() => {
-    if (import.meta.env.DEV || import.meta.env.MODE === 'test') {
+    if (import.meta.env.DEV) {
       ;(window as unknown as { __OIMG_STORES__?: unknown }).__OIMG_STORES__ = {
         files: useFilesStore,
         settings: useSettingsStore,
@@ -225,13 +227,19 @@ export default function App() {
   // shape's wider FileStatus to the narrower visual MockFile status set
   // ('idle' folds to 'queued' for the visual contract).
   const SHELL_FILES: MockFile[] = useMemo(() => {
-    return filesOrder.map((id) => {
+    const fmtToType = (fmt: string): MockFile['type'] =>
+      fmt === 'jpeg' ? 'jpg' : (fmt as MockFile['type'])
+    // WR-02: filesOrder and filesById come from two separate selectors. A
+    // removeFile() that lands between the two reads (concurrent React 19
+    // render or strict-mode double render) leaves an id in `order` whose
+    // entry is no longer in `byId`. Use flatMap + early-bail to drop those
+    // stale ids defensively instead of crashing on entry.status access.
+    return filesOrder.flatMap((id) => {
       const entry = filesById[id]
-      const fmtToType = (fmt: string): MockFile['type'] =>
-        fmt === 'jpeg' ? 'jpg' : (fmt as MockFile['type'])
+      if (!entry) return []
       const status: MockFile['status'] =
         entry.status === 'idle' ? 'queued' : (entry.status as MockFile['status'])
-      return {
+      return [{
         id: entry.id,
         name: entry.name,
         type: fmtToType(entry.format),
@@ -241,7 +249,7 @@ export default function App() {
         target: fmtToType(entry.format),
         dim: '—',
         q: null,
-      }
+      }]
     })
   }, [filesById, filesOrder])
 
@@ -314,8 +322,9 @@ export default function App() {
       // an artificial per-job delay through the stub adapter (worker reads
       // settings.slowMs). VR-02 (concurrency cap) and VR-03 (cancel correctness)
       // tests set this so the otherwise-microsecond stub run becomes observable.
-      // Gated to dev/test mode below; production builds tree-shake the read.
-      const slowMs = (import.meta.env.DEV || import.meta.env.MODE === 'test')
+      // WR-05: gated on import.meta.env.DEV ONLY so accidental `vite build
+      // --mode test` does NOT ship this affordance to production.
+      const slowMs = import.meta.env.DEV
         ? (window as unknown as { __OIMG_SLOW_MS__?: number }).__OIMG_SLOW_MS__ ?? 0
         : 0
       const job: PoolJob = {
@@ -327,14 +336,29 @@ export default function App() {
       }
       pool.enqueue(job)
         .then((result) => {
+          // CR-04: re-check inFlight membership before writing to files store.
+          // A racing cancel() may have cleared inFlight between dispatch and
+          // resolution; in that case runtime.markDone short-circuits already,
+          // and we must NOT write a 'done' status into files store either —
+          // otherwise the cancelled file shows as completed.
+          if (!useRuntimeStore.getState().inFlight.has(fileId)) return
           // result.output.byteLength === f.sourceBlob.size for stub (D-04 round-trip).
           const optimizedBlob = new Blob([result.output])
           useFilesStore.getState().markDone(fileId, optimizedBlob, optimizedBlob.size)
         })
-        .catch(() => {
-          // onError pool callback already routed to runtime.markError.
-          // files store status flip on error is deferred to Phase 5 (no inline
-          // retry surface in v1 per UI-SPEC §7).
+        .catch((err) => {
+          // CR-04 / WR-08: discriminate AbortError (cancel path — already
+          // surfaced via pool onError → runtime.markError) from real adapter
+          // failures, which must flip the files-store entry to 'error' so the
+          // queue row reflects the failed run instead of an old 'done' state.
+          const isAbort =
+            err instanceof DOMException && err.name === 'AbortError'
+          if (isAbort) return
+          useFilesStore.getState().setStatus(fileId, 'error')
+          // Phase 2 has no UI surface for adapter errors yet (Phase 5 adds an
+          // inline retry affordance per UI-SPEC §7). Surface to console so
+          // real bugs are not silently swallowed during dev.
+          console.error(`[startOptimize] ${fileId}:`, err)
         })
     }
   }
