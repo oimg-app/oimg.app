@@ -10,7 +10,7 @@
     "test": "npx playwright test",
     "test:ui": "npx playwright test --ui",
     "test:headed": "npx playwright test --headed",
-    "test:bundle": "node --input-type=module src/tests/build.test.ts",
+    "test:bundle": "node --experimental-strip-types src/tests/build.test.ts",
     "postinstall": "node ./scripts/ensure-rollup-binding.mjs"
   },
   "dependencies": {
