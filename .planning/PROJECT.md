@@ -152,4 +152,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-29 after initialization*
+*Last updated: 2026-04-30 after Phase 2 (worker-harness-state) — worker pool + zustand stores + stub adapter round-trip wired; PERF-01/02/03 satisfied at the substrate level. User-facing requirements remain Active until Phase 3+ codecs land.*
