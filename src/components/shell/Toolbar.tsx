@@ -15,7 +15,7 @@ import { Icons } from '@/components/icons'
 import { Popover } from '@/components/ui/Popover'
 import { Tooltip } from '@/components/ui/Tooltip'
 import type { ThemeMode } from '@/types'
-import { useRuntimeStore } from '@/stores'
+import { useRuntimeStore, useFilesStore } from '@/stores'
 
 type View = 'Batch' | 'Compare' | 'Report'
 
@@ -63,7 +63,11 @@ export function Toolbar(props: ToolbarProps) {
   const busy = useRuntimeStore((s) => s.inFlight.size)
   const poolSize = useRuntimeStore((s) => s.poolSize)
   const errorCount = useRuntimeStore((s) => s.errorCount)
-  const queueDepth = useRuntimeStore((s) => s.queue.length)
+  // Optimize button is enabled when there is at least one file in the FILES
+  // store (the source of truth for "is there work to do") — NOT the runtime
+  // queue, which only has entries WHILE a batch is dispatching.
+  const fileCount = useFilesStore((s) => s.order.length)
+  const hasNoFiles = fileCount === 0
 
   const isPopOpen = (key: string) => openKey === key
   const togglePop = (key: string) => onOpenKey(openKey === key ? null : key)
@@ -103,7 +107,7 @@ export function Toolbar(props: ToolbarProps) {
         </Popover>
       </button>
 
-      <button className="tbtn" onClick={onStartOptimize} disabled={running || queueDepth === 0}>
+      <button className="tbtn" onClick={onStartOptimize} disabled={running || hasNoFiles}>
         {running ? <><Icons.Pause size={13} /> Optimizing…</> : <><Icons.Play size={13} /> Optimize all</>}
       </button>
 

@@ -5,6 +5,7 @@
 // remains here pending Plan 05's panel decomposition.
 
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { Toaster, toast } from 'sonner'
 import { Icons } from '@/components/icons'
 import { Popover } from '@/components/ui/Popover'
 import { CodecPanel } from '@/components/panels/CodecPanel'
@@ -29,30 +30,37 @@ import {
   type SvgoPlugin,
   type MockFile,
 } from '@/data/mock'
+// Phase 2 plan 02-04 — store + worker pool + ARIA live wiring.
+import { useFilesStore, useSettingsStore, useRuntimeStore } from '@/stores'
+import { getWorkerPool } from '@/workers/pool'
+import type { PoolJob } from '@/workers/types'
+import { setLiveRegion, announce, isQuartileBoundary } from '@/lib/live-region'
 
 type Tab = 'codec' | 'svgo' | 'output' | 'report'
 type View = 'Batch' | 'Compare' | 'Report'
 
-interface Toast {
-  id: number
-  msg: string
-  meta?: string
-}
-
 export default function App() {
   const { theme, setTheme } = useTheme()
 
-  const [selectedId, setSelectedId] = useState<string>('f1')
+  // Phase 2 plan 02-04: selectedId migrated to useFilesStore.
+  // selectedId in the files store starts at null; we keep the visual default
+  // pointing at the first MOCK_FILE for the Phase 1 shell preview.
+  const filesSelectedId = useFilesStore((s) => s.selectedId)
+  const selectedId = filesSelectedId ?? 'f1'
+  const setSelectedId = (id: string) => useFilesStore.getState().setSelected(id)
+
   const [tab, setTab] = useState<Tab>('codec')
   const [split, setSplit] = useState<number>(50)
   const [view, setView] = useState<View>('Batch')
 
   const [open, setOpen] = useState<string | null>(null)
-  const [toasts, setToasts] = useState<Toast[]>([])
   const [cmdkOpen, setCmdkOpen] = useState<boolean>(false)
   const [rowMenu, setRowMenu] = useState<string | null>(null)
 
-  // Codec settings
+  // Codec UI state — full migration to settings store deferred to Phase 5
+  // (PATTERNS.md §Migration map: only `selectedId`, `running`, `toasts` are
+  // MUST-MIGRATE in Phase 2; other codec settings are not yet wired to a real
+  // codec, so local useState is fine until Phase 5 panel migrations).
   const [codec, setCodec] = useState<CodecLabel>('WebP')
   const [q, setQ] = useState<number>(82)
   const [method, setMethod] = useState<number>(4)
@@ -66,7 +74,9 @@ export default function App() {
   const [keepIcc, setKeepIcc] = useState<boolean>(false)
   const [aggressive, setAggressive] = useState<boolean>(false)
 
-  const [running, setRunning] = useState<boolean>(false)
+  // Phase 2 plan 02-04: `running` migrated to useRuntimeStore; local `toasts`
+  // state + pushToast helper REMOVED — sonner Toaster owns the toast surface.
+  const running = useRuntimeStore((s) => s.running)
   const [filterQuery, setFilterQuery] = useState<string>('')
   const [sortBy, setSortBy] = useState<string>('queue order')
 
@@ -74,15 +84,34 @@ export default function App() {
   const togglePlugin = (id: string) =>
     setPlugins((ps) => ps.map((p) => (p.id === id ? { ...p, on: !p.on } : p)))
 
+  // Backwards-compat shim for child components that still call onToast(msg, meta).
+  // Routes through sonner so the visual contract from Phase 1 stays intact while
+  // we incrementally remove the helper from child surfaces in later plans.
   const pushToast = (msg: string, meta?: string) => {
-    const id = Date.now() + Math.random()
-    setToasts((ts) => [...ts, { id, msg, meta }])
-    setTimeout(() => setToasts((ts) => ts.filter((t) => t.id !== id)), 2600)
+    if (meta) toast(msg, { description: meta })
+    else toast(msg)
   }
 
-  // Keyboard shortcuts
+  // Phase 2 plan 02-04 — Worker pool singleton, instantiated once with
+  // callbacks bound to runtime store actions (D-08). The pool lazy-spawns
+  // workers on first enqueue, so importing the module here is what causes
+  // Vite to trace and split out the worker-*.js / stub-adapter-*.js chunks
+  // (closes the deferred chunk-emission gate from plan 02-03).
+  const pool = useMemo(() => getWorkerPool({
+    onStarted: (jobId) => useRuntimeStore.getState().markStarted(jobId),
+    onDone: (jobId) => useRuntimeStore.getState().markDone(jobId),
+    onError: (jobId, err) => {
+      const msg = err instanceof Error ? err.message : String(err)
+      useRuntimeStore.getState().markError(jobId, msg)
+    },
+  }), [])
+
+  // Phase 2 plan 02-04 — Keyboard shortcuts. Combined Phase-1 (Cmd+K, Esc, /)
+  // with Phase-2 additions (Cmd+Enter optimize, Cmd+. cancel batch).
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null
+      const isInput = !!target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault()
         setCmdkOpen((v) => !v)
@@ -90,6 +119,14 @@ export default function App() {
         setCmdkOpen(false)
         setOpen(null)
         setRowMenu(null)
+      } else if ((e.metaKey || e.ctrlKey) && e.key === 'Enter' && !isInput) {
+        // Cmd+Enter — Run Optimize (UI-SPEC §8 line 225).
+        e.preventDefault()
+        startOptimize()
+      } else if ((e.metaKey || e.ctrlKey) && e.key === '.' && useRuntimeStore.getState().running) {
+        // Cmd+. — Cancel batch (UI-SPEC §8 line 226). Only active while running.
+        e.preventDefault()
+        cancelBatch()
       } else if (e.key === '/' && !cmdkOpen) {
         const tag = document.activeElement?.tagName
         if (tag !== 'INPUT' && tag !== 'TEXTAREA') {
@@ -100,7 +137,65 @@ export default function App() {
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cmdkOpen])
+
+  // Phase 2 plan 02-04 — Live-region quartile cadence + completion toast.
+  // Subscribes narrowly to runtime store via subscribeWithSelector so we only
+  // re-fire on real transitions (D-09 selector convention).
+  useEffect(() => {
+    const unsub = useRuntimeStore.subscribe(
+      (s) => ({
+        doneCount: s.doneCount,
+        errorCount: s.errorCount,
+        totalJobs: s.totalJobs,
+        running: s.running,
+      }),
+      (curr, prev) => {
+        // Quartile completion announcement on each interior stride.
+        if (curr.doneCount !== prev.doneCount && curr.doneCount > 0 && curr.doneCount < curr.totalJobs) {
+          if (isQuartileBoundary(curr.doneCount, curr.totalJobs)) {
+            announce(`${curr.doneCount} of ${curr.totalJobs} files complete`)
+          }
+        }
+        // Batch end transition (running flipped true → false). cancelBatch()
+        // also flips running → false but resets totalJobs to its preserved
+        // value — cancel emits its own "Batch canceled" announcement directly,
+        // so we guard here with `totalJobs > 0` AND a non-zero done+error sum
+        // to avoid double-announcing on cancel.
+        if (prev.running && !curr.running && curr.totalJobs > 0) {
+          const finished = curr.doneCount + curr.errorCount === curr.totalJobs
+          if (!finished) return // cancel path — handled in cancelBatch()
+          const successCount = curr.totalJobs - curr.errorCount
+          // Stub adapter saves 0 bytes (Phase 2 acceptance gate). Phase 3+
+          // derives savedBytes from useFilesStore originalSize - optimizedSize.
+          const savedHuman = '0 bytes'
+          announce(`Batch complete. ${successCount} files optimized, ${savedHuman} saved.`)
+          if (curr.errorCount === 0) {
+            toast.success(`Optimized ${successCount} files`, { description: savedHuman })
+          } else if (curr.errorCount === curr.totalJobs) {
+            toast.error(`Optimization failed for ${curr.errorCount} files`, { description: 'Click for details' })
+          } else {
+            toast(`Optimized ${successCount} of ${curr.totalJobs} files`, { description: `${curr.errorCount} failed` })
+          }
+        }
+      },
+    )
+    return unsub
+  }, [])
+
+  // Phase 2 plan 02-04 — Dev/test-only store exposure on window for Playwright
+  // store inspection (PATTERNS.md §"Page-context store inspection"). Gated
+  // behind import.meta.env so Vite tree-shakes the assignment out of prod.
+  useEffect(() => {
+    if (import.meta.env.DEV || import.meta.env.MODE === 'test') {
+      ;(window as unknown as { __OIMG_STORES__?: unknown }).__OIMG_STORES__ = {
+        files: useFilesStore,
+        settings: useSettingsStore,
+        runtime: useRuntimeStore,
+      }
+    }
+  }, [])
 
   const file: MockFile = useMemo(
     () => MOCK_FILES.find((f) => f.id === selectedId) ?? MOCK_FILES[0],
@@ -143,17 +238,72 @@ export default function App() {
 
   const toggleTheme = () => setTheme(theme === 'dark' ? 'light' : 'dark')
 
+  // Phase 2 plan 02-04 — Real worker-pool batch dispatcher.
+  // Reads queued/idle/error files from useFilesStore, calls startBatch on the
+  // runtime store (sets running=true + populates queue/totalJobs), enqueues
+  // each fileId as a stub job into the pool, and flips files.byId statuses
+  // through the pool's onStarted/onDone/onError callbacks.
+  //
+  // UI-SPEC §7: silent batch start — NO toast, only the live region announces.
   const startOptimize = () => {
-    setRunning(true)
-    pushToast('Optimizing 12 files…', '5 workers')
-    setTimeout(() => {
-      setRunning(false)
-      pushToast('Done · saved 8.4 MB', '76.4%')
-    }, 1800)
+    const filesState = useFilesStore.getState()
+    const fileIds = filesState.order.filter((id) => {
+      const f = filesState.byId[id]
+      return f && (f.status === 'idle' || f.status === 'queued' || f.status === 'error')
+    })
+    if (fileIds.length === 0) return
+    // Phase 2 keeps jobId === fileId (1:1). Phase 5 may introduce 1:N
+    // (single source → multiple density variants) which will need a separate
+    // jobId allocation strategy.
+    useRuntimeStore.getState().startBatch(fileIds)
+    announce(`Optimizing ${fileIds.length} files`)
+    for (const fileId of fileIds) {
+      const f = filesState.byId[fileId]
+      if (!f) continue
+      // Phase 2 plan 02-04 — TEST AFFORDANCE: window.__OIMG_SLOW_MS__ injects
+      // an artificial per-job delay through the stub adapter (worker reads
+      // settings.slowMs). VR-02 (concurrency cap) and VR-03 (cancel correctness)
+      // tests set this so the otherwise-microsecond stub run becomes observable.
+      // Gated to dev/test mode below; production builds tree-shake the read.
+      const slowMs = (import.meta.env.DEV || import.meta.env.MODE === 'test')
+        ? (window as unknown as { __OIMG_SLOW_MS__?: number }).__OIMG_SLOW_MS__ ?? 0
+        : 0
+      const job: PoolJob = {
+        id: fileId,
+        fileId,
+        format: 'stub',           // Phase 2 routes only the stub adapter; Phase 3+ picks per FormatId.
+        settings: slowMs > 0 ? { slowMs } : {},
+        blob: f.sourceBlob,
+      }
+      pool.enqueue(job)
+        .then((result) => {
+          // result.output.byteLength === f.sourceBlob.size for stub (D-04 round-trip).
+          const optimizedBlob = new Blob([result.output])
+          useFilesStore.getState().markDone(fileId, optimizedBlob, optimizedBlob.size)
+        })
+        .catch(() => {
+          // onError pool callback already routed to runtime.markError.
+          // files store status flip on error is deferred to Phase 5 (no inline
+          // retry surface in v1 per UI-SPEC §7).
+        })
+    }
+  }
+
+  // Phase 2 plan 02-04 — Cancel handler.
+  // Order matters: pool.cancel() trips AbortController (T-02-01 mitigation)
+  // BEFORE useRuntimeStore.cancelBatch() clears the in-flight set. Pool
+  // onError fires for each in-flight job; runtime store guards late
+  // markDone/markError arrivals via the inFlight.has(jobId) check.
+  const cancelBatch = () => {
+    const inFlightCount = useRuntimeStore.getState().inFlight.size
+    pool.cancel()
+    useRuntimeStore.getState().cancelBatch()
+    announce('Batch canceled')
+    toast(`Batch canceled`, { description: `${inFlightCount} files were processing` })
   }
 
   const exportZip = () => {
-    pushToast('Bundled oimg-export.zip', '2.6 MB')
+    toast.success('Bundled oimg-export.zip', { description: '2.6 MB' })
   }
 
   const setCodecFromMenu = (c: CodecLabel) => {
@@ -162,13 +312,16 @@ export default function App() {
     setOpen(null)
   }
 
-  // Command palette items
+  // Command palette items.
+  // Phase 2 plan 02-04: Optimize meta updated to reflect real worker pool;
+  // Cancel batch entry added (visible only while running) per UI-SPEC §3 + §8.
   const cmdGroups: CmdGroup[] = [
     {
       group: 'Actions',
       items: [
         { ic: <Icons.Upload size={13} />, label: 'Add files…', meta: 'A', do: () => pushToast('File picker opened') },
-        { ic: <Icons.Play size={13} />, label: 'Optimize all', meta: 'O', do: startOptimize },
+        { ic: <Icons.Play size={13} />, label: 'Optimize all', meta: 'Run worker pool · ⌘⏎', do: startOptimize },
+        ...(running ? [{ ic: <Icons.X size={14} />, label: 'Cancel batch', meta: 'Stops in-flight workers · ⌘.', do: cancelBatch }] : []),
         { ic: <Icons.Download size={13} />, label: 'Export ZIP', meta: 'E', do: exportZip },
         { ic: <Icons.Zap size={13} />, label: 'Auto (Butteraugli 1.4)', meta: 'B', do: () => pushToast('Auto-optimizing…', 'butteraugli ≤ 1.4') },
       ],
@@ -556,17 +709,34 @@ export default function App() {
     </main>
   )
 
+  // Phase 2 plan 02-04 — Overlays:
+  //   1. ARIA live region (UI-SPEC §5) — single role=status aria-live=polite
+  //      sr-only div mounted at App root. Owned by setLiveRegion ref binder
+  //      so non-React modules (worker pool callbacks, store actions) can
+  //      announce via @/lib/live-region#announce.
+  //   2. Sonner Toaster — replaces the Phase 1 hand-rolled toast-wrap. Sonner
+  //      handles slide-in animation, prefers-reduced-motion, focus return.
+  //   3. CommandPalette (unchanged from Phase 1).
   const overlays = (
     <>
-      <div className="toast-wrap">
-        {toasts.map((t) => (
-          <div key={t.id} className="toast">
-            <Icons.Check size={13} />
-            <span>{t.msg}</span>
-            {t.meta && <span className="t-meta">{t.meta}</span>}
-          </div>
-        ))}
-      </div>
+      <div
+        ref={(el) => setLiveRegion(el)}
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        style={{
+          position: 'absolute',
+          width: 1,
+          height: 1,
+          padding: 0,
+          margin: -1,
+          overflow: 'hidden',
+          clip: 'rect(0,0,0,0)',
+          whiteSpace: 'nowrap',
+          border: 0,
+        }}
+      />
+      <Toaster position="bottom-right" />
       <CommandPalette open={cmdkOpen} onOpenChange={setCmdkOpen} groups={cmdGroups} />
     </>
   )
