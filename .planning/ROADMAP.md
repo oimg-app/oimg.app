@@ -34,7 +34,7 @@ Plans:
 - [x] 01-02-PLAN.md — Test scaffold: Playwright E2E runner, ARIA landmark stubs (real browser), bundle size test
 - [x] 01-03-PLAN.md — Foundation atoms: TypeScript types, data defaults, custom SVG icons, useTheme hook
 - [x] 01-04-PLAN.md — Shell components: AppShell grid, TitleBar (theme toggle), Toolbar, StatusBar + Playwright ARIA tests activated
-- [ ] 01-05-PLAN.md — Panel components: FilePanel, DetailPanel, TweaksPanel accordion + visual checkpoint
+- [x] 01-05-PLAN.md — Panel components: FilePanel, DetailPanel, TweaksPanel accordion + visual checkpoint
 
 **UI hint**: yes
 
