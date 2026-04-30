@@ -33,7 +33,7 @@ Plans:
 - [x] 01-01-PLAN.md — Security foundation: COOP/COEP headers, fontsource self-hosted fonts, 5-stop oklch design tokens
 - [x] 01-02-PLAN.md — Test scaffold: Playwright E2E runner, ARIA landmark stubs (real browser), bundle size test
 - [x] 01-03-PLAN.md — Foundation atoms: TypeScript types, data defaults, custom SVG icons, useTheme hook
-- [ ] 01-04-PLAN.md — Shell components: AppShell grid, TitleBar (theme toggle), Toolbar, StatusBar + Playwright ARIA tests activated
+- [x] 01-04-PLAN.md — Shell components: AppShell grid, TitleBar (theme toggle), Toolbar, StatusBar + Playwright ARIA tests activated
 - [ ] 01-05-PLAN.md — Panel components: FilePanel, DetailPanel, TweaksPanel accordion + visual checkpoint
 
 **UI hint**: yes
@@ -124,7 +124,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Shell + Foundation | 0/5 | Not started | - |
+| 1. Shell + Foundation | 4/5 | In Progress|  |
 | 2. Worker Harness + State | 0/TBD | Not started | - |
 | 3. SVG Pipeline | 0/TBD | Not started | - |
 | 4. Decode + Resize + Memory Model | 0/TBD | Not started | - |

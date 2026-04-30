@@ -4,14 +4,14 @@ milestone: v1.0
 milestone_name: milestone
 status: executing
 stopped_at: Completed 01-03-PLAN.md (foundation ratification)
-last_updated: "2026-04-30T10:15:08.971Z"
+last_updated: "2026-04-30T10:38:20.530Z"
 last_activity: 2026-04-30
 progress:
   total_phases: 8
   completed_phases: 0
   total_plans: 5
-  completed_plans: 3
-  percent: 60
+  completed_plans: 4
+  percent: 80
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-04-29)
 ## Current Position
 
 Phase: 01 (shell-foundation) — EXECUTING
-Plan: 2 of 5
+Plan: 3 of 5
 Status: Ready to execute
 Last activity: 2026-04-30
 
-Progress: [██████░░░░] 60%
+Progress: [████████░░] 80%
 
 ## Performance Metrics
 
@@ -53,6 +53,7 @@ Progress: [██████░░░░] 60%
 
 *Updated after each plan completion*
 | Phase 01-shell-foundation P03 | 2min | 2 tasks | 2 files |
+| Phase 01-shell-foundation P04 | 25min | 2 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -67,6 +68,8 @@ Recent decisions affecting current work:
 - Phase 4: Memory model (streaming concurrency cap, Blob-only state, revoke discipline) designed in before raster encoders — retrofitting is HIGH-cost
 - [Phase 01]: mock.ts and defaults.ts coexist by design — defaults.ts is the typed contract for Phase 2 pipeline; mock.ts mirrors example-ui/data.jsx 1:1 for Phase 1 visual shell and is deleted in Phase 2. Header comments lock the split (plan 01-03).
 - [Phase 01]: Foundation surface area locked at end of Wave 2 — 13 type/interface exports, 7 default constants, 5 mock constants, 26 icons, useTheme contract are grep-asserted; Plans 04 and 05 may import by name without spelunking (plan 01-03).
+- [Phase 01-shell-foundation]: Vite downgraded 8→7 to drop rolldown's broken native binding loader on Apple Silicon; postinstall script ensure-rollup-binding.mjs force-installs both arm64 and x64 rollup bindings (plan 01-04)
+- [Phase 01-shell-foundation]: Shell decomposed — App.tsx (552 LOC) is now the composition root and state owner; chrome lives in src/components/shell/{AppShell,TitleBar,Toolbar,StatusBar,CommandPalette}.tsx (plan 01-04)
 
 ### Pending Todos
 
@@ -98,6 +101,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-30T10:14:55.243Z
+Last session: 2026-04-30T10:35:00.467Z
 Stopped at: Completed 01-03-PLAN.md (foundation ratification)
 Resume file: None

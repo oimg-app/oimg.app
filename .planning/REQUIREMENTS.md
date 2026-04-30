@@ -40,9 +40,9 @@
 - [ ] **UI-03**: File list view with thumbnail before/after, size delta (bytes + %)
 - [ ] **UI-04**: Click a file to open detail view with Squoosh-style split slider (original ↔ optimized) and per-file overrides
 - [ ] **UI-05**: Accordion-style settings panel (per format, plus Global, Resize/Variants, Snippet output)
-- [ ] **UI-06**: Dark + light theme (dark default, oklch palette from example-ui)
-- [ ] **UI-07**: Responsive desktop-first layout
-- [ ] **UI-08**: Full keyboard navigation, ARIA labels, WCAG AA contrast
+- [x] **UI-06**: Dark + light theme (dark default, oklch palette from example-ui)
+- [x] **UI-07**: Responsive desktop-first layout
+- [x] **UI-08**: Full keyboard navigation, ARIA labels, WCAG AA contrast
 
 ### Privacy & Persistence
 
