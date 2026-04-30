@@ -28,6 +28,9 @@ interface Slot {
 interface PendingJob extends PoolJob {
   resolve: (r: AdapterRunResult) => void
   reject: (err: unknown) => void
+  // CR-02: explicit settled flag so cancel() does NOT fire onError for jobs
+  // whose proxy.runJob already resolved/rejected before the abort tripped.
+  settled: boolean
 }
 
 export interface PoolCallbacks {
@@ -47,6 +50,11 @@ export class WorkerPool {
   private inFlight = new Map<number, PendingJob>() // slot → job
   private abortController: AbortController | null = null
   private spawned = false
+  // CR-01: monotonic generation counter. Each cancel() bumps this; runOnSlot
+  // captures the value at dispatch time and bails out of its finally block if
+  // the generation no longer matches — preventing stale slot indexes from
+  // being pushed back onto the new pool's idle list.
+  private generation = 0
 
   constructor(private callbacks: PoolCallbacks = {}) {
     this.size = computePoolSize()
@@ -66,7 +74,7 @@ export class WorkerPool {
   enqueue(job: PoolJob): Promise<AdapterRunResult> {
     if (!this.spawned) this.spawnAll()
     return new Promise<AdapterRunResult>((resolve, reject) => {
-      this.queue.push({ ...job, resolve, reject })
+      this.queue.push({ ...job, resolve, reject, settled: false })
       this.tryDispatch()
     })
   }
@@ -75,18 +83,31 @@ export class WorkerPool {
    * pending promises with AbortError, respawns the pool fresh (D-02). */
   cancel(): void {
     const error = new DOMException('Batch cancelled', 'AbortError')
+    // CR-01: bump generation so any pending runOnSlot finally blocks tied to
+    // the previous generation no-op when they unwind.
+    this.generation += 1
     // Trip the abort controller so Promise.race in dispatched jobs rejects.
     this.abortController?.abort()
     // Terminate all workers — kills WASM regardless of state.
     for (const slot of this.slots) slot?.worker.terminate()
     // Reject still-queued jobs (never dispatched).
     for (const job of this.queue) {
-      job.reject(error)
-      this.callbacks.onError?.(job.id, error)
+      if (!job.settled) {
+        job.settled = true
+        job.reject(error)
+        this.callbacks.onError?.(job.id, error)
+      }
     }
-    // Reject in-flight jobs (Promise.race already settled but onError hook needs to fire).
+    // CR-02: only fire onError for genuinely unsettled in-flight jobs. A job
+    // whose proxy.runJob already resolved (and called job.resolve) but whose
+    // finally block has not yet run will be settled=true; firing onError for
+    // it would double-count via runtime.markError after markDone already ran.
     for (const job of this.inFlight.values()) {
-      this.callbacks.onError?.(job.id, error)
+      if (!job.settled) {
+        job.settled = true
+        job.reject(error)
+        this.callbacks.onError?.(job.id, error)
+      }
     }
     this.queue = []
     this.inFlight.clear()
@@ -106,6 +127,12 @@ export class WorkerPool {
     this.queue = []
     this.inFlight.clear()
     this.spawned = false
+    // WR-07: clear stale abortController so a subsequent re-spawn doesn't
+    // observe a controller whose signal is already aborted.
+    this.abortController = null
+    // Bump generation for symmetry with cancel(): any in-flight finally
+    // closures captured against the old generation will no-op.
+    this.generation += 1
   }
 
   private spawnAll(): void {
@@ -142,6 +169,10 @@ export class WorkerPool {
       // Slot was terminated mid-flight — abort path already handled.
       return
     }
+    // CR-01: capture pool generation at dispatch time. If cancel()/terminate()
+    // bumps it before this job unwinds, the finally block becomes a no-op so
+    // we don't push a stale slot index onto the new pool's idle list.
+    const generation = this.generation
     const signal = this.abortController!.signal
     try {
       // D-11/D-12: derive ArrayBuffer immediately before postMessage; never store.
@@ -166,12 +197,24 @@ export class WorkerPool {
           )
         }),
       ])
-      job.resolve(result)
-      this.callbacks.onDone?.(job.id, result)
+      // CR-02: mark settled BEFORE the resolve callback runs so a racing
+      // cancel() observes the settled=true flag and skips its onError fan-out.
+      if (!job.settled) {
+        job.settled = true
+        job.resolve(result)
+        this.callbacks.onDone?.(job.id, result)
+      }
     } catch (err) {
-      job.reject(err)
-      this.callbacks.onError?.(job.id, err)
+      if (!job.settled) {
+        job.settled = true
+        job.reject(err)
+        this.callbacks.onError?.(job.id, err)
+      }
     } finally {
+      // CR-01: stale generation → cancel() already wiped slots[]/idle[] and
+      // (re)spawned a fresh pool. Touching this.slots / this.idle now would
+      // corrupt the new generation's bookkeeping.
+      if (generation !== this.generation) return
       this.inFlight.delete(slot)
       // Worker may have been terminated mid-flight (cancel) — guard.
       if (this.slots[slot]) {
