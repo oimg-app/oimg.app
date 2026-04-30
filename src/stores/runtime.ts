@@ -55,9 +55,14 @@ export const useRuntimeStore = create<RuntimeState>()(
 
     markStarted: (jobId) =>
       set((s) => {
-        // Dispatch a queued job: remove from queue, add to inFlight.
-        if (!s.queue.includes(jobId)) return {}
+        // CR-03: pool is the source of truth for "this job is dispatched."
+        // Idempotent — already-dispatched jobs no-op. Queue membership is
+        // NOT a precondition: if a future caller orders enqueue() before
+        // startBatch(), or strict-mode renders the queue write twice, we
+        // still want inFlight populated so subsequent markDone/markError
+        // run their bookkeeping.
         const inFlight = new Set(s.inFlight)
+        if (inFlight.has(jobId)) return {}
         inFlight.add(jobId)
         return {
           queue: s.queue.filter((id) => id !== jobId),
