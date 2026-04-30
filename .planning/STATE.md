@@ -109,7 +109,7 @@ None yet.
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
 | 260429-rud | add usage of shadcn component library to project | 2026-04-29 | 3f69cba | [260429-rud-add-usage-of-shadcn-component-library-to](./quick/260429-rud-add-usage-of-shadcn-component-library-to/) |
-| 260430-s6i | rewrite TitleBar.tsx using shadcn menubar (option 2 — wrapper) | 2026-04-30 | _pending_ | [260430-s6i-rewrite-titlebar-tsx-using-shadcn-menuba](./quick/260430-s6i-rewrite-titlebar-tsx-using-shadcn-menuba/) |
+| 260430-s6i | rewrite TitleBar.tsx using shadcn menubar (option 2 — wrapper) | 2026-04-30 | 09dfb38 | [260430-s6i-rewrite-titlebar-tsx-using-shadcn-menuba](./quick/260430-s6i-rewrite-titlebar-tsx-using-shadcn-menuba/) |
 
 ## Session Continuity
 
