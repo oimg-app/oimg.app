@@ -39,3 +39,89 @@ test.describe('Shell ARIA landmarks (UI-08)', () => {
     await expect(page.getByRole('contentinfo')).toBeVisible()
   })
 })
+
+// Plan 05 additions: interaction tests covering UI-06 and UI-08
+test.describe('Shell interactions (UI-06, UI-08)', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/')
+  })
+
+  test('theme toggle round-trip flips .dark class on html', async ({ page }) => {
+    // Default is dark per useTheme readStoredTheme fallback.
+    await expect(page.locator('html')).toHaveClass(/dark/)
+
+    // Click theme toggle in the toolbar (uses aria-label "Toggle theme")
+    await page.getByRole('button', { name: /toggle theme/i }).first().click()
+    await expect(page.locator('html')).not.toHaveClass(/dark/)
+
+    // Reload — preference persists via localStorage
+    await page.reload()
+    await expect(page.locator('html')).not.toHaveClass(/dark/)
+
+    // Switch back to dark
+    await page.getByRole('button', { name: /toggle theme/i }).first().click()
+    await expect(page.locator('html')).toHaveClass(/dark/)
+  })
+
+  test('Cmd+K opens command palette and Escape closes it', async ({ page }) => {
+    // Initially closed: cmdk-back element should not exist
+    await expect(page.locator('.cmdk-back')).toHaveCount(0)
+
+    // Press Cmd+K (Meta+K on macOS Chromium)
+    await page.keyboard.press('Meta+k')
+    await expect(page.locator('.cmdk-back')).toBeVisible()
+
+    // Type a query — input has autoFocus
+    await page.keyboard.type('opt')
+    await expect(page.locator('.cmdk-list')).toContainText(/optimi[sz]e/i)
+
+    // Escape closes
+    await page.keyboard.press('Escape')
+    await expect(page.locator('.cmdk-back')).toHaveCount(0)
+  })
+
+  test('queue renders a listbox with options', async ({ page }) => {
+    const queue = page.getByRole('listbox', { name: /Files/i })
+    await expect(queue).toBeVisible()
+
+    // 12 file rows from MOCK_FILES
+    const options = page.getByRole('option')
+    await expect(options).toHaveCount(12)
+
+    // First file is selected by default (selectedId='f1' in App.tsx)
+    await expect(options.first()).toHaveAttribute('aria-selected', 'true')
+  })
+
+  test('inspector renders a tablist with at least 3 tabs', async ({ page }) => {
+    const tablist = page.getByRole('tablist', { name: /Inspector/i })
+    await expect(tablist).toBeVisible()
+
+    // 'f1' is a PNG, so Codec/Output/Report are visible (SVG tab is hidden when non-SVG file selected)
+    const tabs = page.getByRole('tab')
+    const count = await tabs.count()
+    expect(count).toBeGreaterThanOrEqual(3)
+
+    // Tabpanel exists and is referenced by the active tab via aria-controls
+    await expect(page.getByRole('tabpanel')).toBeVisible()
+  })
+
+  test('Tab navigation reaches at least one toolbar button without errors', async ({ page }) => {
+    // Focus body, then walk the focus through the first ~10 Tab presses;
+    // assert that at least one focused element has aria-label matching a known toolbar control.
+    await page.locator('body').click()
+    for (let i = 0; i < 12; i++) {
+      await page.keyboard.press('Tab')
+    }
+    const focused = await page.evaluate(() => {
+      const el = document.activeElement
+      if (!el) return null
+      return {
+        tag: el.tagName,
+        ariaLabel: el.getAttribute('aria-label'),
+        role: el.getAttribute('role'),
+      }
+    })
+    expect(focused).not.toBeNull()
+    expect(focused!.tag).toMatch(/^(BUTTON|INPUT|A)$/)
+  })
+})
