@@ -565,9 +565,18 @@ test.describe('Phase 3 — XSS corpus (SC-3, T-V5-01..07)', () => {
   })
 
   test('T-V5-02: onmouseover handler stripped by DOMPurify', async ({ page }) => {
-    // Use xss-onload.svg as base; verify generic on* handler removal
-    // (onmouseover tested via onload fixture with onmouseover variant)
-    await runXssTest(page, 'xss-onload.svg', 'xss-onmouseover')
+    // Use dedicated xss-onmouseover.svg fixture (rect with onmouseover= attribute)
+    // Verifies generic on* handler stripping independent of the onload= vector.
+    await runXssTest(page, 'xss-onmouseover.svg', 'xss-onmouseover')
+    // Confirm the specific attribute is absent from the cleaned output
+    const cleanSvg = await page.evaluate(async () => {
+      const blob = (window as unknown as { __OIMG_STORES__: any })
+        .__OIMG_STORES__.files.getState().byId['xss-onmouseover'].optimizedBlob
+      return blob ? await blob.text() : ''
+    })
+    // <rect> element itself should survive; only the event handler attribute is stripped
+    expect(cleanSvg).toContain('<rect')
+    expect(cleanSvg).not.toContain('onmouseover=')
   })
 
   test('T-V5-03: javascript: href attribute removed', async ({ page }) => {
@@ -703,7 +712,7 @@ test.describe('Phase 3 — XSS corpus (SC-3, T-V5-01..07)', () => {
 | Threat ID | Category | Component | Disposition | Mitigation Plan |
 |-----------|----------|-----------|-------------|-----------------|
 | T-V5-01 | Tampering | `src/tests/svg-xss.spec.ts` (verification) | verify | `window.__XSS_FIRED__` undefined + `sanitizedCount > 0` + clean blob text assertions for script-tag vector |
-| T-V5-02 | Tampering | `src/tests/svg-xss.spec.ts` (verification) | verify | `onload=` + `onmouseover` event handler vectors asserted absent from clean output |
+| T-V5-02 | Tampering | `src/tests/svg-xss.spec.ts` (verification) | verify | `onload=` vector uses `xss-onload.svg`; `onmouseover=` vector uses dedicated `xss-onmouseover.svg` fixture — `<rect>` preserved, `onmouseover=` attribute absent from clean output |
 | T-V5-03 | Elevation of Privilege | `src/tests/svg-xss.spec.ts` (verification) | verify | `javascript:` href vectors (href + xlink:href) asserted absent from clean output |
 | T-V5-04 | Elevation of Privilege | `src/tests/svg-xss.spec.ts` (verification) | verify | `data:text/html` href vector asserted absent; `sanitizedCount > 0` |
 | T-V5-05 | Tampering | `src/tests/svg-xss.spec.ts` (verification) | verify | `foreignObject` script injection; clean output asserted `not.toContain('<script')` |

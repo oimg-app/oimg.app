@@ -21,6 +21,7 @@ must_haves:
     - "Post-batch live savings column shows aggregate bytes/% per plugin in SvgoPanel (D-06)"
     - "Sanitization section has Toggle for unsafe-export (D-04); default OFF; badge shows 'safe'/'unsafe'"
     - "Aggressive-mode butteraugli toggle is deleted from SvgoPanel"
+    - "D-06 savings computation enqueues jobs via WorkerPool.enqueue() (or uses a requestIdleCallback-yielded loop if pool signature is incompatible); App.tsx and SvgoPanel.tsx do NOT call svg-adapter.run() synchronously on the main thread for savings"
   artifacts:
     - path: "src/components/panels/SvgoPanel.tsx"
       provides: "Rewritten panel: 12 curated plugins + live savings col + foot-gun hints + Sanitization section"
@@ -386,20 +387,25 @@ const plugins = Object.entries(svgSettings.plugins).map(([id, on]) => ({
 }))
 ```
 
-**D-06: Post-batch live savings computation:**
+**D-06: Post-batch live savings computation (via WorkerPool.enqueue — Architectural Responsibility Map requirement):**
 
 In the pool's batch-completion handler (find in App.tsx or useRuntimeStore — where `running` transitions from `true` to `false` and all jobs are done), add:
 
 ```typescript
-// After all SVG files in the batch are done:
-// For each SVG file, run N+1 SVGO passes to measure per-plugin savings
-// Pattern from RESEARCH.md §Performance Budget for D-06:
-// Queue savings jobs immediately after batch; pool processes them in parallel
+// D-06: After all SVG files in the batch are done, enqueue N+1 SVGO jobs through
+// WorkerPool.enqueue() to measure per-plugin savings without blocking the main thread.
+// Source: 03-RESEARCH.md Architectural Responsibility Map —
+//   "Live per-plugin savings computation | Worker thread preferred —
+//    N+1 SVGO runs enqueued via WorkerPool.enqueue()"
+// Aggregate results on main thread; write to useSettingsStore.svg.pluginSavings.
+
+const SAVINGS_TIMEOUT_MS = 5000
 
 async function computePluginSavings(fileIds: string[]) {
   const settings = useSettingsStore.getState().svg
   const pluginIds = Object.keys(settings.plugins)
   const savings: Record<string, { bytes: number; pct: number }> = {}
+  const pool = getWorkerPool()  // same pool accessor used elsewhere in runtime.ts / App.tsx
 
   const svgFiles = fileIds
     .map(id => useFilesStore.getState().byId[id])
@@ -407,45 +413,123 @@ async function computePluginSavings(fileIds: string[]) {
 
   if (svgFiles.length === 0) return
 
-  // Baseline: all-on pass per file
-  // Per-plugin: disabled pass per file
-  // Use Promise.race with 5s timeout per RESEARCH.md §Abort threshold
-  const TIMEOUT_MS = 5000
-  const savingsJobs = pluginIds.map(async (pluginId) => {
-    let totalBaselineBytes = 0
-    let totalDisabledBytes = 0
-    for (const file of svgFiles) {
-      const text = await file!.optimizedBlob!.text()
-      const { optimize } = await import('./workers/svg-adapter')
-      // Baseline: current settings
-      const base = await import('./workers/svg-adapter').then(m =>
-        m.run(new TextEncoder().encode(text).buffer, settings))
-      totalBaselineBytes += base.output.byteLength
-      // Disabled: this plugin off
-      const disabledPlugins = { ...settings.plugins, [pluginId]: false }
-      const disabled = await import('./workers/svg-adapter').then(m =>
-        m.run(new TextEncoder().encode(text).buffer, { ...settings, plugins: disabledPlugins }))
-      totalDisabledBytes += disabled.output.byteLength
-    }
-    const bytesDiff = totalDisabledBytes - totalBaselineBytes
-    const pct = totalBaselineBytes > 0 ? (bytesDiff / totalDisabledBytes) * 100 : 0
-    savings[pluginId] = { bytes: bytesDiff, pct: Math.max(0, pct) }
-  })
+  // For each plugin, enqueue one pool job per SVG file for the "disabled" variant.
+  // The baseline (all-on) size is the already-stored optimizedSize from the main batch.
+  //
+  // Pool job shape matches Phase 2 enqueue signature — read App.tsx enqueue call to confirm.
+  // Each job: { id, fileId, format: 'svg', input: ArrayBuffer, settings: CodecSettingsSvg }
+  // The pool returns { output: ArrayBuffer } via onDone callback.
+
+  // Build all savings jobs as Promises over pool.enqueue
+  const timeoutSignal = new Promise<never>((_, reject) =>
+    setTimeout(() => reject(new Error('savings timeout')), SAVINGS_TIMEOUT_MS)
+  )
 
   try {
     await Promise.race([
-      Promise.all(savingsJobs),
-      new Promise<void>((_, reject) => setTimeout(() => reject(new Error('savings timeout')), TIMEOUT_MS))
+      (async () => {
+        for (const pluginId of pluginIds) {
+          let totalBaselineBytes = 0
+          let totalDisabledBytes = 0
+
+          await Promise.all(svgFiles.map(async (file) => {
+            const input = await file!.optimizedBlob!.arrayBuffer()
+            const baselineSize = file!.optimizedSize ?? input.byteLength
+            totalBaselineBytes += baselineSize
+
+            // Enqueue a worker job with this plugin disabled
+            const disabledSettings = {
+              ...settings,
+              plugins: { ...settings.plugins, [pluginId]: false },
+            }
+            const jobId = `savings-${pluginId}-${file!.id}`
+            const result = await new Promise<{ output: ArrayBuffer }>((resolve, reject) => {
+              pool.enqueue({
+                id: jobId,
+                fileId: file!.id,
+                format: 'svg',
+                input,
+                settings: disabledSettings,
+                onDone: (out: { output: ArrayBuffer }) => resolve(out),
+                onError: (err: Error) => reject(err),
+              })
+            })
+            totalDisabledBytes += result.output.byteLength
+          }))
+
+          const bytesDiff = totalDisabledBytes - totalBaselineBytes
+          const pct = totalBaselineBytes > 0 ? (bytesDiff / totalBaselineBytes) * 100 : 0
+          savings[pluginId] = { bytes: bytesDiff, pct: Math.max(0, pct) }
+        }
+        useSettingsStore.getState().setSvg({ pluginSavings: savings })
+      })(),
+      timeoutSignal,
     ])
-    useSettingsStore.getState().setSvg({ pluginSavings: savings })
-  } catch {
-    // Timeout — leave savings empty (SvgoPanel shows '—' for all plugins)
-    console.warn('[oimg] Plugin savings computation timed out — showing —')
+  } catch (err) {
+    if (err instanceof Error && err.message === 'savings timeout') {
+      // Timeout — leave savings empty; SvgoPanel shows '—' for all plugins.
+      // This is the noticeable affordance: columns stay blank rather than crashing.
+      console.warn('[oimg] Plugin savings computation timed out after 5s — columns will show —')
+    } else {
+      throw err
+    }
   }
 }
 ```
 
-NOTE: The savings computation runs svg-adapter.run() on the MAIN thread using the imported function directly (not through the pool), since this is a background computation after the user's batch is done. This avoids worker pool contention. SVGO is synchronous (RESEARCH.md Assumption A2) so calling it on the main thread in microtasks is acceptable for post-batch analysis.
+NOTE: The `pool.enqueue` call shape above is illustrative — read the existing Phase 2 enqueue call in App.tsx to match the exact job object shape the pool expects (the `onDone`/`onError` callback names may differ). If the pool does NOT support per-job inline callbacks (some Phase 2 pools use a global onDone), use a `Map<jobId, resolve/reject>` correlation table at the call site instead of inline callbacks.
+
+**Fallback (only if WorkerPool.enqueue is structurally infeasible for savings jobs):**
+
+If the existing pool signature cannot accommodate savings jobs (e.g., requires a registered fileId that clashes with the existing entry), use a `requestIdleCallback`-yielded main-thread loop instead:
+
+```typescript
+async function computePluginSavings_fallback(fileIds: string[]) {
+  const settings = useSettingsStore.getState().svg
+  const pluginIds = Object.keys(settings.plugins)
+  const savings: Record<string, { bytes: number; pct: number }> = {}
+  const { run } = await import('./workers/svg-adapter')
+
+  const svgFiles = fileIds
+    .map(id => useFilesStore.getState().byId[id])
+    .filter(f => f && f.format === 'svg' && f.optimizedBlob)
+
+  if (svgFiles.length === 0) return
+
+  const startTime = Date.now()
+  const WALL_TIMEOUT_MS = 5000
+
+  for (const pluginId of pluginIds) {
+    if (Date.now() - startTime > WALL_TIMEOUT_MS) {
+      console.warn('[oimg] Plugin savings fallback exceeded 5s — aborting')
+      break
+    }
+    // Yield to the event loop between each plugin to avoid blocking render
+    await new Promise<void>(resolve => {
+      if (typeof requestIdleCallback !== 'undefined') {
+        requestIdleCallback(() => resolve(), { timeout: 300 })
+      } else {
+        setTimeout(resolve, 0)
+      }
+    })
+    let totalBaselineBytes = 0
+    let totalDisabledBytes = 0
+    for (const file of svgFiles) {
+      const input = await file!.optimizedBlob!.arrayBuffer()
+      totalBaselineBytes += file!.optimizedSize ?? input.byteLength
+      const disabledSettings = { ...settings, plugins: { ...settings.plugins, [pluginId]: false } }
+      const result = await run(input, disabledSettings)
+      totalDisabledBytes += result.output.byteLength
+    }
+    const bytesDiff = totalDisabledBytes - totalBaselineBytes
+    const pct = totalBaselineBytes > 0 ? (bytesDiff / totalBaselineBytes) * 100 : 0
+    savings[pluginId] = { bytes: bytesDiff, pct: Math.max(0, pct) }
+  }
+  useSettingsStore.getState().setSvg({ pluginSavings: savings })
+}
+```
+
+The fallback satisfies the architectural requirement by (a) yielding between iterations via `requestIdleCallback`/`setTimeout(0)`, (b) capping to 5 s wall-time with an explicit bail, and (c) leaving `pluginSavings` empty (columns show '—') when the timeout is hit. Use the fallback only if pool enqueue is structurally blocked; document the choice in the SUMMARY.
 
 Call `computePluginSavings(completedSvgFileIds)` in the batch-completion lifecycle — find the exact hook point in App.tsx or runtime store (the place that sets `running: false` after all jobs complete).
   </action>
@@ -468,6 +552,7 @@ Call `computePluginSavings(completedSvgFileIds)` in the batch-completion lifecyc
     - `grep "Disable on export" src/components/panels/SvgoPanel.tsx` returns a match (verbatim copy)
     - `grep "pluginSavings" src/App.tsx` returns a match (D-06 savings passed to panel)
     - `grep "enqueuePreview" src/App.tsx` returns a match (D-11 debounce wired)
+    - `grep -r "WorkerPool\|getWorkerPool\|pool.enqueue\|pool\.enqueue" src/App.tsx src/stores/runtime.ts | grep -i savings` returns a match OR `grep -r "requestIdleCallback\|setTimeout(resolve" src/App.tsx` returns a match (if fallback used) — savings path does NOT call `import.*svg-adapter.*\.run` directly from App.tsx or SvgoPanel.tsx without yielding
     - `npx tsc --noEmit` exits 0
     - `npx playwright test src/tests/svg-pipeline.spec.ts -g "plugin list"` completes (stub or live)
   </acceptance_criteria>

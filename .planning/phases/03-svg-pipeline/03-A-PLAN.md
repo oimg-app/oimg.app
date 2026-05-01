@@ -26,6 +26,7 @@ files_modified:
   - src/tests/fixtures/xss-xlink-href.svg
   - src/tests/fixtures/xss-use-data.svg
   - src/tests/fixtures/xss-css-expression.svg
+  - src/tests/fixtures/xss-onmouseover.svg
 autonomous: true
 requirements:
   - OPT-01
@@ -189,6 +190,7 @@ export const DEFAULT_CODEC_SVG: CodecSettingsSvg = {
     src/tests/fixtures/xss-xlink-href.svg
     src/tests/fixtures/xss-use-data.svg
     src/tests/fixtures/xss-css-expression.svg
+    src/tests/fixtures/xss-onmouseover.svg
   </files>
   <action>
 **Step 1: Install dependencies**
@@ -319,7 +321,7 @@ console.log('TODO: implement after Plan C ships svg-snippets.ts')
 process.exit(0) // placeholder — Plan C fills these in
 ```
 
-**Step 4: Create XSS fixture SVGs** (8 files) — these are the actual malicious SVG fixtures used by Playwright:
+**Step 4: Create XSS fixture SVGs** (9 files) — these are the actual malicious SVG fixtures used by Playwright:
 
 `src/tests/fixtures/xss-script.svg`:
 ```xml
@@ -385,6 +387,13 @@ process.exit(0) // placeholder — Plan C fills these in
   <rect width="100" height="100" style="behavior: url(#xss); -moz-binding: url('data:text/xml,&lt;bindings&gt;'); fill: blue"/>
 </svg>
 ```
+
+`src/tests/fixtures/xss-onmouseover.svg`:
+```xml
+<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
+  <rect x="0" y="0" width="100" height="100" fill="red" onmouseover="window.__XSS_FIRED__ = true; window.__XSS_VECTOR__ = 'onmouseover'"/>
+</svg>
+```
   </action>
   <verify>
     <automated>
@@ -400,6 +409,7 @@ process.exit(0) // placeholder — Plan C fills these in
       test -f src/tests/fixtures/xss-xlink-href.svg &amp;&amp;
       test -f src/tests/fixtures/xss-use-data.svg &amp;&amp;
       test -f src/tests/fixtures/xss-css-expression.svg &amp;&amp;
+      test -f src/tests/fixtures/xss-onmouseover.svg &amp;&amp;
       node -e "require('svgo')" 2&gt;/dev/null &amp;&amp; echo "svgo ok" &amp;&amp;
       node -e "require('dompurify')" 2&gt;/dev/null &amp;&amp; echo "dompurify ok"
     </automated>
@@ -407,7 +417,7 @@ process.exit(0) // placeholder — Plan C fills these in
   <acceptance_criteria>
     - `npm ls svgo` shows version `^4.0.1` installed
     - `npm ls dompurify` shows version `^3.4.2` installed
-    - All 8 XSS fixture files exist in `src/tests/fixtures/`
+    - All 9 XSS fixture files exist in `src/tests/fixtures/` (including `xss-onmouseover.svg`)
     - Each fixture contains `window.__XSS_FIRED__ = true` script content
     - `src/tests/svg-pipeline.spec.ts` contains `test.fail(true,` on every stub test
     - `src/tests/svg-xss.spec.ts` has exactly 10 test stubs (8 attack vectors + unsafe-export + snippet-output)
