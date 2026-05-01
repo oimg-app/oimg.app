@@ -6,6 +6,7 @@ import { create } from 'zustand'
 import { subscribeWithSelector } from 'zustand/middleware'
 import type { FileEntry } from '@/types'
 import { useRuntimeStore } from './runtime'
+import { useSettingsStore } from './settings'
 
 export interface FileEntryWithBlob extends FileEntry {
   sourceBlob: Blob
@@ -52,6 +53,14 @@ export const useFilesStore = create<FilesState>()(
     removeFile: (fileId) => {
       // D-10 + PATTERNS.md Pitfall 3 — revoke BEFORE byId deletion.
       useRuntimeStore.getState().revokeObjectURL(fileId)
+      // WR-02: drop the per-file snippet toggle entry from the settings store
+      // so the toggles map does not grow unbounded across drag-drop / remove
+      // churn. Mirrors the URL-revocation cross-store pattern above.
+      useSettingsStore.setState((s) => {
+        if (!(fileId in s.snippetTogglesByFileId)) return {}
+        const { [fileId]: _drop, ...rest } = s.snippetTogglesByFileId
+        return { snippetTogglesByFileId: rest }
+      })
       set((s) => {
         const { [fileId]: _removed, ...rest } = s.byId
         return {
@@ -108,6 +117,9 @@ export const useFilesStore = create<FilesState>()(
       for (const fileId of Object.keys(useFilesStore.getState().byId)) {
         runtime.revokeObjectURL(fileId)
       }
+      // WR-02: drop ALL per-file snippet toggle entries on clear so the
+      // settings store does not retain dangling references to discarded files.
+      useSettingsStore.setState({ snippetTogglesByFileId: {} })
       set({ byId: {}, order: [], selectedId: null })
     },
   })),
