@@ -10,7 +10,7 @@ import { Icons } from '@/components/icons'
 import { Popover } from '@/components/ui/Popover'
 import { CodecPanel } from '@/components/panels/CodecPanel'
 import { SvgoPanel, PLUGIN_FOOTGUNS } from '@/components/panels/SvgoPanel'
-import { OutputPanel } from '@/components/panels/OutputPanel'
+import { SnippetPanel } from '@/components/panels/SnippetPanel'
 import { ReportPanel } from '@/components/panels/ReportPanel'
 import { AppShell } from '@/components/shell/AppShell'
 import { TitleBar } from '@/components/shell/TitleBar'
@@ -1009,7 +1009,9 @@ export default function App() {
               setUnsafeExport={setUnsafeExport}
             />
           )}
-          {tab === 'output' && <OutputPanel file={file} />}
+          {tab === 'output' && (
+            <SnippetPanel file={filesById[selectedId] ?? null} />
+          )}
           {tab === 'report' && <ReportPanel files={SHELL_FILES} />}
         </div>
       </div>
