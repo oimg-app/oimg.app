@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 3 UI-SPEC approved
-last_updated: "2026-05-01T10:49:26.109Z"
+stopped_at: Completed 03-B-PLAN.md (Plan B SVGO inspector + live re-optimize)
+last_updated: "2026-05-01T11:08:09.797Z"
 last_activity: 2026-05-01
 progress:
   total_phases: 8
   completed_phases: 2
   total_plans: 14
-  completed_plans: 11
-  percent: 79
+  completed_plans: 12
+  percent: 86
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-04-29)
 ## Current Position
 
 Phase: 03 (svg-pipeline) — EXECUTING
-Plan: 2 of 4
+Plan: 3 of 4
 Status: Ready to execute
 Last activity: 2026-05-01
 
-Progress: [████████░░] 79%
+Progress: [█████████░] 86%
 
 ## Performance Metrics
 
@@ -61,6 +61,7 @@ Progress: [████████░░] 79%
 | Phase 02-worker-harness-state PP04 | 23min | 2 tasks tasks | 9 files files |
 | Phase 02-worker-harness-state P05 | ~10min | 2 tasks | 11 files |
 | Phase 03 PA | 70min | 2 tasks | 22 files |
+| Phase 03-svg-pipeline PPB | 13min | 2 tasks tasks | 4 files files |
 
 ## Accumulated Context
 
@@ -86,6 +87,10 @@ Recent decisions affecting current work:
 - [Phase ?]: [Phase 03-svg-pipeline plan 03-A]: removeViewBox/removeDimensions default false (NOT in SVGO v4 preset-default; UI-SPEC row 11 spec error)
 - [Phase ?]: [Phase 03-svg-pipeline plan 03-A]: SVGO_PLUGINS mock array deleted; DEFAULT_CODEC_SVG.plugins is single source of truth
 - [Phase ?]: [Phase 03-svg-pipeline plan 03-A]: pre-existing CR-04 race in pool .then handler fixed (byId existence check replaces inFlight.has); incidentally fixes VR-01
+- [Phase ?]: [Phase 03-svg-pipeline plan 03-B]: auxiliary-job prefix discriminator (preview-/savings-) at App.tsx pool callback boundary keeps runtime-store batch bookkeeping clean
+- [Phase ?]: [Phase 03-svg-pipeline plan 03-B]: SvgoPanel rewrite ships 12 curated plugins with always-visible foot-gun hints + Sanitization toggle replacing the legacy perceptual-loss section
+- [Phase ?]: [Phase 03-svg-pipeline plan 03-B]: live re-optimize on plugin toggle via useRuntimeStore.enqueuePreview with 200ms debounce + pool cancel-and-restart (D-08/D-10/D-11)
+- [Phase ?]: [Phase 03-svg-pipeline plan 03-B]: D-06 post-batch live savings via WorkerPool.enqueue (N+1 passes) with 5s wall-time cap and partial-result persistence
 
 ### Pending Todos
 
@@ -118,6 +123,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-05-01T10:49:12.632Z
-Stopped at: Phase 3 UI-SPEC approved
+Last session: 2026-05-01T11:08:09.792Z
+Stopped at: Completed 03-B-PLAN.md (Plan B SVGO inspector + live re-optimize)
 Resume file: None
