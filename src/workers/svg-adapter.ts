@@ -25,64 +25,14 @@ import { optimize } from 'svgo/browser'
 import type { AdapterMeta } from './types'
 import { AdapterError } from './types'
 import type { CodecSettingsSvg } from '../types/index'
-
-// Plugins shipped enabled in SVGO v4 preset-default (subset of the 34-plugin
-// preset that the curated 12-plugin UI surfaces). Enabling/disabling is done
-// via `params.overrides[id] = false`, NOT by removing them from the plugins
-// array, because preset-default is one composite plugin entry.
-const PRESET_DEFAULT_PLUGINS = new Set([
-  'removeComments',
-  'removeMetadata',
-  'removeUselessDefs',
-  'removeUnusedNS',
-  'cleanupIds',
-  'cleanupNumericValues',
-  'convertColors',
-  'convertPathData',
-  'mergePaths',
-  'minifyStyles',
-])
-
-// Plugins NOT in preset-default (D-07 opt-in extras with foot-gun warnings).
-// Included in the plugins array only when the user explicitly enables them.
-const EXTRA_PLUGINS = new Set(['removeViewBox', 'removeDimensions'])
-
-/**
- * Build the SVGO v4 config payload from the user-facing CodecSettingsSvg.
- * Exported for unit testing (src/tests/svg-adapter.unit.ts) and for Plan B's
- * D-06 N+1-pass live-savings benchmark.
- *
- * Returns `Parameters<typeof optimize>[1]` (i.e. `Config | undefined`) — the
- * exported type. SVGO's `PluginConfig` union accepts both bare plugin-name
- * strings (typed as `keyof BuiltinsWithOptionalParams`) and `{ name, params }`
- * objects. We type the extras array as the loose union and rely on SVGO's
- * runtime resolution to validate the names.
- */
-export function buildSvgoConfig(settings: CodecSettingsSvg): Parameters<typeof optimize>[1] {
-  const overrides: Record<string, boolean> = {}
-  // The extra plugin names are validated against EXTRA_PLUGINS at build time;
-  // SVGO accepts the bare-string form. Type as the SVGO PluginConfig union.
-  type PluginConfig = NonNullable<Parameters<typeof optimize>[1]>['plugins'] extends
-    (infer U)[] | undefined
-    ? U
-    : never
-  const extraPlugins: PluginConfig[] = []
-
-  for (const [id, enabled] of Object.entries(settings.plugins)) {
-    if (PRESET_DEFAULT_PLUGINS.has(id)) {
-      if (!enabled) overrides[id] = false
-    } else if (EXTRA_PLUGINS.has(id)) {
-      if (enabled) extraPlugins.push(id as PluginConfig)
-    }
-  }
-
-  return {
-    plugins: [
-      { name: 'preset-default', params: { overrides } },
-      ...extraPlugins,
-    ],
-  }
-}
+// buildSvgoConfig was extracted to svg-config.ts (Plan 03-D) so the unit
+// tests can import it without evaluating the `svgo/browser` package — that
+// path only resolves inside the Vite browser bundle, not under Node's
+// --experimental-strip-types runner. Re-exported here so callers that
+// historically imported buildSvgoConfig from svg-adapter (App.tsx D-06
+// live-savings benchmark) keep working without churn.
+import { buildSvgoConfig } from './svg-config.ts'
+export { buildSvgoConfig }
 
 export async function run(
   input: ArrayBuffer,
