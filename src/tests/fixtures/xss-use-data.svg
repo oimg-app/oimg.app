@@ -1,0 +1,3 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <use href="data:image/svg+xml,&lt;svg&gt;&lt;script&gt;window.__XSS_FIRED__ = true; window.__XSS_VECTOR__ = 'use-data'&lt;/script&gt;&lt;/svg&gt;"/>
+</svg>
