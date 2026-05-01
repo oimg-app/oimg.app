@@ -8,7 +8,7 @@
 //         03-UI-SPEC.md §SnippetPanel (Section/code-row layout)
 //         WR-04 clipboard pattern (await writeText → copied 1100ms → reset)
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { Section } from '@/components/ui/Section'
 import { Icons } from '@/components/icons'
@@ -29,6 +29,19 @@ const EMPTY_TOGGLES: Record<string, boolean> = {}
 export function SnippetPanel({ file }: SnippetPanelProps) {
   const [copied, setCopied] = useState<CopyKey>(null)
   const [svgText, setSvgText] = useState<string | null>(null)
+  // WR-04: track the copy-feedback reset timer so a quick file switch
+  // (which unmounts/remounts SnippetPanel under a different file?.id)
+  // does not leave a dangling setTimeout that fires after unmount.
+  const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  useEffect(
+    () => () => {
+      if (copyTimerRef.current !== null) {
+        clearTimeout(copyTimerRef.current)
+        copyTimerRef.current = null
+      }
+    },
+    [],
+  )
 
   // Plan 03-D fix (Rule 1) — selector previously returned a fresh `{}` literal
   // on each render whenever the file had no toggles persisted yet, which
@@ -52,9 +65,22 @@ export function SnippetPanel({ file }: SnippetPanelProps) {
       return
     }
     let cancelled = false
-    file.optimizedBlob.text().then((text) => {
-      if (!cancelled) setSvgText(text)
-    })
+    file.optimizedBlob.text().then(
+      (text) => {
+        if (!cancelled) setSvgText(text)
+      },
+      // WR-03: Blob.text() can reject (e.g. detached source from a
+      // transferred ArrayBuffer in some browser builds, or AbortError on
+      // platforms that support cancellation). Surface to the console for
+      // dev visibility and clear svgText so the panel falls back to its
+      // "Run Optimize to generate snippet" empty state instead of staying
+      // permanently null with no diagnostic trail.
+      (err) => {
+        if (cancelled) return
+        console.error('[SnippetPanel] blob.text failed:', err)
+        setSvgText(null)
+      },
+    )
     return () => {
       cancelled = true
     }
@@ -71,7 +97,14 @@ export function SnippetPanel({ file }: SnippetPanelProps) {
     try {
       await navigator.clipboard.writeText(text)
       setCopied(key)
-      setTimeout(() => setCopied((c) => (c === key ? null : c)), 1100)
+      // WR-04: clear any pending reset before scheduling a new one — a
+      // rapid double-copy or file switch would otherwise leak the prior
+      // timer into the new mount lifecycle.
+      if (copyTimerRef.current !== null) clearTimeout(copyTimerRef.current)
+      copyTimerRef.current = setTimeout(() => {
+        copyTimerRef.current = null
+        setCopied((c) => (c === key ? null : c))
+      }, 1100)
     } catch {
       toast.error('Copy failed')
     }
