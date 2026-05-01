@@ -144,9 +144,30 @@ test.describe('Phase 3 — XSS corpus (SC-3, T-V5-01..07)', () => {
     await runXssTest(page, 'xss-data-href.svg', 'xss-data-href')
   })
 
+  test('T-V5-04: use href=data: external reference neutralized', async ({ page }) => {
+    // CR-01: dedicated coverage for `<use href="data:image/svg+xml,...">`.
+    // The anchor (`<a href="data:...">`) and `<use>` xlink-resolution paths
+    // are independent in DOMPurify; one passing does not validate the other.
+    // The xss-use-data fixture decodes to <svg><script>__XSS_FIRED__</script>
+    // </svg>; the cleaned blob must not retain a data:image/svg+xml href and
+    // the literal payload string must be gone.
+    const { cleanSvg } = await runXssTest(page, 'xss-use-data.svg', 'xss-use-data')
+    expect(cleanSvg).not.toMatch(/href=["']?data:image\/svg\+xml/i)
+    expect(cleanSvg).not.toMatch(/xlink:href=["']?data:image\/svg\+xml/i)
+    expect(cleanSvg).not.toContain('__XSS_FIRED__')
+  })
+
   test('T-V5-05: foreignObject script injection neutralized', async ({ page }) => {
     const { cleanSvg } = await runXssTest(page, 'xss-foreignobject.svg', 'xss-foreign')
-    expect(cleanSvg).not.toContain('<script')
+    // WR-05: the fixture embeds `<xhtml:script>` — the prior substring
+    // check `not.toContain('<script')` would PASS for `<xhtml:script>`
+    // because the `<` is followed by `x`, not `s`. Use a regex that
+    // matches any optional namespace prefix before `script`.
+    expect(cleanSvg).not.toMatch(/<\w*:?script[\s>]/i)
+    // Defense-in-depth: the literal payload must also be gone — if the
+    // marker string is missing, no execution path remains regardless of
+    // how the wrapper tag was named.
+    expect(cleanSvg).not.toContain('__XSS_FIRED__')
   })
 
   test('CSS expression in style attribute does not fire XSS', async ({ page }) => {
@@ -272,15 +293,33 @@ test.describe('Phase 3 — XSS corpus (SC-3, T-V5-01..07)', () => {
     // generated <svg> body + URL-encoded data URI for inspection.
     await page.getByRole('tab', { name: /^Output$/ }).click()
 
-    // Every code block (inline-SVG + data-URI for the SVG file) must be
-    // entirely free of the dangerous markers — proves the snippet generator
-    // consumed the sanitized blob, NOT the raw input.
+    // WR-09: assert per-block. The inline-SVG block carries the markup
+    // verbatim and is the meaningful substring check. The data-URI
+    // block runs encodeSvgForDataUri which percent-encodes `<` → `%3C`
+    // — `<script` is therefore trivially absent from the encoded form
+    // regardless of input cleanliness. Decode the encoded payload
+    // before substring-checking it so the assertion actually proves
+    // the data-URI carries clean bytes.
     const codeBlocks = await page.locator('pre.code').allTextContents()
     expect(codeBlocks.length).toBeGreaterThan(0)
     for (const block of codeBlocks) {
-      expect(block).not.toContain('<script')
-      expect(block).not.toContain('onload=')
-      expect(block).not.toContain('javascript:')
+      const dataUriMatch = block.match(/url\("data:image\/svg\+xml,([^"]+)"\)/)
+      if (dataUriMatch) {
+        // Data-URI block — decode the percent-encoded payload, then
+        // restore the yoksel `'` → `"` (or %22) substitution so the
+        // resulting markup looks like the original sanitized SVG.
+        const encoded = dataUriMatch[1]
+        const decoded = decodeURIComponent(encoded).replace(/'/g, '"')
+        expect(decoded).not.toContain('<script')
+        expect(decoded).not.toContain('onload=')
+        expect(decoded).not.toContain('javascript:')
+      } else {
+        // Inline-SVG block (or any non-data-URI snippet) — substring
+        // check the markup directly.
+        expect(block).not.toContain('<script')
+        expect(block).not.toContain('onload=')
+        expect(block).not.toContain('javascript:')
+      }
     }
   })
 })
