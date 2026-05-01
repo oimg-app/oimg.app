@@ -22,13 +22,24 @@ interface SnippetPanelProps {
 
 type CopyKey = string | null
 
+// Stable empty map used as the fallback when the selected file has no
+// per-snippet toggle overrides yet — see the Rule 1 fix below.
+const EMPTY_TOGGLES: Record<string, boolean> = {}
+
 export function SnippetPanel({ file }: SnippetPanelProps) {
   const [copied, setCopied] = useState<CopyKey>(null)
   const [svgText, setSvgText] = useState<string | null>(null)
 
-  const snippetToggles = useSettingsStore((s) =>
-    file ? (s.snippetTogglesByFileId[file.id] ?? {}) : {},
-  )
+  // Plan 03-D fix (Rule 1) — selector previously returned a fresh `{}` literal
+  // on each render whenever the file had no toggles persisted yet, which
+  // tripped React 19's getSnapshot caching guard ("The result of getSnapshot
+  // should be cached to avoid an infinite loop") and crashed the panel with
+  // "Maximum update depth exceeded" the moment the SVG pipeline E2E specs
+  // selected the SnippetPanel tab. Hoist the selector to the parent record
+  // (a stable reference between renders) and derive the file-specific entry
+  // outside zustand so the selector cache is valid.
+  const togglesByFile = useSettingsStore((s) => s.snippetTogglesByFileId)
+  const snippetToggles = file ? (togglesByFile[file.id] ?? EMPTY_TOGGLES) : EMPTY_TOGGLES
   const setSnippetToggle = useSettingsStore((s) => s.setSnippetToggle)
 
   // Read the optimizedBlob as text when the selected file or its blob changes.
