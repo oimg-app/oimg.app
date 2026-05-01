@@ -11,6 +11,14 @@ import { subscribeWithSelector } from 'zustand/middleware'
 import { getWorkerPool } from '@/workers/pool'
 import type { PoolJob } from '@/workers/types'
 import { sanitizeSvg } from '@/lib/sanitize-svg'
+// Phase 3 plan 03-B — enqueuePreview reads from the files + settings stores.
+// `files.ts` already statically imports `useRuntimeStore` from this module,
+// so the static cycle here is intentional. JS resolves it because both
+// modules export named bindings (the zustand store hooks) that are accessed
+// lazily at call time via getState() — neither side needs the other's
+// internals at module-init time.
+import { useFilesStore } from './files'
+import { useSettingsStore } from './settings'
 
 export const POOL_SIZE = Math.min(
   typeof navigator !== 'undefined' ? navigator.hardwareConcurrency || 2 : 2,
@@ -190,8 +198,8 @@ export const useRuntimeStore = create<RuntimeState>()(
     //      App.tsx startOptimize SVG branch verbatim, so byte deltas + the
     //      sanitized badge update for free.
     //
-    // Stores are dynamically imported to avoid a static-import cycle with
-    // useFilesStore (which already imports useRuntimeStore).
+    // The cross-store reads (files + settings) are resolved lazily via
+    // getState() so the runtime/files static cycle does not blow up on init.
     enqueuePreview: debounce((fileId: string) => {
       void (async () => {
         const state = get()
@@ -202,10 +210,6 @@ export const useRuntimeStore = create<RuntimeState>()(
         }
         const jobId = `preview-${crypto.randomUUID()}`
         set({ previewJobId: jobId })
-
-        // Late imports to avoid cycle with files.ts → runtime.ts.
-        const { useFilesStore } = await import('./files')
-        const { useSettingsStore } = await import('./settings')
 
         const fileEntry = useFilesStore.getState().byId[fileId]
         if (!fileEntry || fileEntry.format !== 'svg' || !fileEntry.sourceBlob) return

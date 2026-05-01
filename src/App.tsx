@@ -9,7 +9,7 @@ import { Toaster, toast } from 'sonner'
 import { Icons } from '@/components/icons'
 import { Popover } from '@/components/ui/Popover'
 import { CodecPanel } from '@/components/panels/CodecPanel'
-import { SvgoPanel } from '@/components/panels/SvgoPanel'
+import { SvgoPanel, PLUGIN_FOOTGUNS } from '@/components/panels/SvgoPanel'
 import { OutputPanel } from '@/components/panels/OutputPanel'
 import { ReportPanel } from '@/components/panels/ReportPanel'
 import { AppShell } from '@/components/shell/AppShell'
@@ -25,25 +25,18 @@ import { fmtBytes, fmtPct } from '@/lib/format'
 // MOCK_FILES is no longer needed — the queue starts empty and is populated
 // by addFile() into useFilesStore (drag-drop / file-picker in Phase 5).
 // Phase 3 plan 03-A: SVGO_PLUGINS array deleted from defaults.ts in favor of
-// DEFAULT_CODEC_SVG.plugins record. The SVGO_PLUGINS shim below derives the
-// visual-shell SvgoPlugin[] view-model from the curated record so the
-// existing SvgoPanel.tsx keeps compiling. Plan B rewrites SvgoPanel to
-// consume the record directly and the shim disappears.
-import { CODECS, DEFAULT_CODEC_SVG } from '@/data/defaults'
+// DEFAULT_CODEC_SVG.plugins record.
+// Phase 3 plan 03-B: SvgoPanel rewritten to consume the curated record + live
+// pluginSavings directly, so the Plan-A SVGO_PLUGINS shim is gone and the
+// Plan-1 useState plugin slice is replaced by a store-backed binding.
+import { CODECS } from '@/data/defaults'
 import type {
   CodecLabel,
   ResizeAlg,
   FitMode,
-  SvgoPlugin,
   MockFile,
 } from '@/types'
 
-// Plan 03-A shim — derive visual-shell rows from DEFAULT_CODEC_SVG.plugins.
-// Plan B replaces this with a live read from useSettingsStore.svg.plugins +
-// pluginSavings.
-const SVGO_PLUGINS: SvgoPlugin[] = Object.entries(DEFAULT_CODEC_SVG.plugins).map(
-  ([id, on]) => ({ id, on, saves: '—' }),
-)
 // Phase 2 plan 02-04 — store + worker pool + ARIA live wiring.
 import { useFilesStore, useSettingsStore, useRuntimeStore } from '@/stores'
 import { getWorkerPool } from '@/workers/pool'
@@ -54,6 +47,107 @@ import { sanitizeSvg } from '@/lib/sanitize-svg'
 
 type Tab = 'codec' | 'svgo' | 'output' | 'report'
 type View = 'Batch' | 'Compare' | 'Report'
+
+// Phase 3 plan 03-B (D-06) — post-batch per-plugin live savings.
+// Source: 03-RESEARCH.md §Architectural Responsibility Map —
+//   "Live per-plugin savings computation | Worker thread preferred —
+//    N+1 SVGO runs enqueued via WorkerPool.enqueue()"
+//
+// For each plugin, enqueue one pool job per completed SVG file with that
+// plugin disabled (overrides[plugin]=false). Aggregate the byte deltas vs.
+// the all-on optimized size already in FileEntry.optimizedSize. Job ids
+// carry a 'savings-' prefix so the App-level pool callbacks skip the
+// runtime-store bookkeeping (would otherwise inflate doneCount past
+// totalJobs and corrupt the batch-completion subscriber).
+//
+// Wall-time cap: 5s. On timeout, pluginSavings stays empty (or partially
+// populated up to the timeout) and the SvgoPanel column shows '—' / blank
+// for un-measured plugins — the noticeable affordance per plan spec.
+const SAVINGS_TIMEOUT_MS = 5000
+
+async function computePluginSavings(fileIds: string[]): Promise<void> {
+  const settings = useSettingsStore.getState().svg
+  const pluginIds = Object.keys(settings.plugins)
+  const savings: Record<string, { bytes: number; pct: number }> = {}
+  const pool = getWorkerPool()
+
+  const svgFiles = fileIds
+    .map((id) => useFilesStore.getState().byId[id])
+    .filter((f): f is NonNullable<typeof f> =>
+      Boolean(f && f.format === 'svg' && f.optimizedBlob),
+    )
+
+  if (svgFiles.length === 0) return
+
+  let timedOut = false
+  const timeoutPromise = new Promise<never>((_, reject) =>
+    setTimeout(() => {
+      timedOut = true
+      reject(new Error('savings timeout'))
+    }, SAVINGS_TIMEOUT_MS),
+  )
+
+  try {
+    await Promise.race([
+      (async () => {
+        for (const pluginId of pluginIds) {
+          if (timedOut) break
+          let totalBaselineBytes = 0
+          let totalDisabledBytes = 0
+
+          await Promise.all(
+            svgFiles.map(async (file) => {
+              const baselineSize = file.optimizedSize ?? file.optimizedBlob!.size
+              totalBaselineBytes += baselineSize
+
+              const disabledSettings = {
+                ...settings,
+                plugins: { ...settings.plugins, [pluginId]: false },
+              }
+              const job: PoolJob = {
+                id: `savings-${pluginId}-${file.id}`,
+                fileId: file.id,
+                format: 'svg',
+                settings: disabledSettings,
+                // Use the SOURCE blob — we want to measure full re-optimization
+                // with this plugin disabled vs. the all-on baseline that
+                // produced FileEntry.optimizedSize.
+                blob: file.sourceBlob,
+              }
+              const result = await pool.enqueue(job)
+              totalDisabledBytes += result.output.byteLength
+            }),
+          )
+
+          const bytesDiff = totalDisabledBytes - totalBaselineBytes
+          const pct = totalBaselineBytes > 0 ? (bytesDiff / totalBaselineBytes) * 100 : 0
+          // Negative pct (disabling the plugin made things smaller — surprising
+          // but possible for plugins that interact). Clamp to 0 so the UI
+          // shows '—' rather than a negative percent.
+          savings[pluginId] = { bytes: bytesDiff, pct: Math.max(0, pct) }
+        }
+        useSettingsStore.getState().setSvg({ pluginSavings: savings })
+      })(),
+      timeoutPromise,
+    ])
+  } catch (err) {
+    if (err instanceof Error && err.message === 'savings timeout') {
+      // Persist whatever was measured before the timeout so partial info
+      // appears in the panel rather than blanking everything.
+      if (Object.keys(savings).length > 0) {
+        useSettingsStore.getState().setSvg({ pluginSavings: savings })
+      }
+      console.warn('[oimg] Plugin savings computation timed out after 5s — columns may show — for unmeasured plugins')
+    } else {
+      // AbortError from a concurrent pool.cancel() (the user clicked Cancel
+      // mid-savings). Bail silently — savings is best-effort.
+      const isAbort = err instanceof DOMException && err.name === 'AbortError'
+      if (!isAbort) {
+        console.error('[oimg] computePluginSavings failed:', err)
+      }
+    }
+  }
+}
 
 export default function App() {
   const { theme, setTheme } = useTheme()
@@ -90,7 +184,9 @@ export default function App() {
   const [fit, setFit] = useState<FitMode>('contain')
   const [stripMeta, setStripMeta] = useState<boolean>(true)
   const [keepIcc, setKeepIcc] = useState<boolean>(false)
-  const [aggressive, setAggressive] = useState<boolean>(false)
+  // Phase 3 plan 03-B — `aggressive` removed (butteraugli is bitmap-only;
+  // SVG never had a meaningful "aggressive mode"). The Sanitization toggle
+  // replaces it; see SvgoPanel.tsx and 03-CONTEXT.md §Deferred Ideas.
 
   // Phase 2 plan 02-04: `running` migrated to useRuntimeStore; local `toasts`
   // state + pushToast helper REMOVED — sonner Toaster owns the toast surface.
@@ -98,9 +194,31 @@ export default function App() {
   const [filterQuery, setFilterQuery] = useState<string>('')
   const [sortBy, setSortBy] = useState<string>('queue order')
 
-  const [plugins, setPlugins] = useState<SvgoPlugin[]>(SVGO_PLUGINS)
-  const togglePlugin = (id: string) =>
-    setPlugins((ps) => ps.map((p) => (p.id === id ? { ...p, on: !p.on } : p)))
+  // Phase 3 plan 03-B — SVG settings are now read live from useSettingsStore
+  // (D-09 global in v1). Toggling a plugin calls setSvg with the updated
+  // record; the plugin-change subscriber further down fires enqueuePreview
+  // for the selected SVG file (D-08/D-10/D-11).
+  const svgSettings = useSettingsStore((s) => s.svg)
+  const setSvg = useSettingsStore((s) => s.setSvg)
+  const togglePlugin = (id: string) => {
+    const current = useSettingsStore.getState().svg.plugins
+    if (!(id in current)) return
+    setSvg({ plugins: { ...current, [id]: !current[id] } })
+  }
+  const setUnsafeExport = (v: boolean) => setSvg({ unsafeExport: v })
+  // Per-row view-model the SvgoPanel consumes. `savings === null` until the
+  // first Optimize batch completes and computePluginSavings populates
+  // useSettingsStore.svg.pluginSavings.
+  const svgoPluginRows = useMemo(
+    () =>
+      Object.entries(svgSettings.plugins).map(([id, on]) => ({
+        id,
+        on,
+        savings: svgSettings.pluginSavings?.[id] ?? null,
+        footgun: PLUGIN_FOOTGUNS[id],
+      })),
+    [svgSettings.plugins, svgSettings.pluginSavings],
+  )
 
   // Backwards-compat shim for child components that still call onToast(msg, meta).
   // Routes through sonner so the visual contract from Phase 1 stays intact while
@@ -115,10 +233,27 @@ export default function App() {
   // workers on first enqueue, so importing the module here is what causes
   // Vite to trace and split out the worker-*.js / stub-adapter-*.js chunks
   // (closes the deferred chunk-emission gate from plan 02-03).
+  //
+  // Phase 3 plan 03-B — preview / savings jobs use prefixed jobIds
+  // ('preview-...' from enqueuePreview, 'savings-...' from
+  // computePluginSavings). They are awaited via pool.enqueue's returned
+  // promise; bookkeeping in the runtime store (markStarted / markDone /
+  // markError) MUST NOT count them — the auxiliary jobs would otherwise
+  // inflate doneCount past totalJobs, corrupt the batch-completion subscriber,
+  // and double-fire on cancel. Discriminate by prefix.
+  const isAuxiliaryJob = (jobId: string) =>
+    jobId.startsWith('preview-') || jobId.startsWith('savings-')
   const pool = useMemo(() => getWorkerPool({
-    onStarted: (jobId) => useRuntimeStore.getState().markStarted(jobId),
-    onDone: (jobId) => useRuntimeStore.getState().markDone(jobId),
+    onStarted: (jobId) => {
+      if (isAuxiliaryJob(jobId)) return
+      useRuntimeStore.getState().markStarted(jobId)
+    },
+    onDone: (jobId) => {
+      if (isAuxiliaryJob(jobId)) return
+      useRuntimeStore.getState().markDone(jobId)
+    },
     onError: (jobId, err) => {
+      if (isAuxiliaryJob(jobId)) return
       const msg = err instanceof Error ? err.message : String(err)
       useRuntimeStore.getState().markError(jobId, msg)
     },
@@ -195,6 +330,18 @@ export default function App() {
             toast.error(`Optimization failed for ${curr.errorCount} files`, { description: 'Click for details' })
           } else {
             toast(`Optimized ${successCount} of ${curr.totalJobs} files`, { description: `${curr.errorCount} failed` })
+          }
+          // Phase 3 plan 03-B (D-06) — post-batch live per-plugin savings.
+          // Run only when at least one SVG file finished successfully.
+          // Fire-and-forget; the function handles its own 5s timeout + error
+          // path. Errors are logged, not surfaced as toasts.
+          const filesNow = useFilesStore.getState()
+          const completedSvgIds = filesNow.order.filter((id) => {
+            const f = filesNow.byId[id]
+            return f && f.format === 'svg' && f.status === 'done' && f.optimizedBlob
+          })
+          if (completedSvgIds.length > 0) {
+            void computePluginSavings(completedSvgIds)
           }
         }
       },
@@ -856,10 +1003,10 @@ export default function App() {
           )}
           {tab === 'svgo' && (
             <SvgoPanel
-              plugins={plugins}
+              plugins={svgoPluginRows}
               togglePlugin={togglePlugin}
-              aggressive={aggressive}
-              setAggressive={setAggressive}
+              unsafeExport={svgSettings.unsafeExport ?? false}
+              setUnsafeExport={setUnsafeExport}
             />
           )}
           {tab === 'output' && <OutputPanel file={file} />}
