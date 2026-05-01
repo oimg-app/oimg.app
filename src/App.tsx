@@ -97,6 +97,11 @@ async function computePluginSavings(fileIds: string[]): Promise<void> {
 
           await Promise.all(
             svgFiles.map(async (file) => {
+              // WR-08: check timedOut BEFORE enqueuing. Without this,
+              // every file's pool.enqueue is fired synchronously inside
+              // .map() and continues to occupy worker slots after the
+              // 5s wall-clock timeout has already rejected the race.
+              if (timedOut) return
               const baselineSize = file.optimizedSize ?? file.optimizedBlob!.size
               totalBaselineBytes += baselineSize
 
@@ -115,6 +120,11 @@ async function computePluginSavings(fileIds: string[]): Promise<void> {
                 blob: file.sourceBlob,
               }
               const result = await pool.enqueue(job)
+              // WR-08: re-check after the await — the timeout may have
+              // landed while the worker was running. Discarding the
+              // late result keeps totalDisabledBytes consistent with
+              // totalBaselineBytes for this plugin.
+              if (timedOut) return
               totalDisabledBytes += result.output.byteLength
             }),
           )
