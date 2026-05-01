@@ -335,14 +335,27 @@ export default function App() {
           // Run only when at least one SVG file finished successfully.
           // Fire-and-forget; the function handles its own 5s timeout + error
           // path. Errors are logged, not surfaced as toasts.
-          const filesNow = useFilesStore.getState()
-          const completedSvgIds = filesNow.order.filter((id) => {
-            const f = filesNow.byId[id]
-            return f && f.format === 'svg' && f.status === 'done' && f.optimizedBlob
+          //
+          // Plan 03-D fix (Rule 1): defer the file-state read by a microtask.
+          // pool.runOnSlot calls `job.resolve(result); callbacks.onDone(...)`
+          // synchronously — onDone fires runtime.markDone BEFORE the
+          // pool.enqueue().then() microtask runs the SVG `useFilesStore
+          // .markDone(fileId, sanitizedBlob, …, sanitizedCount)` write. If we
+          // read useFilesStore synchronously here, files are still
+          // status='processing' / optimizedBlob === null — `completedSvgIds`
+          // is empty and computePluginSavings never runs. queueMicrotask
+          // schedules our read AFTER the resolve→sanitize→markDone microtask
+          // chain has flushed, so file state is current.
+          queueMicrotask(() => {
+            const filesNow = useFilesStore.getState()
+            const completedSvgIds = filesNow.order.filter((id) => {
+              const f = filesNow.byId[id]
+              return f && f.format === 'svg' && f.status === 'done' && f.optimizedBlob
+            })
+            if (completedSvgIds.length > 0) {
+              void computePluginSavings(completedSvgIds)
+            }
           })
-          if (completedSvgIds.length > 0) {
-            void computePluginSavings(completedSvgIds)
-          }
         }
       },
     )
