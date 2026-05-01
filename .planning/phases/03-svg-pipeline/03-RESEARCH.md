@@ -96,9 +96,9 @@ Phase 3 wires the first real codec adapter (`svg-adapter.ts`) behind the existin
 | Capability | Primary Tier | Secondary Tier | Rationale |
 |------------|-------------|----------------|-----------|
 | SVG optimization (SVGO) | Worker thread (`svg-adapter.ts`) | — | Must not block main thread; Phase 2 D-04 contract |
-| DOMPurify sanitization | Worker thread (inside `svg-adapter.ts`) | — | D-01: post-SVGO, in-adapter; DOMPurify is browser-native, works in workers |
+| DOMPurify sanitization | Main thread (`src/lib/sanitize-svg.ts`) | — | D-01 pipeline order honored — SVGO (worker) → DOMPurify (main, post-pool). DOMPurify checks `window.document.nodeType` at init and cannot run inside a standard Web Worker (verified 2026-05-01, dompurify@3.4.2 src/purify.ts:132–138). Sanitize helper is invoked from `useFilesStore.markDone` after the pool returns optimized bytes. |
 | Plugin toggle → debounce → cancel/restart | Main thread (`useRuntimeStore`) | WorkerPool | D-11: `previewJobId` + debounced `enqueuePreview`; pool cancel is in pool.ts |
-| Live per-plugin savings computation | Worker thread (N+1 SVGO runs per file) | Main thread (aggregate + store) | D-06: batch work in workers; aggregate stored in `useSettingsStore.svg.pluginSavings` |
+| Live per-plugin savings computation | Worker thread preferred — N+1 SVGO runs enqueued via `WorkerPool.enqueue()` | Main thread aggregate + store write to `useSettingsStore.svg.pluginSavings` | D-06: batch work belongs in workers to avoid main-thread jank (~12 plugins × 30 files = ~360 SVGO runs). Plan B implements this via the existing pool surface; if benchmarking shows the synchronous path is acceptable for typical batches, the plan may inline it on the main thread with a documented jank-budget guard, but the pool path is the recommended primary tier. |
 | Snippet generation (inline-svg, url-encoded) | Main thread (`src/lib/svg-snippets.ts`) | — | Text manipulation only; no WASM; synchronous; safe on main thread |
 | Snippet registry | Main thread (`src/lib/snippet-registry.ts`) | — | Static lookup; consumed by `SnippetPanel` render |
 | Sanitized blob as source of truth | Worker (produces) → `useFilesStore.markDone` (consumes) | — | D-04 blob-in-store discipline from Phase 2 D-12 |
@@ -811,22 +811,16 @@ test('script tag removed by DOMPurify (SC-3)', async ({ page }) => {
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **DOMPurify Worker compatibility (A1)**
-   - What we know: Standard Workers lack `document`; DOMPurify checks `window.document.nodeType` at init
-   - What's unclear: Whether `new Worker({ type: 'module' })` in a crossOriginIsolated context has different `globalThis` properties
-   - Recommendation: Planner should add a Wave 0 task to test `import DOMPurify from 'dompurify'` inside a worker — if it initializes, the adapter can keep sanitization co-located. If it throws, use main-thread sanitization.
+1. **DOMPurify Worker compatibility (A1)** — **RESOLVED 2026-05-01**
+   - Resolution: DOMPurify cannot init in a standard Web Worker. `dompurify@3.4.2` (`src/purify.ts:132–138`) checks `window.document.nodeType` at module init and throws when `document` is undefined. `new Worker({ type: 'module' })` in a crossOriginIsolated context does not provide `document`. **DOMPurify runs on the main thread (`src/lib/sanitize-svg.ts`) post-pool.** SVGO stays in the worker. D-01's "post-SVGO" pipeline order is preserved (SVGO worker → DOMPurify main); D-01's "in-adapter" phrasing is interpreted as "logically the final stage of the SVG pipeline," not "physically inside the Worker module." Plan A enforces this with a grep that the adapter does NOT import `dompurify`.
 
-2. **removeViewBox default state vs 03-UI-SPEC.md row 11 (A3)**
-   - What we know: SVGO v4 `preset-default` does NOT include `removeViewBox`; D-07 says "mirror preset-default"
-   - What's unclear: Whether the 03-UI-SPEC.md row 11 was intentionally overriding D-07 or is a spec error
-   - Recommendation: Treat as spec error; keep `removeViewBox: false`; add a plan note for user confirmation if the planner wants certainty. See `§CRITICAL Contradiction`.
+2. **removeViewBox default state vs 03-UI-SPEC.md row 11 (A3)** — **RESOLVED 2026-05-01**
+   - Resolution: UI-SPEC row 11 is a spec error. SVGO v4 `preset-default` does NOT include `removeViewBox` (verified by reading `svgo@4.0.1/plugins/preset-default.js`). D-07 says "mirror preset-default." Therefore the curated 12-plugin record keeps `removeViewBox: false` (do not run the plugin). A foot-gun warning is rendered in SvgoPanel for users who flip it on. Plan B preserves the `false` default and treats this as the resolved state.
 
-3. **pluginSavings storage location**
-   - What we know: UI-SPEC requires `pluginSavings: Record<PluginId, { aggregateBytes, aggregatePct }>` for the `.saves` column
-   - What's unclear: Whether savings lives in `useSettingsStore.svg` (global, reused on next Optimize) or `useRuntimeStore` (ephemeral, cleared on cancel)
-   - Recommendation: `useSettingsStore.svg.pluginSavings` — it should persist between sessions (Phase 7) and is per-codec-settings, not per-batch. Cleared when settings change.
+3. **pluginSavings storage location** — **RESOLVED 2026-05-01**
+   - Resolution: `useSettingsStore.svg.pluginSavings: Record<PluginId, { aggregateBytes: number; aggregatePct: number }>`. Lives in the settings slice because savings are tied to the active plugin record (per-codec-settings), persist across batches in v1 (cleared whenever the user mutates the plugin record), and align with the Phase 7 persistence path. Plan B implements this slot.
 
 ---
 
