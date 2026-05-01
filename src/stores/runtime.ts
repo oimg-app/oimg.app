@@ -201,12 +201,23 @@ export const useRuntimeStore = create<RuntimeState>()(
     // The cross-store reads (files + settings) are resolved lazily via
     // getState() so the runtime/files static cycle does not blow up on init.
     enqueuePreview: debounce((fileId: string) => {
-      void (async () => {
+      // WR-07: the inner try/catch only covers code AFTER the synchronous
+      // setup (state/pool reads, crypto.randomUUID, set()). Anything that
+      // throws BEFORE the try (e.g. a future store-immutability tightening
+      // or a missing crypto on a hostile platform) would otherwise become
+      // an unhandled rejection — the `void` operator silences the lint but
+      // does not register a .catch. Tail-attach a catch to the IIFE result.
+      ;(async () => {
         const state = get()
         const pool = getWorkerPool()
         if (!state.running) {
-          // No batch in flight — safe to cancel for instant preview (D-11).
-          pool.cancel()
+          // WR-01: only cancel preview jobs — never the post-batch
+          // 'savings-' benchmark that runs once `running` flips false.
+          // The previous full pool.cancel() terminated savings workers
+          // mid-iteration, partially populating pluginSavings and
+          // suppressing the timeout warning. cancelByPrefix leaves the
+          // in-flight savings jobs alone and only aborts older previews.
+          pool.cancelByPrefix('preview-')
         }
         const jobId = `preview-${crypto.randomUUID()}`
         set({ previewJobId: jobId })
@@ -250,7 +261,10 @@ export const useRuntimeStore = create<RuntimeState>()(
           // authoritative status writer.
           console.error(`[enqueuePreview] ${fileId}:`, err)
         }
-      })()
+      })().catch((err) => {
+        // Tail catch — covers throws BEFORE the inner try (see WR-07 note).
+        console.error(`[enqueuePreview] ${fileId} (outer):`, err)
+      })
     }, 200),
   })),
 )

@@ -79,6 +79,43 @@ export class WorkerPool {
     })
   }
 
+  /** WR-01: narrow-cancel only jobs whose id starts with `prefix` (e.g.
+   * 'preview-'). Rejects matching queued + in-flight promises with
+   * AbortError, but DOES NOT terminate any worker — non-matching jobs
+   * (e.g. 'savings-' benchmark or batch fileIds) keep running. The
+   * matching in-flight worker will complete its run; runOnSlot observes
+   * the `settled=true` flag and skips the resolve/onDone fan-out so the
+   * stale result is discarded.
+   *
+   * Use this from preview-style debounced re-enqueue paths where the
+   * call site only owns its own jobIds and must not disturb peers. */
+  cancelByPrefix(prefix: string): void {
+    const error = new DOMException('Batch cancelled', 'AbortError')
+    // Drop queued jobs that match — never dispatched.
+    this.queue = this.queue.filter((job) => {
+      if (!job.id.startsWith(prefix)) return true
+      if (!job.settled) {
+        job.settled = true
+        job.reject(error)
+        this.callbacks.onError?.(job.id, error)
+      }
+      return false
+    })
+    // Mark in-flight matches as settled + reject their promises. The
+    // worker keeps running (we cannot kill a single worker without
+    // tearing down the slot); runOnSlot's settled check swallows the
+    // late resolve/reject, and the finally block returns the slot to
+    // the idle list as usual.
+    for (const job of this.inFlight.values()) {
+      if (!job.id.startsWith(prefix)) continue
+      if (!job.settled) {
+        job.settled = true
+        job.reject(error)
+        this.callbacks.onError?.(job.id, error)
+      }
+    }
+  }
+
   /** Hard-stop all in-flight + queued jobs. Terminates workers, rejects
    * pending promises with AbortError, respawns the pool fresh (D-02). */
   cancel(): void {
