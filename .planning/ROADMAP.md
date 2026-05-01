@@ -65,7 +65,14 @@ Plans:
   2. SVGO plugin toggles (enable/disable individual plugins) update the optimized output in real time
   3. An SVG containing `<script>` and `on*` event handlers is sanitized — neither the preview nor the snippet output contains executable script
   4. The inline SVG snippet and URL-encoded data URI snippet are available and copy correctly to clipboard
-**Plans**: TBD
+**Plans**: 4 plans
+
+Plans:
+- [ ] 03-A-PLAN.md — Wave 0+1: deps install + spec stubs + XSS fixtures + svg-adapter (SVGO-only worker) + sanitize-svg (main-thread DOMPurify) + ADAPTERS wiring + sanitizedCount + file-row badge
+- [ ] 03-B-PLAN.md — Wave 2: SvgoPanel rewrite (12 curated plugins + live savings + foot-gun hints + Sanitization section) + store extensions (previewJobId, enqueuePreview, snippetToggles) + D-06 post-batch savings
+- [ ] 03-C-PLAN.md — Wave 3: snippet-registry + svg-snippets (yoksel encoder) + SnippetPanel (replaces OutputPanel) + per-snippet checkboxes + D-15 URL-encoding
+- [ ] 03-D-PLAN.md — Wave 4: activate all spec stubs → live E2E + unit assertions; full suite green phase gate
+
 **UI hint**: yes
 
 ### Phase 4: Decode + Resize + Memory Model
@@ -133,7 +140,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 1. Shell + Foundation | 5/5 | Complete | 2026-04-30 |
 | 2. Worker Harness + State | 5/5 | Complete | 2026-04-30 |
-| 3. SVG Pipeline | 0/TBD | Not started | - |
+| 3. SVG Pipeline | 0/4 | Not started | - |
 | 4. Decode + Resize + Memory Model | 0/TBD | Not started | - |
 | 5. Raster Encoders | 0/TBD | Not started | - |
 | 6. Snippet Generation | 0/TBD | Not started | - |
