@@ -43,6 +43,16 @@ export function sanitizeSvg(svgString: string, unsafe: boolean): SanitizeResult 
   const clean = DOMPurify.sanitize(svgString, {
     USE_PROFILES: { svg: true, svgFilters: true },
   })
-  const sanitizedCount = DOMPurify.removed.length
+  // Plan 03-D fix (Rule 1): DOMPurify wraps every parsed input in a synthetic
+  // <body> element and "unwraps" it when serializing — that synthetic wrapper
+  // shows up in DOMPurify.removed[] for every input, including pristine SVGs.
+  // Counting it would surface a misleading "sanitized · 1" badge on every
+  // clean SVG (and break the sanitized-badge regression test). Filter the
+  // synthetic BODY out so the count reflects ACTUAL dangerous-content
+  // removals only.
+  const sanitizedCount = DOMPurify.removed.filter((entry) => {
+    const el = (entry as { element?: { nodeName?: string } }).element
+    return !(el && el.nodeName === 'BODY')
+  }).length
   return { clean, sanitizedCount }
 }
