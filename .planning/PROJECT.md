@@ -14,7 +14,11 @@ If everything else fails, the upload → adjust → download-with-snippets pipel
 
 ### Validated
 
-(None yet — ship to validate)
+- SVG optimization via SVGO browser bundle (preset-default + per-plugin toggles) — Validated in Phase 3 (svg-pipeline)
+- Per-file snippet panel inline `<svg>` + CSS `background-image` data URI for SVG — Validated in Phase 3 (D-12 per-snippet checkboxes)
+- One-click copy-to-clipboard per snippet (SVG side) — Validated in Phase 3 (WR-04 unmount-safe timer)
+- URL-encoded data URI for SVG (cross-browser CSS-safe) — Validated in Phase 3 (yoksel D-15 verbatim)
+- XSS sanitization via main-thread DOMPurify (T-V5-01..07 corpus) — Validated in Phase 3
 
 ### Active
 
@@ -27,7 +31,7 @@ If everything else fails, the upload → adjust → download-with-snippets pipel
 - [ ] User can download individual files
 
 #### Optimization
-- [ ] SVG optimization via SVGO browser bundle (preset-default + per-plugin toggles)
+- [x] SVG optimization via SVGO browser bundle (preset-default + per-plugin toggles) — Phase 3
 - [ ] PNG optimization via jSquash OxiPNG (lossless levels 0-6)
 - [ ] WebP optimization via jSquash WebP (lossy/lossless, quality, method)
 - [ ] JPEG optimization via jSquash `@jsquash/jpeg` (MozJPEG-based encoder; quality, progressive)
@@ -35,10 +39,10 @@ If everything else fails, the upload → adjust → download-with-snippets pipel
 - [ ] Metadata stripping (EXIF/XMP/IPTC) with optional ICC-profile preservation
 
 #### Snippet generation (the differentiator)
-- [ ] Per-file snippet panel with checkboxes to enable: `<picture>` + srcset, `<img srcset>`, CSS `background-image` data URI, inline `<svg>` markup, raw data URI string
+- [~] Per-file snippet panel with checkboxes — SVG side (inline + data URI) Phase 3; raster (`<picture>`, `<img srcset>`) deferred to Phase 5/6
 - [ ] Snippets reflect actual generated variants (1x/2x/3x) and chosen output formats (e.g., AVIF + WebP + PNG fallback in `<picture>`)
-- [ ] One-click copy-to-clipboard per snippet
-- [ ] URL-encoded data URI for SVG (cross-browser CSS-safe), Base64 for raster
+- [x] One-click copy-to-clipboard per snippet — Phase 3 (SVG snippets)
+- [~] URL-encoded data URI for SVG validated Phase 3; Base64 for raster pending Phase 5/6
 
 #### UI/UX
 - [ ] Port `example-ui/` (UMD React + HTML prototype) to Vite + TypeScript + JSX modules — preserve layout, components, design tokens, theme system
@@ -152,4 +156,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-30 after Phase 2 (worker-harness-state) — worker pool + zustand stores + stub adapter round-trip wired; PERF-01/02/03 satisfied at the substrate level. User-facing requirements remain Active until Phase 3+ codecs land.*
+*Last updated: 2026-05-01 after Phase 3 (svg-pipeline) — SVGO worker + main-thread DOMPurify + snippet registry shipped. OPT-01, SNIP-01, SNIP-03, SNIP-04, PIPE-01 satisfied. SVG-side requirements validated; raster codecs and `<picture>`/`<img srcset>` snippets pending Phase 5/6.*
