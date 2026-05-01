@@ -10,7 +10,7 @@
 
 ### Pipeline
 
-- [ ] **PIPE-01**: User can drag-and-drop or pick multiple files (SVG, PNG, WebP, JPEG, AVIF)
+- [x] **PIPE-01**: User can drag-and-drop or pick multiple files (SVG, PNG, WebP, JPEG, AVIF)
 - [ ] **PIPE-02**: User can configure per-format codec settings via accordion settings panel
 - [ ] **PIPE-03**: User can set global settings that apply across all uploaded files
 - [ ] **PIPE-04**: User can mark each file's source density (1x / 2x / 3x); app generates missing variants by scaling
@@ -19,7 +19,7 @@
 
 ### Optimization
 
-- [ ] **OPT-01**: SVG optimization via SVGO browser bundle (preset-default + per-plugin toggles)
+- [x] **OPT-01**: SVG optimization via SVGO browser bundle (preset-default + per-plugin toggles)
 - [ ] **OPT-02**: PNG optimization via jSquash OxiPNG (lossless levels 0-6)
 - [ ] **OPT-03**: WebP optimization via jSquash WebP (lossy/lossless, quality, method)
 - [ ] **OPT-04**: JPEG optimization via jSquash `@jsquash/jpeg` (MozJPEG-based; quality, progressive)

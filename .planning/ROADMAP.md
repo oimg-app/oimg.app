@@ -68,7 +68,7 @@ Plans:
 **Plans**: 4 plans
 
 Plans:
-- [ ] 03-A-PLAN.md — Wave 0+1: deps install + spec stubs + XSS fixtures + svg-adapter (SVGO-only worker) + sanitize-svg (main-thread DOMPurify) + ADAPTERS wiring + sanitizedCount + file-row badge
+- [x] 03-A-PLAN.md — Wave 0+1: deps install + spec stubs + XSS fixtures + svg-adapter (SVGO-only worker) + sanitize-svg (main-thread DOMPurify) + ADAPTERS wiring + sanitizedCount + file-row badge
 - [ ] 03-B-PLAN.md — Wave 2: SvgoPanel rewrite (12 curated plugins + live savings + foot-gun hints + Sanitization section) + store extensions (previewJobId, enqueuePreview, snippetToggles) + D-06 post-batch savings
 - [ ] 03-C-PLAN.md — Wave 3: snippet-registry + svg-snippets (yoksel encoder) + SnippetPanel (replaces OutputPanel) + per-snippet checkboxes + D-15 URL-encoding
 - [ ] 03-D-PLAN.md — Wave 4: activate all spec stubs → live E2E + unit assertions; full suite green phase gate

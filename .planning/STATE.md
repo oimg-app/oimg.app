@@ -4,14 +4,14 @@ milestone: v1.0
 milestone_name: milestone
 status: executing
 stopped_at: Phase 3 UI-SPEC approved
-last_updated: "2026-05-01T09:11:55.190Z"
-last_activity: 2026-05-01 -- Phase 03 planning complete
+last_updated: "2026-05-01T10:49:26.109Z"
+last_activity: 2026-05-01
 progress:
   total_phases: 8
   completed_phases: 2
   total_plans: 14
-  completed_plans: 10
-  percent: 71
+  completed_plans: 11
+  percent: 79
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-29)
 
 **Core value:** Developer drops a folder of source assets, picks output settings once, and walks away with a ZIP of optimized files plus copy-paste HTML/CSS snippets — without anything leaving the browser.
-**Current focus:** Phase 02 — worker-harness-state
+**Current focus:** Phase 03 — svg-pipeline
 
 ## Current Position
 
-Phase: 3
-Plan: Not started
+Phase: 03 (svg-pipeline) — EXECUTING
+Plan: 2 of 4
 Status: Ready to execute
-Last activity: 2026-05-01 -- Phase 03 planning complete
+Last activity: 2026-05-01
 
-Progress: [██████████] 100% (Phase 2 of 8 complete)
+Progress: [████████░░] 79%
 
 ## Performance Metrics
 
@@ -60,6 +60,7 @@ Progress: [██████████] 100% (Phase 2 of 8 complete)
 | Phase 02 P03 | 5min | 2 tasks | 4 files |
 | Phase 02-worker-harness-state PP04 | 23min | 2 tasks tasks | 9 files files |
 | Phase 02-worker-harness-state P05 | ~10min | 2 tasks | 11 files |
+| Phase 03 PA | 70min | 2 tasks | 22 files |
 
 ## Accumulated Context
 
@@ -81,6 +82,10 @@ Recent decisions affecting current work:
 - [Phase ?]: [Phase 02-worker-harness-state P03]: Worker harness landed — WorkerPool with lazy spawn, FIFO dispatch, terminate-and-respawn cancel; static ADAPTERS map (T-02-03 mitigated); Comlink.transfer zero-copy both directions; Promise.race+AbortSignal cancel correctness
 - [Phase ?]: [Phase 02-worker-harness-state P04]: App.tsx + Toolbar wired to stores + worker pool; ARIA live region with quartile cadence; sonner Toaster replaces hand-rolled toast-wrap; Cmd+Enter/Cmd+. shortcuts; window.__OIMG_STORES__ dev-only exposure; vite worker.format='es' closes deferred chunk-emission gate from 02-03; all 5 Wave 0 VR specs (VR-01..VR-05) flipped from test.fail() to live green
 - [Phase 02-worker-harness-state]: Worker harness wired — WorkerPool singleton (lazy spawn, FIFO, terminate-and-respawn cancel), three sliced zustand stores (files/settings/runtime), urlCache lifecycle (lazy-create, revoke-on-evict/supersede), ARIA live region with quartile cadence. mock.ts deleted; production state is store-driven. Final regression: 17/17 Playwright tests green, bundle 84.4 KB / 200 KB budget, worker + stub-adapter chunks separate from initial bundle, __OIMG_STORES__ + __OIMG_SLOW_MS__ tree-shaken from production.
+- [Phase ?]: [Phase 03-svg-pipeline plan 03-A]: DOMPurify on main thread (Pitfall 1 verified empirically); svg-adapter is SVGO-only
+- [Phase ?]: [Phase 03-svg-pipeline plan 03-A]: removeViewBox/removeDimensions default false (NOT in SVGO v4 preset-default; UI-SPEC row 11 spec error)
+- [Phase ?]: [Phase 03-svg-pipeline plan 03-A]: SVGO_PLUGINS mock array deleted; DEFAULT_CODEC_SVG.plugins is single source of truth
+- [Phase ?]: [Phase 03-svg-pipeline plan 03-A]: pre-existing CR-04 race in pool .then handler fixed (byId existence check replaces inFlight.has); incidentally fixes VR-01
 
 ### Pending Todos
 
@@ -113,6 +118,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-30T23:51:15.068Z
+Last session: 2026-05-01T10:49:12.632Z
 Stopped at: Phase 3 UI-SPEC approved
-Resume file: .planning/phases/03-svg-pipeline/03-UI-SPEC.md
+Resume file: None
