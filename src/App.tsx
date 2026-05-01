@@ -217,6 +217,28 @@ export default function App() {
     }
   }, [])
 
+  // Phase 3 plan 03-B (D-08 + D-10) — plugin-change subscriber.
+  // Toggling any SVGO plugin while a SVG file is selected fires the debounced
+  // single-file re-optimize via useRuntimeStore.enqueuePreview. The 200ms
+  // debounce + pool cancel-and-restart inside enqueuePreview implements D-11
+  // (last-toggle-wins). Subscriber lives in App.tsx so it runs only while the
+  // app is mounted; teardown returns the unsubscribe function.
+  useEffect(() => {
+    const unsub = useSettingsStore.subscribe(
+      (s) => s.svg.plugins,
+      () => {
+        const filesState = useFilesStore.getState()
+        const id = filesState.selectedId
+        if (!id) return
+        const entry = filesState.byId[id]
+        if (entry?.format !== 'svg') return
+        useRuntimeStore.getState().enqueuePreview(id)
+      },
+      { equalityFn: Object.is },
+    )
+    return unsub
+  }, [])
+
   // Phase 2 plan 02-05 — MOCK_FILES is gone. The queue is now driven by
   // useFilesStore: derive a MockFile-shaped view model on the fly so the
   // existing Phase 1 row-renderer keeps working without a wholesale rewrite.
