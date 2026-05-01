@@ -27,11 +27,37 @@ export function ensureNamespace(svg: string): string {
  * D-15: " → ', whitespace collapsed, only symbols regex chars percent-encoded.
  * Spaces and UTF-8 characters (e.g. ★) are left as-is.
  */
+// WR-06: detect the case where a double-quoted attribute value contains
+// a literal apostrophe — yoksel's blanket `"` → `'` swap would close
+// the attribute prematurely there. Walk every `="..."` attribute and
+// check the inside.
+function hasApostropheInDoubleQuotedAttr(svgString: string): boolean {
+  const dqAttr = /="([^"]*)"/g
+  let match: RegExpExecArray | null
+  while ((match = dqAttr.exec(svgString)) !== null) {
+    if (match[1].includes("'")) return true
+  }
+  return false
+}
+
 export function encodeSvgForDataUri(svgString: string): string {
-  let data = svgString.replace(/"/g, "'")          // " → ' (avoids encoding in CSS url("..."))
+  // WR-06: detect apostrophe-in-double-quoted-attr conflict up-front.
+  // Note: `%22` substitution must happen AFTER the symbols-regex pass
+  // because the symbols regex includes `%` and would re-encode the `%`
+  // of `%22` to `%25` (double-encoding). Use a placeholder during the
+  // symbols pass and substitute at the end.
+  const useFallback = hasApostropheInDoubleQuotedAttr(svgString)
+  let data = useFallback
+    ? svgString // leave " literal — encoded below in the final pass
+    : svgString.replace(/"/g, "'")
   data = data.replace(/>\s{1,}</g, '><')            // collapse whitespace between tags
   data = data.replace(/\s{2,}/g, ' ')               // collapse runs of whitespace
-  return data.replace(symbols, encodeURIComponent)  // encode only the problematic chars
+  data = data.replace(symbols, encodeURIComponent)  // encode only the problematic chars
+  // Final pass: in the fallback path, encode the remaining literal `"`
+  // as `%22` (the symbols regex did not touch them). Order matters —
+  // doing this BEFORE the symbols pass would double-encode `%`.
+  if (useFallback) data = data.replace(/"/g, '%22')
+  return data
 }
 
 /**

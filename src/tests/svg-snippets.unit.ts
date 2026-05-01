@@ -32,5 +32,23 @@ assert('generateDataUri: no unencoded "  (only outer url quotes)', uri.split('ur
 assert('ensureNamespace: adds xmlns when missing', ensureNamespace('<svg>').includes('http://www.w3.org/2000/svg'), true)
 assert('ensureNamespace: no-op when xmlns present', ensureNamespace('<svg xmlns="http://www.w3.org/2000/svg">'), '<svg xmlns="http://www.w3.org/2000/svg">')
 
+// WR-06: apostrophe inside a double-quoted attribute must NOT collapse
+// to `'` (would break the attribute boundary). Encoder falls back to %22
+// for the surrounding double quotes; the inner literal `'` is preserved
+// (encodeURIComponent does not encode it, which is fine — the apostrophe
+// only matters when adjacent to swapped attribute boundaries).
+const apos = encodeSvgForDataUri('<text title="It\'s a test">x</text>')
+assert('WR-06: apostrophe-in-attr keeps %22 around the value', apos.includes('title=%22It'), true)
+assert('WR-06: apostrophe-in-attr does NOT swap " to \' on the boundary', apos.includes("title='It"), false)
+// Resulting data URI should still parse via new URL(...) when wrapped.
+const aposUri = generateDataUri('<svg xmlns="http://www.w3.org/2000/svg"><text title="It\'s a test">x</text></svg>')
+const innerEncoded = aposUri.split('url("data:image/svg+xml,')[1].split('")')[0]
+let parseOk = false
+try { new URL(`data:image/svg+xml,${innerEncoded}`); parseOk = true } catch { /* parseOk stays false */ }
+assert('WR-06: apostrophe-in-attr data URI parses through new URL()', parseOk, true)
+
+// Non-conflicting input keeps the yoksel default (" → ')
+assert('WR-06: no apostrophe — yoksel default preserved (" → \')', encodeSvgForDataUri('<svg fill="red"/>').includes("fill='red'"), true)
+
 console.log(`\n${passed} passed, ${failed} failed`)
 if (failed > 0) process.exit(1)
