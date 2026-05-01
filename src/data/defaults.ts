@@ -1,8 +1,12 @@
 // Production codec defaults consumed by the Phase 2+ pipeline.
 // Single source of truth for "what should this codec do by default."
 // Phase 2 plan 02-05 (cleanup wave) deleted src/data/mock.ts; the visual-shell
-// constants that lived there (CODECS, RESIZE_ALG, FIT_MODES, SVGO_PLUGINS) are
-// now consolidated here as the canonical list for UI controls.
+// constants that lived there (CODECS, RESIZE_ALG, FIT_MODES) are now
+// consolidated here as the canonical list for UI controls.
+// Phase 3 plan 03-A removed the SVGO_PLUGINS mock array — the curated
+// 12-plugin record now lives in DEFAULT_CODEC_SVG.plugins below and is the
+// SOLE source of truth for the SvgoPanel toggle list (Plan B rewrites the
+// panel to consume the record directly).
 
 import type {
   FormatDefinition,
@@ -15,7 +19,6 @@ import type {
   CodecLabel,
   ResizeAlg,
   FitMode,
-  SvgoPlugin,
 } from '@/types'
 
 export const DEFAULT_FORMATS: FormatDefinition[] = [
@@ -26,14 +29,29 @@ export const DEFAULT_FORMATS: FormatDefinition[] = [
   { id: 'avif', label: 'AVIF', mime: 'image/avif', ext: 'avif' },
 ]
 
+// Phase 3 (D-05/D-07) — curated 12-plugin set.
+// Mirrors SVGO v4 preset-default exactly: the 10 plugins set to `true` are
+// IN preset-default; `removeViewBox` and `removeDimensions` are NOT in
+// preset-default and ship as opt-in extras (default `false`). This is the
+// correct "mirror preset-default" reading of D-07 — confirmed by reading
+// svgo@4.0.1/plugins/preset-default.js (RESEARCH.md §Critical Contradiction).
+// The 03-UI-SPEC.md row 11 default `on` for removeViewBox is a documented
+// spec error; the false default below is the correct behavior.
 export const DEFAULT_CODEC_SVG: CodecSettingsSvg = {
   preset: 'default',
   plugins: {
     removeComments: true,
     removeMetadata: true,
-    removeViewBox: false, // D-07 note: removeViewBox off by default — preserves responsive scaling
+    removeUselessDefs: true,
+    removeUnusedNS: true,
     cleanupIds: true,
+    cleanupNumericValues: true,
+    convertColors: true,
     convertPathData: true,
+    mergePaths: true,
+    minifyStyles: true,
+    removeViewBox: false, // NOT in preset-default — opt-in extra; foot-gun (D-07)
+    removeDimensions: false, // NOT in preset-default — opt-in extra; foot-gun (D-07)
   },
 }
 
@@ -68,30 +86,6 @@ export const CODECS: CodecLabel[] = ['SVG', 'PNG', 'WebP', 'JPEG', 'AVIF']
 export const RESIZE_ALG: ResizeAlg[] = ['lanczos3', 'mitchell', 'catrom', 'triangle']
 export const FIT_MODES: FitMode[] = ['cover', 'contain', 'fill']
 
-// Default SVGO plugin list — moved from src/data/mock.ts in plan 02-05.
-// SvgoPanel renders these as togglable rows; Phase 3 will reconcile this list
-// with the live svgo v4 plugin registry.
-export const SVGO_PLUGINS: SvgoPlugin[] = [
-  { id: 'removeDoctype', on: true, saves: '0.4%' },
-  { id: 'removeXMLProcInst', on: true, saves: '0.3%' },
-  { id: 'removeComments', on: true, saves: '1.2%' },
-  { id: 'removeMetadata', on: true, saves: '0.8%' },
-  { id: 'removeEditorsNSData', on: true, saves: '2.1%' },
-  { id: 'cleanupAttrs', on: true, saves: '0.6%' },
-  { id: 'mergeStyles', on: true, saves: '4.8%' },
-  { id: 'inlineStyles', on: true, saves: '6.2%' },
-  { id: 'minifyStyles', on: true, saves: '3.4%' },
-  { id: 'convertStyleToAttrs', on: false, saves: '1.8%' },
-  { id: 'cleanupIds', on: true, saves: '5.6%' },
-  { id: 'removeRasterImages', on: false, saves: '—' },
-  { id: 'removeUselessDefs', on: true, saves: '2.4%' },
-  { id: 'cleanupNumericValues', on: true, saves: '8.1%' },
-  { id: 'convertColors', on: true, saves: '1.4%' },
-  { id: 'removeEmptyAttrs', on: true, saves: '0.5%' },
-  { id: 'removeEmptyContainers', on: true, saves: '0.7%' },
-  { id: 'removeUnusedNS', on: true, saves: '0.3%' },
-  { id: 'sortAttrs', on: true, saves: '—' },
-  { id: 'removeDimensions', on: false, saves: '0.4%' },
-  { id: 'convertPathData', on: true, saves: '14.3%' },
-  { id: 'mergePaths', on: true, saves: '7.2%' },
-]
+// SVGO_PLUGINS mock array removed in Plan 03-A.
+// The canonical plugin list is now DEFAULT_CODEC_SVG.plugins above.
+// Plan B rewrites SvgoPanel to consume that record directly with live savings.

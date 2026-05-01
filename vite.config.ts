@@ -20,6 +20,15 @@ export default defineConfig({
   worker: {
     format: 'es',
   },
+  // Phase 3 plan 03-A — svgo + dompurify are large ESM packages with many
+  // sub-modules. Without `optimizeDeps.include`, Vite serves them as raw ESM
+  // in dev mode and the worker's first dynamic-import of svg-adapter stalls
+  // for tens of seconds (svgo ships ~200 plugin source files). Pre-bundling
+  // them collapses the import graph to a single chunk for both the main
+  // thread and worker thread.
+  optimizeDeps: {
+    include: ['svgo/browser', 'dompurify'],
+  },
   server: {
     headers: {
       'Cross-Origin-Opener-Policy': 'same-origin',

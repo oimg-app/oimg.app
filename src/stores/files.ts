@@ -19,9 +19,18 @@ interface FilesState {
 
   addFile: (entry: FileEntryWithBlob) => void
   removeFile: (fileId: string) => void
-  // Called by WorkerPool when an adapter run completes.
+  // Called by WorkerPool consumer (App.tsx) when an adapter run completes
+  // and (for SVG) DOMPurify has finished sanitizing on the main thread.
   // PATTERNS.md Pitfall 3: revoke OLD url BEFORE writing the new optimized Blob.
-  markDone: (fileId: string, optimizedBlob: Blob, optimizedSize: number) => void
+  // Phase 3 (D-03) — `sanitizedCount` is set by the SVG path (number of
+  // dangerous elements/attrs DOMPurify removed, 0 = clean). Other formats
+  // omit the parameter and FileEntry.sanitizedCount stays undefined.
+  markDone: (
+    fileId: string,
+    optimizedBlob: Blob,
+    optimizedSize: number,
+    sanitizedCount?: number,
+  ) => void
   setSelected: (fileId: string | null) => void
   setStatus: (fileId: string, status: FileEntry['status']) => void
   setSourceDensity: (fileId: string, density: FileEntry['sourceDensity']) => void
@@ -53,7 +62,7 @@ export const useFilesStore = create<FilesState>()(
       })
     },
 
-    markDone: (fileId, optimizedBlob, optimizedSize) => {
+    markDone: (fileId, optimizedBlob, optimizedSize, sanitizedCount) => {
       // PATTERNS.md Pitfall 3 — revoke the OLD url for this fileId BEFORE writing the
       // new optimized Blob. Next render lazy-creates a fresh URL for the new Blob.
       useRuntimeStore.getState().revokeObjectURL(fileId)
@@ -68,6 +77,9 @@ export const useFilesStore = create<FilesState>()(
               optimizedBlob,
               optimizedSize,
               status: 'done',
+              // Phase 3 (D-03) — only spread when defined so non-SVG formats
+              // do not clobber an existing badge value (idempotent re-runs).
+              ...(sanitizedCount !== undefined ? { sanitizedCount } : {}),
             },
           },
         }

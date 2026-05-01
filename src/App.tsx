@@ -21,11 +21,15 @@ import type { CmdGroup } from '@/components/shell/CommandPalette'
 import { useTheme } from '@/hooks/useTheme'
 import { fmtBytes, fmtPct } from '@/lib/format'
 // Phase 2 plan 02-05 (cleanup wave): src/data/mock.ts deleted.
-// Types moved to @/types; data constants (CODECS, SVGO_PLUGINS) moved to
-// @/data/defaults. MOCK_FILES is no longer needed — the queue starts empty
-// and is populated by addFile() into useFilesStore (drag-drop / file-picker
-// in Phase 5).
-import { CODECS, SVGO_PLUGINS } from '@/data/defaults'
+// Types moved to @/types; data constants (CODECS) moved to @/data/defaults.
+// MOCK_FILES is no longer needed — the queue starts empty and is populated
+// by addFile() into useFilesStore (drag-drop / file-picker in Phase 5).
+// Phase 3 plan 03-A: SVGO_PLUGINS array deleted from defaults.ts in favor of
+// DEFAULT_CODEC_SVG.plugins record. The SVGO_PLUGINS shim below derives the
+// visual-shell SvgoPlugin[] view-model from the curated record so the
+// existing SvgoPanel.tsx keeps compiling. Plan B rewrites SvgoPanel to
+// consume the record directly and the shim disappears.
+import { CODECS, DEFAULT_CODEC_SVG } from '@/data/defaults'
 import type {
   CodecLabel,
   ResizeAlg,
@@ -33,11 +37,20 @@ import type {
   SvgoPlugin,
   MockFile,
 } from '@/types'
+
+// Plan 03-A shim — derive visual-shell rows from DEFAULT_CODEC_SVG.plugins.
+// Plan B replaces this with a live read from useSettingsStore.svg.plugins +
+// pluginSavings.
+const SVGO_PLUGINS: SvgoPlugin[] = Object.entries(DEFAULT_CODEC_SVG.plugins).map(
+  ([id, on]) => ({ id, on, saves: '—' }),
+)
 // Phase 2 plan 02-04 — store + worker pool + ARIA live wiring.
 import { useFilesStore, useSettingsStore, useRuntimeStore } from '@/stores'
 import { getWorkerPool } from '@/workers/pool'
-import type { PoolJob } from '@/workers/types'
+import type { PoolJob, AdapterFormat } from '@/workers/types'
 import { setLiveRegion, announce, isQuartileBoundary } from '@/lib/live-region'
+// Phase 3 plan 03-A — main-thread DOMPurify (Pitfall 1: cannot run in worker).
+import { sanitizeSvg } from '@/lib/sanitize-svg'
 
 type Tab = 'codec' | 'svgo' | 'output' | 'report'
 type View = 'Batch' | 'Compare' | 'Report'
@@ -327,24 +340,55 @@ export default function App() {
       const slowMs = import.meta.env.DEV
         ? (window as unknown as { __OIMG_SLOW_MS__?: number }).__OIMG_SLOW_MS__ ?? 0
         : 0
+      // Phase 3 plan 03-A — route SVG files through the real SVG adapter; all
+      // other formats fall back to the stub (raster encoders land Phase 5).
+      // SVG settings come from useSettingsStore.svg (D-09 global in v1).
+      const isSvg = f.format === 'svg'
+      const adapterFormat: AdapterFormat = isSvg ? 'svg' : 'stub'
+      const settings = isSvg
+        ? useSettingsStore.getState().svg
+        : (slowMs > 0 ? { slowMs } : {})
       const job: PoolJob = {
         id: fileId,
         fileId,
-        format: 'stub',           // Phase 2 routes only the stub adapter; Phase 3+ picks per FormatId.
-        settings: slowMs > 0 ? { slowMs } : {},
+        format: adapterFormat,
+        settings,
         blob: f.sourceBlob,
       }
       pool.enqueue(job)
-        .then((result) => {
-          // CR-04: re-check inFlight membership before writing to files store.
-          // A racing cancel() may have cleared inFlight between dispatch and
-          // resolution; in that case runtime.markDone short-circuits already,
-          // and we must NOT write a 'done' status into files store either —
-          // otherwise the cancelled file shows as completed.
-          if (!useRuntimeStore.getState().inFlight.has(fileId)) return
-          // result.output.byteLength === f.sourceBlob.size for stub (D-04 round-trip).
-          const optimizedBlob = new Blob([result.output])
-          useFilesStore.getState().markDone(fileId, optimizedBlob, optimizedBlob.size)
+        .then(async (result) => {
+          // Phase 3 plan 03-A (Rule 1 fix) — the original CR-04 guard
+          // `if (!inFlight.has(fileId)) return` raced with the pool's onDone
+          // callback: pool.runOnSlot calls `job.resolve(result); callbacks.onDone(...)`
+          // synchronously, so runtime.markDone removes the job from inFlight
+          // BEFORE the .then microtask runs. The guard then incorrectly bailed
+          // on every successful job — files never reached status='done'. This
+          // bug existed since Phase 2 (latent because aria-live tests waited
+          // on runtime.doneCount, not file.status; only worker-pool VR-01 hit it).
+          //
+          // Cancel-race is already handled correctly without this guard: a
+          // cancelled job calls `job.reject(AbortError)` which routes through
+          // .catch (the AbortError discriminator below skips setStatus('error')).
+          // Surviving guard: file may have been removed between enqueue and
+          // resolve — bail if byId entry is gone.
+          if (!useFilesStore.getState().byId[fileId]) return
+          if (isSvg) {
+            // Phase 3 (D-01 + Pitfall 1) — SVGO ran in the worker; DOMPurify
+            // runs HERE on the main thread because it needs `document`.
+            // Read DOMPurify.removed.length immediately after sanitize() —
+            // do not await between (Pitfall 5).
+            const svgText = new TextDecoder().decode(result.output)
+            const unsafe = useSettingsStore.getState().svg.unsafeExport ?? false
+            const { clean, sanitizedCount } = sanitizeSvg(svgText, unsafe)
+            const sanitizedBlob = new Blob([clean], { type: 'image/svg+xml' })
+            useFilesStore
+              .getState()
+              .markDone(fileId, sanitizedBlob, sanitizedBlob.size, sanitizedCount)
+          } else {
+            // Stub round-trip (Phase 2 contract): byte-equal output.
+            const optimizedBlob = new Blob([result.output])
+            useFilesStore.getState().markDone(fileId, optimizedBlob, optimizedBlob.size)
+          }
         })
         .catch((err) => {
           // CR-04 / WR-08: discriminate AbortError (cancel path — already
@@ -507,6 +551,26 @@ export default function App() {
                     <span className={'save' + (((f.orig - f.opt) / f.orig) < 0.3 ? ' warn' : '')}>
                       {fmtPct(f.orig, f.opt)}
                     </span>
+                    {/* Phase 3 (D-03) — sanitized badge: DOMPurify removed N
+                        dangerous elements/attrs. Reads FileEntry.sanitizedCount
+                        directly from useFilesStore.byId (the SHELL_FILES
+                        view-model is MockFile-shaped and doesn't carry it).
+                        Plan B may move this to a dedicated FilePanel component. */}
+                    {(() => {
+                      const entry = filesById[f.id]
+                      const n = entry?.sanitizedCount
+                      if (n === undefined || n <= 0) return null
+                      return (
+                        <span
+                          className="pill warn sm"
+                          aria-label={`${n} element${n === 1 ? '' : 's'} removed by sanitizer`}
+                          title={`${n} dangerous element${n === 1 ? '' : 's'} removed by DOMPurify`}
+                          style={{ marginLeft: 2 }}
+                        >
+                          sanitized · {n}
+                        </span>
+                      )
+                    })()}
                   </div>
                   {f.status === 'processing' && <div className="progbar"><div /></div>}
                 </div>

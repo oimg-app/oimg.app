@@ -62,12 +62,29 @@ export interface FileEntry {
   status: FileStatus
   sourceDensity: SourceDensity
   thumbnail: string | null // Object URL — must be revoked when no longer needed (see threat T-03-02)
+  // Phase 3 (D-03) — count of dangerous elements/attributes removed by DOMPurify.
+  // undefined = file has not yet been processed; 0 = processed and clean;
+  // > 0 = sanitization happened, surface a "sanitized · N" badge in the file row.
+  sanitizedCount?: number
 }
 
 export interface CodecSettingsSvg {
   preset: 'default'
   plugins: Record<string, boolean> // SVGO plugin enable/disable map
+  // Phase 3 (D-04) — global toggle: when true, sanitize-svg.ts skips DOMPurify
+  // and returns the SVGO output verbatim. Default = false (sanitize). Plan B
+  // wires the SvgoPanel "Disable SVG sanitization on export" Toggle.
+  unsafeExport?: boolean
+  // Phase 3 (D-06) — live per-plugin savings, populated by Plan B's post-batch
+  // N+1-pass benchmark. Keyed by plugin id; bytes = aggregate across the batch.
+  pluginSavings?: Record<string, { bytes: number; pct: number }>
 }
+
+// Phase 3 (D-12) — snippet registry id union. Plan C ships 'inline-svg' and
+// 'url-encoded-uri' generators; the raster ids are stubs in Phase 3 and gain
+// real generators in Phase 5/6. Filter via SnippetDef.applicableFormats —
+// never switch on file.format inside SnippetPanel render.
+export type SnippetId = 'inline-svg' | 'url-encoded-uri' | 'picture' | 'img-srcset' | 'data-uri-base64'
 
 export interface CodecSettingsPng {
   level: number // OxiPNG: 0–6

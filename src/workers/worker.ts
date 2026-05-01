@@ -20,11 +20,9 @@ const ADAPTERS: Record<
   }>
 > = {
   stub: () => import('./stub-adapter'),
-  // Phase 3+ adds: svg: () => import('./svg-adapter'),
+  // Phase 3 plan 03-A — SVGO-only adapter (DOMPurify runs on main thread per D-01).
   // Phase 5+ adds: png/jpeg/webp/avif
-  svg: () => {
-    throw new Error('svg adapter not yet implemented (Phase 3)')
-  },
+  svg: () => import('./svg-adapter'),
   png: () => {
     throw new Error('png adapter not yet implemented (Phase 5)')
   },

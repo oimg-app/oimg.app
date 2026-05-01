@@ -358,6 +358,8 @@ input[type=range]::-moz-range-thumb { width: 12px; height: 12px; border-radius: 
 .pill { display: inline-flex; align-items: center; gap: 5px; height: 18px; padding: 0 7px; border-radius: 10px; background: var(--bg-2); border: 1px solid var(--line); font: 500 10px var(--mono); color: var(--fg-1); letter-spacing: 0.04em; }
 .pill.acc  { background: var(--accent-dim); border-color: transparent; color: var(--accent); }
 .pill.warn { background: oklch(from var(--warn) l c h / 0.16); border-color: transparent; color: var(--warn); }
+/* Phase 3 plan 03-A — small variant used by the file-row sanitized badge (D-03). */
+.pill.sm   { height: 14px; padding: 0 5px; font-size: 9.5px; gap: 3px; letter-spacing: 0.03em; }
 
 .icon { display: inline-block; width: 13px; height: 13px; stroke: currentColor; stroke-width: 1.5; fill: none; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
 

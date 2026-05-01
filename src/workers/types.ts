@@ -7,6 +7,10 @@ export type AdapterFormat = 'stub' | 'svg' | 'png' | 'jpeg' | 'webp' | 'avif'
 export interface AdapterMeta {
   unchanged?: boolean
   codecVersion?: string
+  // Phase 3 — populated by the SVG path only; produced on the main thread by
+  // src/lib/sanitize-svg.ts after the worker returns SVGO-optimized bytes.
+  // 0 = clean (no removals); undefined = non-svg adapter run.
+  sanitizedCount?: number
 }
 
 export interface AdapterRunResult {
