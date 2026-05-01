@@ -4,14 +4,14 @@ milestone: v1.0
 milestone_name: milestone
 status: executing
 stopped_at: Completed 03-B-PLAN.md (Plan B SVGO inspector + live re-optimize)
-last_updated: "2026-05-01T11:08:09.797Z"
+last_updated: "2026-05-01T11:19:32.375Z"
 last_activity: 2026-05-01
 progress:
   total_phases: 8
   completed_phases: 2
   total_plans: 14
-  completed_plans: 12
-  percent: 86
+  completed_plans: 13
+  percent: 93
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-04-29)
 ## Current Position
 
 Phase: 03 (svg-pipeline) — EXECUTING
-Plan: 3 of 4
+Plan: 4 of 4
 Status: Ready to execute
 Last activity: 2026-05-01
 
-Progress: [█████████░] 86%
+Progress: [█████████░] 93%
 
 ## Performance Metrics
 
@@ -62,6 +62,7 @@ Progress: [█████████░] 86%
 | Phase 02-worker-harness-state P05 | ~10min | 2 tasks | 11 files |
 | Phase 03 PA | 70min | 2 tasks | 22 files |
 | Phase 03-svg-pipeline PPB | 13min | 2 tasks tasks | 4 files files |
+| Phase 03-svg-pipeline PC | 12min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -91,6 +92,9 @@ Recent decisions affecting current work:
 - [Phase ?]: [Phase 03-svg-pipeline plan 03-B]: SvgoPanel rewrite ships 12 curated plugins with always-visible foot-gun hints + Sanitization toggle replacing the legacy perceptual-loss section
 - [Phase ?]: [Phase 03-svg-pipeline plan 03-B]: live re-optimize on plugin toggle via useRuntimeStore.enqueuePreview with 200ms debounce + pool cancel-and-restart (D-08/D-10/D-11)
 - [Phase ?]: [Phase 03-svg-pipeline plan 03-B]: D-06 post-batch live savings via WorkerPool.enqueue (N+1 passes) with 5s wall-time cap and partial-result persistence
+- [Phase ?]: [Phase 03-svg-pipeline plan 03-C]: SNIPPET_REGISTRY plain Record (5 entries) — applicableFormats filter is the contract Phase 5/6 plugs into without touching SnippetPanel
+- [Phase ?]: [Phase 03-svg-pipeline plan 03-C]: yoksel D-15 encoder ported verbatim (symbols regex line 15; encodeSVG lines 134-148); minimal-escape preserves UTF-8 + spaces
+- [Phase ?]: [Phase 03-svg-pipeline plan 03-C]: SnippetPanel takes FileEntryWithBlob (canonical store entry with optimizedBlob), not MockFile view-model — D-04 sanitized-blob is the single source of truth, no re-sanitization in render
 
 ### Pending Todos
 
@@ -123,6 +127,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-05-01T11:08:09.792Z
+Last session: 2026-05-01T11:19:11.771Z
 Stopped at: Completed 03-B-PLAN.md (Plan B SVGO inspector + live re-optimize)
 Resume file: None

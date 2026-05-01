@@ -28,10 +28,10 @@
 
 ### Snippet Generation
 
-- [ ] **SNIP-01**: Per-file snippet panel with `<picture>` srcset, `<img srcset>`, CSS data URI, inline SVG, raw data URI
+- [x] **SNIP-01**: Per-file snippet panel with `<picture>` srcset, `<img srcset>`, CSS data URI, inline SVG, raw data URI
 - [ ] **SNIP-02**: Snippets reflect actual generated variants (1x/2x/3x) and chosen output formats
-- [ ] **SNIP-03**: One-click copy-to-clipboard per snippet
-- [ ] **SNIP-04**: URL-encoded data URI for SVG (cross-browser CSS-safe), Base64 for raster
+- [x] **SNIP-03**: One-click copy-to-clipboard per snippet
+- [x] **SNIP-04**: URL-encoded data URI for SVG (cross-browser CSS-safe), Base64 for raster
 
 ### UI/UX
 
