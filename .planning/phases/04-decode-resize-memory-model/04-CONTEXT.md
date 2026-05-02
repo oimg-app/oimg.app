@@ -154,7 +154,46 @@ Users declare per-file source density (1x/2x/3x) on raster files (PNG, JPEG, Web
 
 </deferred>
 
+<post_research_amendments>
+## Post-Research Amendments (2026-05-02)
+
+Research (`04-RESEARCH.md`) uncovered three issues that contradict or extend the original CONTEXT.md decisions. The user has ratified the resolutions below; planner MUST treat these as locked.
+
+### D-10 AMENDED — ICC preservation is not a flag in jSquash
+
+- **Reality:** `@jsquash/{png,jpeg,webp,avif}` expose ZERO ICC option. ICC preservation requires manual chunk extract/embed (PNG `iCCP`, JPEG `APP2 ICC_PROFILE`, WebP `ICCP`, AVIF `colr` of `prof` type). ~150–300 LOC per format.
+- **Decision (locked):** **Phase 4 ships the data shape only.** `FileEntry.preserveIcc?: boolean` and the global TweaksPanel toggle land this phase, but the worker IGNORES the flag — it always strips. The toggle is wired to state but functionally no-op.
+- **Phase 5 owns the real ICC implementation** for PNG iCCP first, then extends to JPEG/WebP/AVIF as those encoders integrate.
+- **OPT-06 / SC-3 partial in P4:** strip-by-default is verifiable; ICC-preserve-when-on is wired but not yet honored. Phase 5 closes the gap.
+- **UI copy (locked):** the toggle label is "Preserve ICC color profiles" with helper text noting "applies once encoders ship in v1.1" so users aren't misled.
+- **Planner action:** add a Phase 5 backlog note in CONTEXT.md `<deferred>` of Phase 5 (handled at next discuss-phase).
+
+### D-15 NEW — Per-file optimize budget recalibration for raster
+
+- **Original PROJECT.md / CLAUDE.md target:** 100 ms per 2 MB file. Triple-decode design (D-04 + D-14) measured ~210 ms / 2 MB PNG variant — 2.1× breach.
+- **Decision (locked):** **For raster (PNG/JPEG/WebP/AVIF) the per-file budget is p50 ≤ 500 ms / 2 MB.** SVG keeps the tighter target. D-04 + D-14's simple 1:1 jobs:FileEntries design is preserved.
+- **Verification:** Phase 4 Wave 0 measures decode+resize+stub-encode on a 2 MB reference PNG; if p50 exceeds 500 ms, escalate before Wave 1 wires up.
+- **Documentation followup:** PROJECT.md / CLAUDE.md update to record the raster-vs-SVG split is part of Phase 4 docs work (planner adds task).
+
+### D-16 NEW — Filename collision handling
+
+- **Reality:** Phase 2 has no filename sanitization step (the CONTEXT.md reference to a Phase 2 sanitize was incorrect — that was the SVG-content sanitization step from Phase 3).
+- **Decision (locked):** **Auto-suffix `(2)`, `(3)`, … on collision; one Sonner info toast per batch summarizing total renames** ("2 files renamed to avoid collisions").
+- **Order of operations:** apply density suffix FIRST (`logo.png` → `logo@2x.png`), then collision-check across the existing FileEntry set; if collision, insert `(N)` before the `@Nx` suffix (`logo (2)@2x.png`).
+- **State home:** rename-count counter lives in `useRuntimeStore` (per-batch-scoped). Mirrors D-13 first-throttle-toast plumbing.
+
+### Why these amendments are non-negotiable
+
+ICC: shipping a working flag in P4 would either lie to users or balloon scope by ~600–1200 LOC of byte-level codec wrangling. Data-shape-only matches the D-07 / D-09 deferred-UI pattern.
+
+Budget: the user explicitly accepted triple-decode in `<specifics>` and asked to escalate if >2× breach. Switching to single-decode-fanout breaks Phase 2 D-04's 1:1 contract that the WorkerPool was built around.
+
+Collision: silent suffix without notice means ZIP filename surprises in Phase 6/7; blocking second upload adds friction; the chosen middle path mirrors Phase 3's badge+toast discipline.
+
+</post_research_amendments>
+
 ---
 
 *Phase: 04-decode-resize-memory-model*
 *Context gathered: 2026-05-02*
+*Post-research amendments: 2026-05-02*
