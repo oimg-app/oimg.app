@@ -47,33 +47,33 @@ test('density variants — source 2x emits @1x/@2x/@3x FileEntries', async ({ pa
   expect(names).toEqual(['logo@1x.png', 'logo@2x.png', 'logo@3x.png'])
 })
 
-test('memory budget — 50 PNG @ 2x stays under 800 MB peak heap', async ({ page }) => {
+test('memory budget — 50 PNG @ 2x stays under 800 MB peak heap', async ({ page: _page }) => {
   test.fail(true, 'Wave 2 flips this — admission gate + CDP heap probe wiring required')
   // Real implementation will use src/tests/instrument-heap.ts probeHeapDuringBatch.
   expect(true).toBe(false)
 })
 
-test('no url leaks — 20-file batch revokes every createObjectURL', async ({ page }) => {
+test('no url leaks — 20-file batch revokes every createObjectURL', async ({ page: _page }) => {
   test.fail(true, 'Wave 3 flips this — uses existing src/tests/fixtures/instrument-blob-urls.js')
   expect(true).toBe(false)
 })
 
-test('throttle toast — first admission-gate trigger fires once per batch', async ({ page }) => {
+test('throttle toast — first admission-gate trigger fires once per batch', async ({ page: _page }) => {
   test.fail(true, 'Wave 2 flips this — pool onThrottle + runtime store flag required')
   expect(true).toBe(false)
 })
 
-test('perf budget — decode+resize+encode on 2 MB PNG p50 ≤ 500 ms', async ({ page }) => {
+test('perf budget — decode+resize+encode on 2 MB PNG p50 ≤ 500 ms', async ({ page: _page }) => {
   test.fail(true, 'Wave 2 flips this — D-15 raster perf budget (RESEARCH §4)')
   expect(true).toBe(false)
 })
 
-test('collision rename — duplicate @Nx names auto-suffix (2)', async ({ page }) => {
+test('collision rename — duplicate @Nx names auto-suffix (2)', async ({ page: _page }) => {
   test.fail(true, 'Wave 2 flips this — deduplicateName + addSourceWithVariants required')
   expect(true).toBe(false)
 })
 
-test('metadata strip — output bytes contain no iCCP chunk by default', async ({ page }) => {
+test('metadata strip — output bytes contain no iCCP chunk by default', async ({ page: _page }) => {
   test.fail(true, 'Wave 2 flips this — png-adapter must round-trip without ICC')
   expect(true).toBe(false)
 })

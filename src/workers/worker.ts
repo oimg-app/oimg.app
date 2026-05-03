@@ -23,9 +23,9 @@ const ADAPTERS: Record<
   // Phase 3 plan 03-A — SVGO-only adapter (DOMPurify runs on main thread per D-01).
   // Phase 5+ adds: png/jpeg/webp/avif
   svg: () => import('./svg-adapter'),
-  png: () => {
-    throw new Error('png adapter not yet implemented (Phase 5)')
-  },
+  // Phase 4 plan 04-03 — PNG decode + resize + re-encode adapter (D-04 + D-14).
+  // Each density variant is its own pool job; adapter sees 1:1 input → output.
+  png: () => import('./png-adapter'),
   jpeg: () => {
     throw new Error('jpeg adapter not yet implemented (Phase 5)')
   },

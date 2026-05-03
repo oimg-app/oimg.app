@@ -45,7 +45,16 @@ export async function run(
     // SVGO v4 optimize() is synchronous and returns { data: string }; it
     // throws on malformed SVG (Pitfall 4 in 03-RESEARCH.md). Wrap in try/catch
     // and rethrow as AdapterError(format, 'process', message) per Phase 2 D-04.
-    const result = optimize(svgString, buildSvgoConfig(settings as CodecSettingsSvg))
+    // Plan 04-03 (Rule 3 blocker): buildSvgoConfig returns the loose
+    // SvgoConfigShape (extracted to svg-config.ts so unit tests can import
+    // without evaluating svgo/browser). At runtime the shape matches SVGO's
+    // Config exactly — preset-default + bare extra-plugin names are accepted
+    // verbatim. Cast through `Parameters<typeof optimize>[1]` to satisfy the
+    // strict structural check; runtime behavior is unchanged.
+    const result = optimize(
+      svgString,
+      buildSvgoConfig(settings as CodecSettingsSvg) as Parameters<typeof optimize>[1],
+    )
     optimized = result.data
   } catch (err) {
     throw new AdapterError('svg', 'process', err instanceof Error ? err.message : String(err))
