@@ -124,25 +124,150 @@ test('settings resize slice — defaults lanczos3 + setResize partial merge', as
   expect(result.iccPreserved).toBe(false)
 })
 
-test('memory budget — 50 PNG @ 2x stays under 800 MB peak heap', async ({ page: _page }) => {
-  test.fail(true, 'Wave 2 flips this — admission gate + CDP heap probe wiring required')
-  // Real implementation will use src/tests/instrument-heap.ts probeHeapDuringBatch.
-  expect(true).toBe(false)
+test('memory budget — 50 PNG @ 2x stays under 800 MB peak heap', async ({ page }) => {
+  // Plan 04-07 Task 2 — live SC-2: admission gate (D-11) keeps peak heap under
+  // 800 MB while encoding 150 variants from 50 source files.
+  const { probeHeapDuringBatch } = await import('./instrument-heap')
+  const pngBytes = await loadFixture('density-2x.png')
+  const peak = await probeHeapDuringBatch(page, async () => {
+    await page.evaluate(async ({ bytes }) => {
+      const blob = new Blob([new Uint8Array(bytes)], { type: 'image/png' })
+      const filesApi = (window as unknown as { __OIMG_STORES__: any }).__OIMG_STORES__.files.getState()
+      for (let i = 0; i < 50; i++) {
+        await filesApi.addSourceWithVariants({
+          sourceBlob: blob,
+          sourceDensity: '2x',
+          name: `f${i}.png`,
+          format: 'png',
+          targets: ['1x', '2x', '3x'],
+        })
+      }
+      const btn = Array.from(document.querySelectorAll('button')).find(
+        (b) => /optimize/i.test(b.textContent ?? ''),
+      ) as HTMLButtonElement | undefined
+      btn?.click()
+      await new Promise<void>((resolve) => {
+        const i = setInterval(() => {
+          if (
+            !(window as unknown as { __OIMG_STORES__: any }).__OIMG_STORES__.runtime
+              .getState().running
+          ) {
+            clearInterval(i)
+            resolve()
+          }
+        }, 100)
+      })
+    }, { bytes: pngBytes })
+  })
+  expect(peak).toBeLessThan(800 * 1024 * 1024)
 })
 
-test('no url leaks — 20-file batch revokes every createObjectURL', async ({ page: _page }) => {
-  test.fail(true, 'Wave 3 flips this — uses existing src/tests/fixtures/instrument-blob-urls.js')
-  expect(true).toBe(false)
+test('no url leaks — 20-file batch revokes every createObjectURL', async ({ page }) => {
+  // Plan 04-07 Task 2 — live SC-4: createObjectURL/revokeObjectURL pairing
+  // across a 20-file batch followed by clear(). Reuses Phase 2 instrumentation.
+  await page.evaluate(() =>
+    (window as unknown as { __OIMG_INSTRUMENT_BLOB_URLS__?: () => void }).__OIMG_INSTRUMENT_BLOB_URLS__?.(),
+  )
+  const pngBytes = await loadFixture('density-2x.png')
+  await page.evaluate(async ({ bytes }) => {
+    const blob = new Blob([new Uint8Array(bytes)], { type: 'image/png' })
+    const filesApi = (window as unknown as { __OIMG_STORES__: any }).__OIMG_STORES__.files.getState()
+    for (let i = 0; i < 20; i++) {
+      await filesApi.addSourceWithVariants({
+        sourceBlob: blob,
+        sourceDensity: '2x',
+        name: `f${i}.png`,
+        format: 'png',
+        targets: ['1x'],
+      })
+    }
+    filesApi.clear()
+  }, { bytes: pngBytes })
+  const stats = await page.evaluate(() =>
+    (window as unknown as {
+      __OIMG_BLOB_URL_STATS__?: () => { created: number; revoked: number }
+    }).__OIMG_BLOB_URL_STATS__?.() ?? { created: 0, revoked: 0 },
+  )
+  expect(stats.created).toBe(stats.revoked)
 })
 
-test('throttle toast — first admission-gate trigger fires once per batch', async ({ page: _page }) => {
-  test.fail(true, 'Wave 2 flips this — pool onThrottle + runtime store flag required')
-  expect(true).toBe(false)
+test('throttle toast — first admission-gate trigger fires once per batch', async ({ page }) => {
+  // Plan 04-07 Task 2 — live D-13: at-most-once-per-batch toast latch (false
+  // positives on small batches are fine; T-04-07-01 mitigation).
+  const pngBytes = await loadFixture('density-2x.png')
+  await page.evaluate(async ({ bytes }) => {
+    const blob = new Blob([new Uint8Array(bytes)], { type: 'image/png' })
+    const filesApi = (window as unknown as { __OIMG_STORES__: any }).__OIMG_STORES__.files.getState()
+    for (let i = 0; i < 10; i++) {
+      await filesApi.addSourceWithVariants({
+        sourceBlob: blob,
+        sourceDensity: '2x',
+        name: `f${i}.png`,
+        format: 'png',
+        targets: ['1x', '2x', '3x'],
+      })
+    }
+    const btn = Array.from(document.querySelectorAll('button')).find(
+      (b) => /optimize/i.test(b.textContent ?? ''),
+    ) as HTMLButtonElement | undefined
+    btn?.click()
+    await new Promise<void>((resolve) => {
+      const i = setInterval(() => {
+        if (
+          !(window as unknown as { __OIMG_STORES__: any }).__OIMG_STORES__.runtime
+            .getState().running
+        ) {
+          clearInterval(i)
+          resolve()
+        }
+      }, 100)
+    })
+  }, { bytes: pngBytes })
+  const toastCount = await page
+    .locator('[data-sonner-toast]')
+    .filter({ hasText: 'Pacing batch for memory' })
+    .count()
+  expect(toastCount).toBeLessThanOrEqual(1)
 })
 
-test('perf budget — decode+resize+encode on 2 MB PNG p50 ≤ 500 ms', async ({ page: _page }) => {
-  test.fail(true, 'Wave 2 flips this — D-15 raster perf budget (RESEARCH §4)')
-  expect(true).toBe(false)
+test('perf budget — decode+resize+encode on 2 MB PNG p50 ≤ 500 ms', async ({ page }) => {
+  // Plan 04-07 Task 2 — live D-15: raster perf budget. Five-sample p50.
+  const pngBytes = await loadFixture('density-2x.png')
+  const samples = await page.evaluate(async ({ bytes }) => {
+    const blob = new Blob([new Uint8Array(bytes)], { type: 'image/png' })
+    const stores = (window as unknown as { __OIMG_STORES__: any }).__OIMG_STORES__
+    const filesApi = stores.files.getState()
+    const runtimeApi = stores.runtime
+    const out: number[] = []
+    for (let i = 0; i < 5; i++) {
+      filesApi.clear()
+      await filesApi.addSourceWithVariants({
+        sourceBlob: blob,
+        sourceDensity: '2x',
+        name: `s${i}.png`,
+        format: 'png',
+        targets: ['1x'],
+      })
+      const t0 = performance.now()
+      ;(Array.from(document.querySelectorAll('button')).find(
+        (b) => /optimize/i.test(b.textContent ?? ''),
+      ) as HTMLButtonElement | undefined)?.click()
+      await new Promise<void>((resolve) => {
+        const t = setInterval(() => {
+          if (!runtimeApi.getState().running) {
+            clearInterval(t)
+            resolve()
+          }
+        }, 50)
+      })
+      out.push(performance.now() - t0)
+    }
+    return out
+  }, { bytes: pngBytes })
+  samples.sort((a, b) => a - b)
+  const p50 = samples[Math.floor(samples.length / 2)]
+  console.log(`Perf budget p50: ${p50.toFixed(1)} ms (D-15 raster: ≤ 500 ms / 2 MB)`)
+  expect(p50).toBeLessThan(500)
 })
 
 test('collision rename — duplicate @Nx names auto-suffix (2)', async ({ page }) => {
@@ -192,7 +317,61 @@ test('collision rename — duplicate @Nx names auto-suffix (2)', async ({ page }
   expect(result.renameCount).toBe(3)
 })
 
-test('metadata strip — output bytes contain no iCCP chunk by default', async ({ page: _page }) => {
-  test.fail(true, 'Wave 2 flips this — png-adapter must round-trip without ICC')
-  expect(true).toBe(false)
+test('metadata strip — output bytes contain no iCCP chunk by default', async ({ page }) => {
+  // Plan 04-07 Task 2 — live OPT-06 / SC-3: png-adapter round-trips without ICC.
+  // Mirrors the runtime.running poll pattern used elsewhere in this file so an
+  // error status on the entry doesn't hang; assertions surface the actual status.
+  //
+  // Known Vite-dev-server flake: when this test runs in a fresh playwright
+  // worker that races Vite's WASM compilation, the @jsquash/png WASM fetch
+  // can return the SPA HTML fallback ("expected magic word 00 61 73 6d, found
+  // 3c 21 64 6f"). Console-error capture surfaces the cause when this happens.
+  // Tracked as a deferred Plan 04-03 (png-adapter) hardening item — see
+  // 04-07-SUMMARY Deferred Issues.
+  const consoleErrors: string[] = []
+  page.on('console', (msg) => { if (msg.type() === 'error') consoleErrors.push(msg.text()) })
+  page.on('pageerror', (err) => consoleErrors.push(`pageerror: ${err.message}`))
+  const iccBytes = await loadFixture('with-icc.png')
+  const finalState = await page.evaluate(async ({ bytes }) => {
+    const blob = new Blob([new Uint8Array(bytes)], { type: 'image/png' })
+    const stores = (window as unknown as { __OIMG_STORES__: any }).__OIMG_STORES__
+    const filesApi = stores.files.getState()
+    filesApi.clear()
+    await filesApi.addSourceWithVariants({
+      sourceBlob: blob,
+      sourceDensity: '2x',
+      name: 'icc.png',
+      format: 'png',
+      targets: ['1x'],
+    })
+    ;(Array.from(document.querySelectorAll('button')).find(
+      (b) => /optimize/i.test(b.textContent ?? ''),
+    ) as HTMLButtonElement | undefined)?.click()
+    await new Promise<void>((resolve) => {
+      const t = setInterval(() => {
+        if (!stores.runtime.getState().running) {
+          clearInterval(t)
+          resolve()
+        }
+      }, 100)
+    })
+    const entries = Object.values(stores.files.getState().byId) as Array<{
+      status: string
+      error?: string
+      optimizedBlob?: Blob
+    }>
+    const e = entries[0]
+    const bytesOut = e?.optimizedBlob
+      ? Array.from(new Uint8Array(await e.optimizedBlob.arrayBuffer()))
+      : null
+    return { count: entries.length, status: e?.status, error: e?.error, bytesOut }
+  }, { bytes: iccBytes })
+  expect(finalState.count).toBe(1)
+  expect(
+    finalState.status,
+    `optimize failed for icc fixture: ${finalState.error ?? 'no error message'}; console: ${consoleErrors.join(' | ')}`,
+  ).toBe('done')
+  expect(finalState.bytesOut).not.toBeNull()
+  const out = Buffer.from(finalState.bytesOut!)
+  expect(out.includes(Buffer.from('iCCP'))).toBe(false)
 })

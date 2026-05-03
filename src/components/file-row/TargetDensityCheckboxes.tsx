@@ -13,6 +13,7 @@
 // below marks the wiring point.
 
 import { useFilesStore } from '@/stores/files';
+import { useShallow } from 'zustand/react/shallow';
 import type { SourceDensity } from '@/types';
 
 const DENSITIES: readonly SourceDensity[] = ['1x', '2x', '3x'] as const;
@@ -42,8 +43,17 @@ export function TargetDensityCheckboxes({
   // Pull the full byId snapshot then filter to the family. Cheaper than a
   // selector per density — three densities at most + the family is a single
   // groupBy of the existing list.
-  const family = useFilesStore((s) =>
-    Object.values(s.byId).filter((e) => e.sourceFamilyId === sourceFamilyId),
+  //
+  // Plan 04-07 Rule 1 fix — wrap the .filter() selector in useShallow so the
+  // derived array is referentially stable across renders. Without this, every
+  // render returned a fresh array and React's useSyncExternalStore tripped the
+  // "Maximum update depth exceeded / getSnapshot should be cached to avoid an
+  // infinite loop" guard the moment a real FileEntry was rendered (caught by
+  // raster.spec.ts metadata-strip test as a blank-DOM page during execution).
+  const family = useFilesStore(
+    useShallow((s) =>
+      Object.values(s.byId).filter((e) => e.sourceFamilyId === sourceFamilyId),
+    ),
   );
 
   if (family.length === 0) {
