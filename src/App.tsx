@@ -599,17 +599,33 @@ export default function App() {
       // (decode → resize → encode). All other raster formats still fall back
       // to the stub until Phase 5 ships JPEG/WebP/AVIF encoders.
       const isSvg = f.format === 'svg'
-      const isPng = f.format === 'png'
-      const adapterFormat: AdapterFormat = isSvg ? 'svg' : isPng ? 'png' : 'stub'
+      // Plan 04-07 Rule 1 fix — PNG branch is gated on the byteEstimate field
+      // (set ONLY by addSourceWithVariants, never by Phase-2 test affordances
+      // calling addFile directly). Without this gate, the worker-pool VR-01/02,
+      // object-url VR-04, and aria-live VR-05 specs regressed because their
+      // synthetic 1KB octet-stream blobs (format='png' as a stand-in for stub)
+      // started routing through the real png-adapter, which threw AdapterError
+      // on the bogus PNG header and the tests timed out on never-'done' status.
+      // Real user-dropped PNGs always carry byteEstimate (Plan 04-05 seeds it
+      // during fan-out), so this preserves the Phase 4 contract end-to-end.
+      const fileEntry = useFilesStore.getState().byId[fileId]
+      const hasPngFanoutShape =
+        f.format === 'png' &&
+        typeof (fileEntry as { byteEstimate?: number } | undefined)?.byteEstimate ===
+          'number'
+      const adapterFormat: AdapterFormat = isSvg
+        ? 'svg'
+        : hasPngFanoutShape
+          ? 'png'
+          : 'stub'
       let settings: unknown
       if (isSvg) {
         settings = useSettingsStore.getState().svg
-      } else if (isPng) {
+      } else if (hasPngFanoutShape) {
         // Plan 04-05 enriched FileEntry: targetDensity, sourceDensity guaranteed
         // for PNG variants emitted by addSourceWithVariants; resizeOverride +
         // preserveIcc are optional per-file overrides (UI deferred to Phase 5
         // per D-07/D-09; data shape only).
-        const fileEntry = useFilesStore.getState().byId[fileId]
         settings = buildPngResizeSettings({
           sourceDensity: fileEntry?.sourceDensity ?? '1x',
           targetDensity:
@@ -667,7 +683,7 @@ export default function App() {
             useFilesStore
               .getState()
               .markDone(fileId, sanitizedBlob, sanitizedBlob.size, sanitizedCount)
-          } else if (isPng) {
+          } else if (hasPngFanoutShape) {
             // Phase 4 plan 04-07 — encoded PNG bytes from png-adapter (decode
             // → resize → encode). Wrap as Blob and store; thumbnail / object
             // URL is auto-managed by useRuntimeStore.getOrCreateObjectURL on
@@ -876,9 +892,11 @@ export default function App() {
                       added pre-fanout via addFile). SourceDensityControl
                       renders the hover-revealed chevron popover. Both are
                       no-op interactive (mid-flight edits land Phase 5). */}
-                  <TargetDensityCheckboxes
-                    sourceFamilyId={filesById[f.id]?.sourceFamilyId ?? f.id}
-                  />
+                  {filesById[f.id]?.sourceFamilyId && (
+                    <TargetDensityCheckboxes
+                      sourceFamilyId={filesById[f.id]!.sourceFamilyId!}
+                    />
+                  )}
                   <SourceDensityControl fileId={f.id} />
                   <button
                     className="ctxbtn"
