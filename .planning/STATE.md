@@ -4,14 +4,14 @@ milestone: v1.0
 milestone_name: milestone
 status: executing
 stopped_at: Phase 4 context gathered
-last_updated: "2026-05-03T16:16:14.416Z"
+last_updated: "2026-05-03T16:23:21.197Z"
 last_activity: 2026-05-03
 progress:
   total_phases: 8
   completed_phases: 3
   total_plans: 21
-  completed_plans: 15
-  percent: 71
+  completed_plans: 16
+  percent: 76
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-04-29)
 ## Current Position
 
 Phase: 04 (decode-resize-memory-model) — EXECUTING
-Plan: 2 of 7
+Plan: 3 of 7
 Status: Ready to execute
 Last activity: 2026-05-03
 
-Progress: [███████░░░] 71%
+Progress: [████████░░] 76%
 
 ## Performance Metrics
 
@@ -66,6 +66,7 @@ Progress: [███████░░░] 71%
 | Phase 03-svg-pipeline PC | 12min | 2 tasks | 5 files |
 | Phase 03-svg-pipeline PD | ~125min | 2 tasks tasks | 8 files files |
 | Phase 04 P04-01 | 16min | 2 tasks tasks | 10 files files |
+| Phase 04-decode-resize-memory-model P04-02 | 3 | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -102,6 +103,7 @@ Recent decisions affecting current work:
 - [Phase 03-svg-pipeline plan 03-D]: buildSvgoConfig extracted into svg-config.ts pure module so unit tests run under node --experimental-strip-types without evaluating svgo/browser; svg-adapter.ts re-exports for callers
 - [Phase 03-svg-pipeline plan 03-D]: Test-author rule: file ids passed to addFile() in tests MUST NOT start with preview- or savings- (App.tsx isAuxiliaryJob short-circuits runtime bookkeeping). Renamed savings-test → live-savings to clear the collision
 - [Phase ?]: [Phase 04-decode-resize-memory-model plan 04-01]: settings-store unit tests use DEFAULT_GLOBAL_SETTINGS + emulated setGlobal merge instead of importing useSettingsStore directly — Vite alias @/data is unresolvable under node --experimental-strip-types; same pattern as Phase 3 svg-adapter.unit.ts importing pure svg-config
+- [Phase ?]: [Phase 04-decode-resize-memory-model plan 04-02]: Three pure-function lib modules (sniff/filename/memory-budget) shipped framework-free with relative ../types/index.ts type-import — Vite alias @/types unresolvable under node --experimental-strip-types; same precedent as Phase 3 svg-config.ts extraction
 
 ### Pending Todos
 
@@ -134,6 +136,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-05-03T16:15:35.160Z
+Last session: 2026-05-03T16:22:55.464Z
 Stopped at: Phase 4 context gathered
 Resume file: None
