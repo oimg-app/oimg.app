@@ -182,6 +182,15 @@ Research (`04-RESEARCH.md`) uncovered three issues that contradict or extend the
 - **Order of operations:** apply density suffix FIRST (`logo.png` → `logo@2x.png`), then collision-check across the existing FileEntry set; if collision, insert `(N)` before the `@Nx` suffix (`logo (2)@2x.png`).
 - **State home:** rename-count counter lives in `useRuntimeStore` (per-batch-scoped). Mirrors D-13 first-throttle-toast plumbing.
 
+### D-01 / D-02 SCOPED — Interactive density editing deferred to Phase 5
+
+- **Reality:** D-01 (per-file source-density dropdown) and D-02 (per-file target-density checkboxes) controls render in the initial drop only. Interactive editing of density AFTER drop — toggling target checkboxes mid-batch, changing source density mid-flight — is deferred to Phase 5.
+- **Phase 4 ships data-shape-only fan-out from initial drop.** The `addSourceWithVariants` action materializes N FileEntries up front from the drop-time source/targets selection. Mutating `sourceDensity` or `targetDensity` on an existing FileEntry does NOT re-fan-out variants in P4 (no add/remove of family members).
+- **Reason:** keeps Phase 4 mutation surface to `addSourceWithVariants` + `removeFamily`. Interactive editing requires re-fan-out logic (diffing target sets, removing newly-unchecked variants, generating newly-checked variants, collision-renaming, byte-estimate recompute) that is out of scope for P4 and naturally lives with the Phase 5 detail-view edit UX.
+- **UI implication (Plan 04-06):** SourceDensityControl + TargetDensityCheckboxes render and are keyboard-accessible, but mutations on rendered FileEntries are NO-OPs (or update a cosmetic `sourceDensity` field only, with inline TODO). The visible affordance is intentional — discoverability for v1.1 — but the user-visible behavior is "edit on drop, not after."
+- **Closure path:** Phase 5 owns the interactive-edit re-fan-out logic; CONTEXT.md for Phase 5 will reference this scoping decision when planning the per-file UI affordances (D-07 + D-09 deferred-UI patterns).
+
+
 ### Why these amendments are non-negotiable
 
 ICC: shipping a working flag in P4 would either lie to users or balloon scope by ~600–1200 LOC of byte-level codec wrangling. Data-shape-only matches the D-07 / D-09 deferred-UI pattern.

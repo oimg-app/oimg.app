@@ -84,7 +84,7 @@ Plans:
   2. Processing 50 raster files simultaneously completes without tab crash or OOM error; Chrome DevTools Memory tab stays below 800 MB peak
   3. Metadata (EXIF/XMP/IPTC) is absent from decoded output by default; ICC profile is preserved when the user enables the toggle
   4. `URL.revokeObjectURL` is called for every processed Blob — no object-URL leaks in a 20-file batch (verifiable via DevTools Memory snapshot)
-**Plans**: 6 plans
+**Plans**: 7 plans
 
 Plans:
 - [ ] 04-01-test-scaffolds-and-types-PLAN.md — Wave 0 test scaffolds + fixtures + FileEntry/AdapterMeta extensions + DEFAULT_RESIZE_SETTINGS
@@ -92,7 +92,8 @@ Plans:
 - [ ] 04-03-png-adapter-PLAN.md — Install jSquash deps + create png-adapter (decode + resize + re-encode) + worker dispatch wiring + ICC strip-by-default unit
 - [ ] 04-04-pool-admission-gate-PLAN.md — PoolJob.byteEstimate + WorkerPool admission gate + onThrottle callback + runtime store throttle/rename batch state
 - [ ] 04-05-files-fanout-and-settings-PLAN.md — useFilesStore.addSourceWithVariants fan-out + removeFamily + useSettingsStore resize slice
-- [ ] 04-06-ui-integration-PLAN.md — TweaksPanel sections + file-row density controls + StatusBar pill + App.tsx pool/PNG/toast wiring + flip raster.spec.ts to live
+- [ ] 04-06-ui-integration-PLAN.md — TweaksPanel sections + file-row density controls + StatusBar pill (components only)
+- [ ] 04-07-app-wiring-and-uat-PLAN.md — App.tsx pool/PNG/toast wiring + flip raster.spec.ts to live + visual UAT
 
 ### Phase 5: Raster Encoders
 **Goal**: Users can optimize PNG, WebP, JPEG, and AVIF files with per-format codec controls, seeing before/after comparison and byte savings
@@ -149,7 +150,7 @@ Plans:
 | 1. Shell + Foundation | 5/5 | Complete | 2026-04-30 |
 | 2. Worker Harness + State | 5/5 | Complete | 2026-04-30 |
 | 3. SVG Pipeline | 0/4 | Not started | - |
-| 4. Decode + Resize + Memory Model | 0/6 | Not started | - |
+| 4. Decode + Resize + Memory Model | 0/7 | Not started | - |
 | 5. Raster Encoders | 0/TBD | Not started | - |
 | 6. Snippet Generation | 0/TBD | Not started | - |
 | 7. ZIP Export + Persistence | 0/TBD | Not started | - |

@@ -736,29 +736,34 @@ export function deduplicateName(proposed: string, takenSet: Set<string>): string
 | A8 | Re-encoding via `@jsquash/png` encode in Phase 4 satisfies "non-zero byte reduction" weakly (mostly equal-size or larger output vs source), so SC-1's filename test is the gate | §1.4 / Risk 4 | MEDIUM — Phase 4 may need to thread settings to oxipng for an honest reduction; planner decides |
 | A9 | The 100ms/2MB perf budget was SVG-calibrated and needs raster recalibration | Risk 2 | MEDIUM — affects SLA conversation with user |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **ICC preservation: ship it, defer it, or drop it from v1?**
+   - RESOLVED: D-10 amendment in CONTEXT.md `<post_research_amendments>` — ICC preserve toggle ships, default OFF, raster only (data-shape only in P4; worker no-op until P5).
    - What we know: jSquash exposes no ICC option for any format
    - What's unclear: how strongly the user values ICC preservation given the implementation cost
    - Recommendation: present Option A (data shape only) and Option C (drop) to discuss-phase; let the user pick
 
 2. **Per-file budget for raster optimize**
+   - RESOLVED: D-15 amendment in CONTEXT.md `<post_research_amendments>` — 50 MiB per-job ceiling via `computeMemoryBudget()` / `estimateJobBytes()`; p50 ≤ 500 ms / 2 MB raster.
    - What we know: 100ms/2MB is in PROJECT.md as a generic constraint; raster realistically needs 2–5× more
    - What's unclear: empirical numbers on target hardware; user's tolerance
    - Recommendation: Wave 0 benchmarks against representative fixtures; planner proposes p50 ≤ 500 ms / 2 MB raster file as the working target; user ratifies
 
 3. **Collision rename UX — toast or silent?**
+   - RESOLVED: D-13 + D-16 — auto-rename with `(N)` suffix before `@Nx`; single Sonner first-event toast per batch summarizing total renames; per-row badge persists for the batch duration.
    - What we know: collision will happen with mixed-density uploads
    - What's unclear: user's preference between silent rename + badge vs Sonner toast
    - Recommendation: toast on first per-batch (mirrors D-13 first-throttle pattern); badge per-row stays for the duration
 
 4. **`removeFamily(sourceId)` action — ship in Phase 4 or defer?**
+   - RESOLVED: ships in Plan 04-05 (CONTEXT.md `<post_research_amendments>`). Action is exported from useFilesStore; no UI wiring in P4 (Phase 5 detail-view owns the button).
    - What we know: CONTEXT.md flags it as Claude's discretion
    - What's unclear: whether a "remove parent removes all variants" UX is wanted
    - Recommendation: ship the action (cheap, ~10 LOC) but DON'T wire a UI button for it in Phase 4; let Phase 5 detail-view decide
 
 5. **Settings store: extend `global` slice vs new `resize` + `metadata` slices?**
+   - RESOLVED: two-slice layout in `src/stores/settings.ts` per CONTEXT.md `<post_research_amendments>` — extend existing `global` (already hosts `stripMetadata` + `preserveIccProfile`); add new top-level `resize: { alg: ResizeAlg }` slice.
    - What we know: Phase 3 added `snippetTogglesByFileId` directly to `useSettingsStore` (flat); existing `global` has `stripMetadata + preserveIccProfile` already
    - What's unclear: cleanliness preference
    - Recommendation: extend existing `global` (it already has the ICC fields); add a top-level `resize: { alg: ResizeAlg }` slice. Two slices, no nesting changes.
