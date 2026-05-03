@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 04-04-pool-admission-gate-PLAN.md
-last_updated: "2026-05-03T17:01:30.877Z"
+stopped_at: Completed 04-05-files-fanout-and-settings-PLAN.md
+last_updated: "2026-05-03T17:35:23.745Z"
 last_activity: 2026-05-03
 progress:
   total_phases: 8
   completed_phases: 3
   total_plans: 21
-  completed_plans: 18
-  percent: 86
+  completed_plans: 19
+  percent: 90
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-04-29)
 ## Current Position
 
 Phase: 04 (decode-resize-memory-model) — EXECUTING
-Plan: 5 of 7
+Plan: 6 of 7
 Status: Ready to execute
 Last activity: 2026-05-03
 
-Progress: [█████████░] 86%
+Progress: [█████████░] 90%
 
 ## Performance Metrics
 
@@ -69,6 +69,7 @@ Progress: [█████████░] 86%
 | Phase 04-decode-resize-memory-model P04-02 | 3 | 2 tasks | 3 files |
 | Phase 04 P04-03 | 13 | 3 tasks | 7 files |
 | Phase 04 P04-04 | 10min | 2 tasks | 5 files |
+| Phase 04 P04-05 | 18min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -111,6 +112,9 @@ Recent decisions affecting current work:
 - [Phase 04-decode-resize-memory-model plan 04-04]: memory budget fixed at WorkerPool construction (computeMemoryBudget called once); deviceMemory is session-static
 - [Phase 04-decode-resize-memory-model plan 04-04]: deadlock-prevention precondition inflightBytes>0 lets a single oversize job dispatch alone — degraded but functional
 - [Phase 04-decode-resize-memory-model plan 04-04]: runtime-throttle.test.ts uses in-test reducer mirror (Plan 04-01/04-03 precedent — bare-node strip-types cannot resolve @/ alias and rejects pool.ts parameter-property syntax)
+- [Phase 04-decode-resize-memory-model plan 04-05]: addSourceWithVariants is the only drop-time fan-out surface — interactive editing of target set after drop is deferred to Phase 5 per CONTEXT.md D-01/D-02 SCOPED amendment
+- [Phase 04-decode-resize-memory-model plan 04-05]: settings.ts gains a NEW top-level resize slice (not a nested global key) so TweaksPanel section split (ICC under global, resize under resize) stays clean — RESEARCH Open Question 5 + PATTERNS.md lines 488-504
+- [Phase 04-decode-resize-memory-model plan 04-05]: removeFamily LOOPS removeFile rather than bulk-deleting byId — preserves URL-revoke + snippetTogglesByFileId cleanup discipline per RESEARCH §5.2 explicit guidance
 
 ### Pending Todos
 
@@ -143,6 +147,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-05-03T17:01:30.872Z
-Stopped at: Completed 04-04-pool-admission-gate-PLAN.md
+Last session: 2026-05-03T17:35:23.740Z
+Stopped at: Completed 04-05-files-fanout-and-settings-PLAN.md
 Resume file: None

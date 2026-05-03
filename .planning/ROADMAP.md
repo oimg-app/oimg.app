@@ -91,7 +91,7 @@ Plans:
 - [x] 04-02-pure-libs-PLAN.md — Pure utilities: sniff PNG IHDR, filename @Nx suffix + collision dedup, memory-budget formula
 - [x] 04-03-png-adapter-PLAN.md — Install jSquash deps + create png-adapter (decode + resize + re-encode) + worker dispatch wiring + ICC strip-by-default unit
 - [x] 04-04-pool-admission-gate-PLAN.md — PoolJob.byteEstimate + WorkerPool admission gate + onThrottle callback + runtime store throttle/rename batch state
-- [ ] 04-05-files-fanout-and-settings-PLAN.md — useFilesStore.addSourceWithVariants fan-out + removeFamily + useSettingsStore resize slice
+- [x] 04-05-files-fanout-and-settings-PLAN.md — useFilesStore.addSourceWithVariants fan-out + removeFamily + useSettingsStore resize slice
 - [ ] 04-06-ui-integration-PLAN.md — TweaksPanel sections + file-row density controls + StatusBar pill (components only)
 - [ ] 04-07-app-wiring-and-uat-PLAN.md — App.tsx pool/PNG/toast wiring + flip raster.spec.ts to live + visual UAT
 
