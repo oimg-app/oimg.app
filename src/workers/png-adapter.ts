@@ -24,10 +24,10 @@
 
 import { decode, encode } from '@jsquash/png'
 import resize from '@jsquash/resize'
-import type { AdapterMeta } from './types'
-import { AdapterError } from './types'
-import type { PngResizeSettings } from './png-config'
-import { buildPngResizeSettings } from './png-config'
+import type { AdapterMeta } from './types.ts'
+import { AdapterError } from './types.ts'
+import type { PngResizeSettings } from './png-config.ts'
+import { buildPngResizeSettings } from './png-config.ts'
 
 // Re-export so callers that historically imported buildPngResizeSettings
 // from png-adapter (App.tsx will, mirroring the svg-adapter pattern) keep
