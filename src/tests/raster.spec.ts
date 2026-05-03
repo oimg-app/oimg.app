@@ -102,6 +102,28 @@ test('removeFamily cascades through removeFile preserving URL revoke', async ({ 
   expect(after.urlCountAfter).toBe(0)
 })
 
+test('settings resize slice — defaults lanczos3 + setResize partial merge', async ({ page }) => {
+  // Plan 04-05 Task 2 — live store contract for the new resize slice
+  // (D-05 + D-06). DEFAULT_RESIZE_SETTINGS exported by Plan 04-01; this test
+  // gates the actual useSettingsStore wiring.
+  const result = await page.evaluate(() => {
+    const stores = (window as unknown as { __OIMG_STORES__: any }).__OIMG_STORES__
+    const s = stores.settings.getState()
+    const initialAlg = s.resize?.alg
+    s.setResize({ alg: 'mitchell' })
+    const afterSet = stores.settings.getState().resize?.alg
+    s.setResize({})
+    const afterNoop = stores.settings.getState().resize?.alg
+    // global.preserveIccProfile must be untouched by resize-slice mutations.
+    const iccPreserved = stores.settings.getState().global?.preserveIccProfile
+    return { initialAlg, afterSet, afterNoop, iccPreserved }
+  })
+  expect(result.initialAlg).toBe('lanczos3')
+  expect(result.afterSet).toBe('mitchell')
+  expect(result.afterNoop).toBe('mitchell')
+  expect(result.iccPreserved).toBe(false)
+})
+
 test('memory budget — 50 PNG @ 2x stays under 800 MB peak heap', async ({ page: _page }) => {
   test.fail(true, 'Wave 2 flips this — admission gate + CDP heap probe wiring required')
   // Real implementation will use src/tests/instrument-heap.ts probeHeapDuringBatch.
