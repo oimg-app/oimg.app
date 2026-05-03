@@ -13,7 +13,7 @@
 - [x] **PIPE-01**: User can drag-and-drop or pick multiple files (SVG, PNG, WebP, JPEG, AVIF)
 - [ ] **PIPE-02**: User can configure per-format codec settings via accordion settings panel
 - [ ] **PIPE-03**: User can set global settings that apply across all uploaded files
-- [ ] **PIPE-04**: User can mark each file's source density (1x / 2x / 3x); app generates missing variants by scaling
+- [x] **PIPE-04**: User can mark each file's source density (1x / 2x / 3x); app generates missing variants by scaling
 - [ ] **PIPE-05**: User can download all results as a single ZIP archive
 - [ ] **PIPE-06**: User can download individual files
 
@@ -24,7 +24,7 @@
 - [ ] **OPT-03**: WebP optimization via jSquash WebP (lossy/lossless, quality, method)
 - [ ] **OPT-04**: JPEG optimization via jSquash `@jsquash/jpeg` (MozJPEG-based; quality, progressive)
 - [ ] **OPT-05**: AVIF optimization via jSquash AVIF (quality, lossless)
-- [ ] **OPT-06**: Metadata stripping (EXIF/XMP/IPTC) with optional ICC-profile preservation
+- [x] **OPT-06**: Metadata stripping (EXIF/XMP/IPTC) with optional ICC-profile preservation
 
 ### Snippet Generation
 

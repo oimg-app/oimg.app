@@ -87,7 +87,7 @@ Plans:
 **Plans**: 7 plans
 
 Plans:
-- [ ] 04-01-test-scaffolds-and-types-PLAN.md — Wave 0 test scaffolds + fixtures + FileEntry/AdapterMeta extensions + DEFAULT_RESIZE_SETTINGS
+- [x] 04-01-test-scaffolds-and-types-PLAN.md — Wave 0 test scaffolds + fixtures + FileEntry/AdapterMeta extensions + DEFAULT_RESIZE_SETTINGS
 - [ ] 04-02-pure-libs-PLAN.md — Pure utilities: sniff PNG IHDR, filename @Nx suffix + collision dedup, memory-budget formula
 - [ ] 04-03-png-adapter-PLAN.md — Install jSquash deps + create png-adapter (decode + resize + re-encode) + worker dispatch wiring + ICC strip-by-default unit
 - [ ] 04-04-pool-admission-gate-PLAN.md — PoolJob.byteEstimate + WorkerPool admission gate + onThrottle callback + runtime store throttle/rename batch state

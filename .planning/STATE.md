@@ -4,14 +4,14 @@ milestone: v1.0
 milestone_name: milestone
 status: executing
 stopped_at: Phase 4 context gathered
-last_updated: "2026-05-03T15:51:09.329Z"
-last_activity: 2026-05-03 -- Phase 04 planning complete
+last_updated: "2026-05-03T16:16:14.416Z"
+last_activity: 2026-05-03
 progress:
   total_phases: 8
   completed_phases: 3
   total_plans: 21
-  completed_plans: 14
-  percent: 67
+  completed_plans: 15
+  percent: 71
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-29)
 
 **Core value:** Developer drops a folder of source assets, picks output settings once, and walks away with a ZIP of optimized files plus copy-paste HTML/CSS snippets — without anything leaving the browser.
-**Current focus:** Phase 03 — svg-pipeline
+**Current focus:** Phase 04 — decode-resize-memory-model
 
 ## Current Position
 
-Phase: 4
-Plan: Not started
+Phase: 04 (decode-resize-memory-model) — EXECUTING
+Plan: 2 of 7
 Status: Ready to execute
-Last activity: 2026-05-03 -- Phase 04 planning complete
+Last activity: 2026-05-03
 
-Progress: [██████████] 100%
+Progress: [███████░░░] 71%
 
 ## Performance Metrics
 
@@ -65,6 +65,7 @@ Progress: [██████████] 100%
 | Phase 03-svg-pipeline PPB | 13min | 2 tasks tasks | 4 files files |
 | Phase 03-svg-pipeline PC | 12min | 2 tasks | 5 files |
 | Phase 03-svg-pipeline PD | ~125min | 2 tasks tasks | 8 files files |
+| Phase 04 P04-01 | 16min | 2 tasks tasks | 10 files files |
 
 ## Accumulated Context
 
@@ -100,6 +101,7 @@ Recent decisions affecting current work:
 - [Phase 03-svg-pipeline plan 03-D]: Phase 3 gate green — 37/37 Playwright + 19/19 unit assertions; 3 Rule 1 fixes shipped (SnippetPanel selector loop, BODY-wrapper count, microtask race); auxiliary-job-prefix test rule documented
 - [Phase 03-svg-pipeline plan 03-D]: buildSvgoConfig extracted into svg-config.ts pure module so unit tests run under node --experimental-strip-types without evaluating svgo/browser; svg-adapter.ts re-exports for callers
 - [Phase 03-svg-pipeline plan 03-D]: Test-author rule: file ids passed to addFile() in tests MUST NOT start with preview- or savings- (App.tsx isAuxiliaryJob short-circuits runtime bookkeeping). Renamed savings-test → live-savings to clear the collision
+- [Phase ?]: [Phase 04-decode-resize-memory-model plan 04-01]: settings-store unit tests use DEFAULT_GLOBAL_SETTINGS + emulated setGlobal merge instead of importing useSettingsStore directly — Vite alias @/data is unresolvable under node --experimental-strip-types; same pattern as Phase 3 svg-adapter.unit.ts importing pure svg-config
 
 ### Pending Todos
 
@@ -132,6 +134,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-05-02T01:01:14.086Z
+Last session: 2026-05-03T16:15:35.160Z
 Stopped at: Phase 4 context gathered
-Resume file: .planning/phases/04-decode-resize-memory-model/04-CONTEXT.md
+Resume file: None
