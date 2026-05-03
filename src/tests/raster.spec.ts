@@ -25,11 +25,12 @@ test.beforeEach(async ({ page }) => {
 })
 
 test('density variants — source 2x emits @1x/@2x/@3x FileEntries', async ({ page }) => {
-  test.fail(true, 'Wave 2/3 flips this — addSourceWithVariants + png-adapter not yet shipped')
+  // Plan 04-05 — addSourceWithVariants fans out N FileEntries with shared
+  // sourceFamilyId, density-suffixed names, and a positive byteEstimate per variant.
   const pngBytes = await loadFixture('density-2x.png')
-  await page.evaluate(({ bytes }) => {
+  await page.evaluate(async ({ bytes }) => {
     const blob = new Blob([new Uint8Array(bytes)], { type: 'image/png' })
-    ;(window as unknown as { __OIMG_STORES__: any }).__OIMG_STORES__.files
+    await (window as unknown as { __OIMG_STORES__: any }).__OIMG_STORES__.files
       .getState()
       .addSourceWithVariants({
         sourceBlob: blob,
@@ -39,12 +40,66 @@ test('density variants — source 2x emits @1x/@2x/@3x FileEntries', async ({ pa
         targets: ['1x', '2x', '3x'],
       })
   }, { bytes: pngBytes })
-  const names = await page.evaluate(() =>
-    Object.values(
-      (window as unknown as { __OIMG_STORES__: any }).__OIMG_STORES__.files.getState().byId,
-    ).map((f: any) => f.name).sort(),
-  )
-  expect(names).toEqual(['logo@1x.png', 'logo@2x.png', 'logo@3x.png'])
+  const result = await page.evaluate(() => {
+    const byId = (window as unknown as { __OIMG_STORES__: any }).__OIMG_STORES__.files
+      .getState().byId
+    const entries = Object.values(byId) as Array<{
+      name: string
+      sourceFamilyId?: string
+      targetDensity?: string
+      sourceDensity?: string
+      byteEstimate?: number
+      id: string
+    }>
+    return {
+      names: entries.map((f) => f.name).sort(),
+      familyIds: [...new Set(entries.map((f) => f.sourceFamilyId))],
+      targetDensities: entries.map((f) => f.targetDensity).sort(),
+      allHavePositiveEstimate: entries.every(
+        (f) => typeof f.byteEstimate === 'number' && f.byteEstimate > 0,
+      ),
+      ids: entries.map((f) => f.id).sort(),
+    }
+  })
+  expect(result.names).toEqual(['logo@1x.png', 'logo@2x.png', 'logo@3x.png'])
+  expect(result.familyIds).toHaveLength(1) // all variants share one sourceFamilyId
+  expect(result.targetDensities).toEqual(['1x', '2x', '3x'])
+  expect(result.allHavePositiveEstimate).toBe(true)
+  // Variant ids are `${sourceUuid}-${density}` — three entries, three suffixes.
+  const suffixes = result.ids.map((id) => id.slice(-2)).sort()
+  expect(suffixes).toEqual(['1x', '2x', '3x'])
+})
+
+test('removeFamily cascades through removeFile preserving URL revoke', async ({ page }) => {
+  const pngBytes = await loadFixture('density-2x.png')
+  const after = await page.evaluate(async ({ bytes }) => {
+    const stores = (window as unknown as { __OIMG_STORES__: any }).__OIMG_STORES__
+    const blob = new Blob([new Uint8Array(bytes)], { type: 'image/png' })
+    await stores.files.getState().addSourceWithVariants({
+      sourceBlob: blob,
+      sourceDensity: '2x',
+      name: 'family-test.png',
+      format: 'png',
+      targets: ['1x', '2x', '3x'],
+    })
+    const familyId = (Object.values(stores.files.getState().byId) as Array<any>)[0]
+      .sourceFamilyId
+    // Seed urlCache for one variant to verify revoke discipline (D-10/PATTERNS Pitfall 3).
+    const ids = Object.keys(stores.files.getState().byId)
+    stores.runtime.getState().getOrCreateObjectURL(ids[0], blob)
+    const beforeUrlCount = stores.runtime.getState().urlCache.size
+    stores.files.getState().removeFamily(familyId)
+    return {
+      remainingOrder: stores.files.getState().order.length,
+      remainingByIdKeys: Object.keys(stores.files.getState().byId).length,
+      urlCountBefore: beforeUrlCount,
+      urlCountAfter: stores.runtime.getState().urlCache.size,
+    }
+  }, { bytes: pngBytes })
+  expect(after.remainingOrder).toBe(0)
+  expect(after.remainingByIdKeys).toBe(0)
+  expect(after.urlCountBefore).toBe(1)
+  expect(after.urlCountAfter).toBe(0)
 })
 
 test('memory budget — 50 PNG @ 2x stays under 800 MB peak heap', async ({ page: _page }) => {
@@ -68,9 +123,51 @@ test('perf budget — decode+resize+encode on 2 MB PNG p50 ≤ 500 ms', async ({
   expect(true).toBe(false)
 })
 
-test('collision rename — duplicate @Nx names auto-suffix (2)', async ({ page: _page }) => {
-  test.fail(true, 'Wave 2 flips this — deduplicateName + addSourceWithVariants required')
-  expect(true).toBe(false)
+test('collision rename — duplicate @Nx names auto-suffix (2)', async ({ page }) => {
+  // Plan 04-05 — addSourceWithVariants applies applyDensitySuffix FIRST, then
+  // deduplicateName against the existing FileEntry name set. Collisions are
+  // reported via useRuntimeStore.markRename(N) for the D-13 / D-16 toast latch.
+  const pngBytes = await loadFixture('density-2x.png')
+  const result = await page.evaluate(async ({ bytes }) => {
+    const stores = (window as unknown as { __OIMG_STORES__: any }).__OIMG_STORES__
+    const blob = new Blob([new Uint8Array(bytes)], { type: 'image/png' })
+    // First drop seeds @1x/@2x/@3x.
+    await stores.files.getState().addSourceWithVariants({
+      sourceBlob: blob,
+      sourceDensity: '2x',
+      name: 'logo.png',
+      format: 'png',
+      targets: ['1x', '2x', '3x'],
+    })
+    // Reset rename counter (the runtime store may have prior batch state).
+    stores.runtime.setState({ renameCountThisBatch: 0 })
+    // Second drop with identical name — every variant collides.
+    await stores.files.getState().addSourceWithVariants({
+      sourceBlob: blob,
+      sourceDensity: '2x',
+      name: 'logo.png',
+      format: 'png',
+      targets: ['1x', '2x', '3x'],
+    })
+    const allNames = (
+      Object.values(stores.files.getState().byId) as Array<{ name: string }>
+    )
+      .map((f) => f.name)
+      .sort()
+    return {
+      names: allNames,
+      renameCount: stores.runtime.getState().renameCountThisBatch,
+    }
+  }, { bytes: pngBytes })
+  expect(result.names).toEqual([
+    'logo (2)@1x.png',
+    'logo (2)@2x.png',
+    'logo (2)@3x.png',
+    'logo@1x.png',
+    'logo@2x.png',
+    'logo@3x.png',
+  ])
+  expect(result.renameCount).toBe(3)
 })
 
 test('metadata strip — output bytes contain no iCCP chunk by default', async ({ page: _page }) => {
