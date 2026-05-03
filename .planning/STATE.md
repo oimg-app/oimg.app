@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 4 context gathered
-last_updated: "2026-05-03T16:23:21.197Z"
+stopped_at: Completed 04-04-03-png-adapter-PLAN.md
+last_updated: "2026-05-03T16:43:25.177Z"
 last_activity: 2026-05-03
 progress:
   total_phases: 8
   completed_phases: 3
   total_plans: 21
-  completed_plans: 16
-  percent: 76
+  completed_plans: 17
+  percent: 81
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-04-29)
 ## Current Position
 
 Phase: 04 (decode-resize-memory-model) — EXECUTING
-Plan: 3 of 7
+Plan: 4 of 7
 Status: Ready to execute
 Last activity: 2026-05-03
 
-Progress: [████████░░] 76%
+Progress: [████████░░] 81%
 
 ## Performance Metrics
 
@@ -67,6 +67,7 @@ Progress: [████████░░] 76%
 | Phase 03-svg-pipeline PD | ~125min | 2 tasks tasks | 8 files files |
 | Phase 04 P04-01 | 16min | 2 tasks tasks | 10 files files |
 | Phase 04-decode-resize-memory-model P04-02 | 3 | 2 tasks | 3 files |
+| Phase 04 P04-03 | 13 | 3 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -104,6 +105,8 @@ Recent decisions affecting current work:
 - [Phase 03-svg-pipeline plan 03-D]: Test-author rule: file ids passed to addFile() in tests MUST NOT start with preview- or savings- (App.tsx isAuxiliaryJob short-circuits runtime bookkeeping). Renamed savings-test → live-savings to clear the collision
 - [Phase ?]: [Phase 04-decode-resize-memory-model plan 04-01]: settings-store unit tests use DEFAULT_GLOBAL_SETTINGS + emulated setGlobal merge instead of importing useSettingsStore directly — Vite alias @/data is unresolvable under node --experimental-strip-types; same pattern as Phase 3 svg-adapter.unit.ts importing pure svg-config
 - [Phase ?]: [Phase 04-decode-resize-memory-model plan 04-02]: Three pure-function lib modules (sniff/filename/memory-budget) shipped framework-free with relative ../types/index.ts type-import — Vite alias @/types unresolvable under node --experimental-strip-types; same precedent as Phase 3 svg-config.ts extraction
+- [Phase ?]: [Phase 04-decode-resize-memory-model plan 04-03]: png-adapter local imports use explicit .ts extension (./types.ts, ./png-config.ts) so node --experimental-strip-types resolves them — Vite is unaffected. Same precedent as Phase 3 svg-config.ts and Phase 4 filename.ts.
+- [Phase ?]: [Phase 04-decode-resize-memory-model plan 04-03]: icc.test.ts WASM-fallback catch extended to recognize node strip-types TypeScript-syntax limits (parameter properties in AdapterError) and ERR_MODULE_NOT_FOUND — Wave 3 raster.spec.ts -g 'metadata strip' is the authoritative ICC gate.
 
 ### Pending Todos
 
@@ -136,6 +139,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-05-03T16:22:55.464Z
-Stopped at: Phase 4 context gathered
+Last session: 2026-05-03T16:43:25.171Z
+Stopped at: Completed 04-04-03-png-adapter-PLAN.md
 Resume file: None
