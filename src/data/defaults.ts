@@ -80,6 +80,13 @@ export const DEFAULT_GLOBAL_SETTINGS: GlobalSettings = {
   preserveIccProfile: false,
 }
 
+// Phase 4 (D-05 + D-06) — default global resize settings. Lanczos3 is the
+// photo-grade default; Mitchell/Catrom/Triangle live in RESIZE_ALG for the
+// TweaksPanel "Resize / Variants" section dropdown.
+export const DEFAULT_RESIZE_SETTINGS: { alg: ResizeAlg } = {
+  alg: 'lanczos3',
+}
+
 // Codec / resize / fit value sets — moved from src/data/mock.ts in plan 02-05.
 // Used by the Toolbar codec menu (TitleBar) and CodecPanel segmented controls.
 export const CODECS: CodecLabel[] = ['SVG', 'PNG', 'WebP', 'JPEG', 'AVIF']

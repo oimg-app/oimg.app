@@ -66,6 +66,18 @@ export interface FileEntry {
   // undefined = file has not yet been processed; 0 = processed and clean;
   // > 0 = sanitization happened, surface a "sanitized · N" badge in the file row.
   sanitizedCount?: number
+  // Phase 4 (D-04 + D-14) — variants are siblings, not children. The source
+  // FileEntry id is the prefix; variant ids are `${sourceUuid}-${density}`.
+  // sourceFamilyId === source's id; useful for groupBy in FilePanel render.
+  sourceFamilyId?: string
+  // Density THIS entry produces. Mirrors `sourceDensity` semantics but for
+  // the OUTPUT slot. addSourceWithVariants populates this on each variant.
+  targetDensity?: SourceDensity
+  // Phase 4 (D-07) — per-file resize algorithm override (UI deferred to Phase 5).
+  resizeOverride?: ResizeAlg
+  // Phase 4 (D-09) — per-file ICC preserve override (data shape only; worker
+  // no-op in P4 per Post-Research D-10 amendment).
+  preserveIcc?: boolean
 }
 
 export interface CodecSettingsSvg {

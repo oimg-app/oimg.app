@@ -11,6 +11,11 @@ export interface AdapterMeta {
   // src/lib/sanitize-svg.ts after the worker returns SVGO-optimized bytes.
   // 0 = clean (no removals); undefined = non-svg adapter run.
   sanitizedCount?: number
+  // Phase 4 (D-04) — density tag attribution: png-resize adapter populates
+  // this with the variant density it produced ('1x' | '2x' | '3x'). Other
+  // adapters omit. Used by App.tsx markDone callback for telemetry only;
+  // does not affect output bytes.
+  density?: '1x' | '2x' | '3x'
 }
 
 export interface AdapterRunResult {
