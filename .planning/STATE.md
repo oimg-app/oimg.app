@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 04-04-03-png-adapter-PLAN.md
-last_updated: "2026-05-03T16:43:25.177Z"
+stopped_at: Completed 04-04-pool-admission-gate-PLAN.md
+last_updated: "2026-05-03T17:01:30.877Z"
 last_activity: 2026-05-03
 progress:
   total_phases: 8
   completed_phases: 3
   total_plans: 21
-  completed_plans: 17
-  percent: 81
+  completed_plans: 18
+  percent: 86
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-04-29)
 ## Current Position
 
 Phase: 04 (decode-resize-memory-model) — EXECUTING
-Plan: 4 of 7
+Plan: 5 of 7
 Status: Ready to execute
 Last activity: 2026-05-03
 
-Progress: [████████░░] 81%
+Progress: [█████████░] 86%
 
 ## Performance Metrics
 
@@ -68,6 +68,7 @@ Progress: [████████░░] 81%
 | Phase 04 P04-01 | 16min | 2 tasks tasks | 10 files files |
 | Phase 04-decode-resize-memory-model P04-02 | 3 | 2 tasks | 3 files |
 | Phase 04 P04-03 | 13 | 3 tasks | 7 files |
+| Phase 04 P04-04 | 10min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -107,6 +108,9 @@ Recent decisions affecting current work:
 - [Phase ?]: [Phase 04-decode-resize-memory-model plan 04-02]: Three pure-function lib modules (sniff/filename/memory-budget) shipped framework-free with relative ../types/index.ts type-import — Vite alias @/types unresolvable under node --experimental-strip-types; same precedent as Phase 3 svg-config.ts extraction
 - [Phase ?]: [Phase 04-decode-resize-memory-model plan 04-03]: png-adapter local imports use explicit .ts extension (./types.ts, ./png-config.ts) so node --experimental-strip-types resolves them — Vite is unaffected. Same precedent as Phase 3 svg-config.ts and Phase 4 filename.ts.
 - [Phase ?]: [Phase 04-decode-resize-memory-model plan 04-03]: icc.test.ts WASM-fallback catch extended to recognize node strip-types TypeScript-syntax limits (parameter properties in AdapterError) and ERR_MODULE_NOT_FOUND — Wave 3 raster.spec.ts -g 'metadata strip' is the authoritative ICC gate.
+- [Phase 04-decode-resize-memory-model plan 04-04]: memory budget fixed at WorkerPool construction (computeMemoryBudget called once); deviceMemory is session-static
+- [Phase 04-decode-resize-memory-model plan 04-04]: deadlock-prevention precondition inflightBytes>0 lets a single oversize job dispatch alone — degraded but functional
+- [Phase 04-decode-resize-memory-model plan 04-04]: runtime-throttle.test.ts uses in-test reducer mirror (Plan 04-01/04-03 precedent — bare-node strip-types cannot resolve @/ alias and rejects pool.ts parameter-property syntax)
 
 ### Pending Todos
 
@@ -139,6 +143,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-05-03T16:43:25.171Z
-Stopped at: Completed 04-04-03-png-adapter-PLAN.md
+Last session: 2026-05-03T17:01:30.872Z
+Stopped at: Completed 04-04-pool-admission-gate-PLAN.md
 Resume file: None
