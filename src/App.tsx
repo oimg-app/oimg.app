@@ -44,6 +44,17 @@ import type { PoolJob, AdapterFormat } from '@/workers/types'
 import { setLiveRegion, announce, isQuartileBoundary } from '@/lib/live-region'
 // Phase 3 plan 03-A — main-thread DOMPurify (Pitfall 1: cannot run in worker).
 import { sanitizeSvg } from '@/lib/sanitize-svg'
+// Phase 4 plan 04-07 — PNG branch in startOptimize. buildPngResizeSettings is
+// re-exported by png-adapter; importing from png-config avoids pulling
+// @jsquash/* into the App.tsx bundle (Vite still tree-shakes the worker chunk).
+import { buildPngResizeSettings } from '@/workers/png-config'
+// Phase 4 plan 04-07 — TweaksPanel sections + file-row density controls.
+import {
+  TweaksResizeSection,
+  TweaksPrivacySection,
+} from '@/components/panels/TweaksPanel'
+import { SourceDensityControl } from '@/components/file-row/SourceDensityControl'
+import { TargetDensityCheckboxes } from '@/components/file-row/TargetDensityCheckboxes'
 
 type Tab = 'codec' | 'svgo' | 'output' | 'report'
 type View = 'Batch' | 'Compare' | 'Report'
@@ -267,6 +278,22 @@ export default function App() {
       const msg = err instanceof Error ? err.message : String(err)
       useRuntimeStore.getState().markError(jobId, msg)
     },
+    // Phase 4 plan 04-07 (D-13) — admission gate held the queue. Snapshot the
+    // toast latch BEFORE markThrottle() flips it (markThrottle is idempotent
+    // and sets throttleToastFiredThisBatch=true on first call). The toast
+    // therefore fires at most once per batch even if the gate trips 50 times.
+    // UI-SPEC §Surface 7.
+    onThrottle: () => {
+      const r = useRuntimeStore.getState()
+      const wasFired = r.throttleToastFiredThisBatch
+      r.markThrottle()
+      if (!wasFired) {
+        toast.info('Pacing batch for memory', {
+          description:
+            'Some files are queued briefly to keep the tab responsive.',
+        })
+      }
+    },
   }), [])
 
   // Phase 2 plan 02-04 — Keyboard shortcuts. Combined Phase-1 (Cmd+K, Esc, /)
@@ -327,6 +354,12 @@ export default function App() {
         // so we guard here with `totalJobs > 0` AND a non-zero done+error sum
         // to avoid double-announcing on cancel.
         if (prev.running && !curr.running && curr.totalJobs > 0) {
+          // Phase 4 plan 04-07 (D-13) — clear the StatusBar Pacing pill at
+          // batch end. setThrottleActive(false) preserves the toast latch
+          // (throttleToastFiredThisBatch) — that latch resets on the next
+          // startBatch, ensuring the toast can fire once per future batch.
+          // UI-SPEC §Surface 6.
+          useRuntimeStore.getState().setThrottleActive(false)
           const finished = curr.doneCount + curr.errorCount === curr.totalJobs
           if (!finished) return // cancel path — handled in cancelBatch()
           const successCount = curr.totalJobs - curr.errorCount
@@ -366,6 +399,35 @@ export default function App() {
               void computePluginSavings(completedSvgIds)
             }
           })
+        }
+      },
+    )
+    return unsub
+  }, [])
+
+  // Phase 4 plan 04-07 (D-16) — collision-rename toast subscriber.
+  // useFilesStore.addSourceWithVariants calls
+  // useRuntimeStore.markRename(N) once per drop that produced collisions.
+  // We listen for renameCountThisBatch transitions and fire one toast.info
+  // per batched increment (lastCount → curr; delta = curr - lastCount).
+  // startBatch / cancelBatch reset renameCountThisBatch to 0 — those zero
+  // transitions produce a negative delta which the if-guard drops. UI-SPEC
+  // §Surface 8.
+  useEffect(() => {
+    let lastCount = useRuntimeStore.getState().renameCountThisBatch
+    const unsub = useRuntimeStore.subscribe(
+      (s) => s.renameCountThisBatch,
+      (curr) => {
+        const delta = curr - lastCount
+        lastCount = curr
+        if (delta > 0) {
+          toast.info(
+            `${delta} ${delta === 1 ? 'file' : 'files'} renamed to avoid collisions`,
+            {
+              description:
+                'Suffix "(2)", "(3)", … inserted before "@Nx" so each variant has a unique name.',
+            },
+          )
         }
       },
     )
@@ -515,9 +577,9 @@ export default function App() {
       return f && (f.status === 'idle' || f.status === 'queued' || f.status === 'error')
     })
     if (fileIds.length === 0) return
-    // Phase 2 keeps jobId === fileId (1:1). Phase 5 may introduce 1:N
-    // (single source → multiple density variants) which will need a separate
-    // jobId allocation strategy.
+    // Phase 4 (D-04 + D-14) — 1:1 jobs:FileEntries. addSourceWithVariants in
+    // useFilesStore materializes one FileEntry per density variant up-front;
+    // each entry is its own pool job here.
     useRuntimeStore.getState().startBatch(fileIds)
     announce(`Optimizing ${fileIds.length} files`)
     for (const fileId of fileIds) {
@@ -532,20 +594,49 @@ export default function App() {
       const slowMs = import.meta.env.DEV
         ? (window as unknown as { __OIMG_SLOW_MS__?: number }).__OIMG_SLOW_MS__ ?? 0
         : 0
-      // Phase 3 plan 03-A — route SVG files through the real SVG adapter; all
-      // other formats fall back to the stub (raster encoders land Phase 5).
-      // SVG settings come from useSettingsStore.svg (D-09 global in v1).
+      // Phase 3 plan 03-A — route SVG files through the real SVG adapter.
+      // Phase 4 plan 04-07 — route PNG files through the real PNG adapter
+      // (decode → resize → encode). All other raster formats still fall back
+      // to the stub until Phase 5 ships JPEG/WebP/AVIF encoders.
       const isSvg = f.format === 'svg'
-      const adapterFormat: AdapterFormat = isSvg ? 'svg' : 'stub'
-      const settings = isSvg
-        ? useSettingsStore.getState().svg
-        : (slowMs > 0 ? { slowMs } : {})
+      const isPng = f.format === 'png'
+      const adapterFormat: AdapterFormat = isSvg ? 'svg' : isPng ? 'png' : 'stub'
+      let settings: unknown
+      if (isSvg) {
+        settings = useSettingsStore.getState().svg
+      } else if (isPng) {
+        // Plan 04-05 enriched FileEntry: targetDensity, sourceDensity guaranteed
+        // for PNG variants emitted by addSourceWithVariants; resizeOverride +
+        // preserveIcc are optional per-file overrides (UI deferred to Phase 5
+        // per D-07/D-09; data shape only).
+        const fileEntry = useFilesStore.getState().byId[fileId]
+        settings = buildPngResizeSettings({
+          sourceDensity: fileEntry?.sourceDensity ?? '1x',
+          targetDensity:
+            fileEntry?.targetDensity ?? fileEntry?.sourceDensity ?? '1x',
+          globalAlg: useSettingsStore.getState().resize.alg,
+          fileOverride: fileEntry?.resizeOverride,
+          globalPreserveIcc:
+            useSettingsStore.getState().global.preserveIccProfile,
+          filePreserveIcc: fileEntry?.preserveIcc,
+        })
+      } else {
+        settings = slowMs > 0 ? { slowMs } : {}
+      }
       const job: PoolJob = {
         id: fileId,
         fileId,
         format: adapterFormat,
         settings,
         blob: f.sourceBlob,
+        // Phase 4 D-11(b) — admission gate input. Plan 04-05 seeded
+        // byteEstimate on FileEntryWithBlob during addSourceWithVariants.
+        // Optional — SVG / stub jobs may have undefined and the gate no-ops.
+        byteEstimate: (
+          useFilesStore.getState().byId[fileId] as
+            | { byteEstimate?: number }
+            | undefined
+        )?.byteEstimate,
       }
       pool.enqueue(job)
         .then(async (result) => {
@@ -576,6 +667,18 @@ export default function App() {
             useFilesStore
               .getState()
               .markDone(fileId, sanitizedBlob, sanitizedBlob.size, sanitizedCount)
+          } else if (isPng) {
+            // Phase 4 plan 04-07 — encoded PNG bytes from png-adapter (decode
+            // → resize → encode). Wrap as Blob and store; thumbnail / object
+            // URL is auto-managed by useRuntimeStore.getOrCreateObjectURL on
+            // the next render. markDone revokes the OLD url before writing
+            // the new optimizedBlob (Pitfall 3).
+            const optimizedBlob = new Blob([result.output], {
+              type: 'image/png',
+            })
+            useFilesStore
+              .getState()
+              .markDone(fileId, optimizedBlob, optimizedBlob.size)
           } else {
             // Stub round-trip (Phase 2 contract): byte-equal output.
             const optimizedBlob = new Blob([result.output])
@@ -767,6 +870,16 @@ export default function App() {
                   {f.status === 'processing' && <div className="progbar"><div /></div>}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  {/* Phase 4 plan 04-07 — D-01/D-02 SCOPED density controls.
+                      Render TargetDensityCheckboxes for the family (groupBy
+                      sourceFamilyId; fall back to f.id when the entry was
+                      added pre-fanout via addFile). SourceDensityControl
+                      renders the hover-revealed chevron popover. Both are
+                      no-op interactive (mid-flight edits land Phase 5). */}
+                  <TargetDensityCheckboxes
+                    sourceFamilyId={filesById[f.id]?.sourceFamilyId ?? f.id}
+                  />
+                  <SourceDensityControl fileId={f.id} />
                   <button
                     className="ctxbtn"
                     onClick={(e) => {
@@ -1012,25 +1125,44 @@ export default function App() {
           aria-labelledby={`inspector-tab-${tab}`}
         >
           {tab === 'codec' && (
-            <CodecPanel
-              codec={codec} setCodec={setCodec}
-              q={q} setQ={setQ}
-              method={method} setMethod={setMethod}
-              lossless={lossless} setLossless={setLossless}
-              resizeOn={resizeOn} setResizeOn={setResizeOn}
-              w={w} setW={setW} h={h} setH={setH}
-              alg={alg} setAlg={setAlg} fit={fit} setFit={setFit}
-              stripMeta={stripMeta} setStripMeta={setStripMeta}
-              keepIcc={keepIcc} setKeepIcc={setKeepIcc}
-            />
+            <>
+              <CodecPanel
+                codec={codec} setCodec={setCodec}
+                q={q} setQ={setQ}
+                method={method} setMethod={setMethod}
+                lossless={lossless} setLossless={setLossless}
+                resizeOn={resizeOn} setResizeOn={setResizeOn}
+                w={w} setW={setW} h={h} setH={setH}
+                alg={alg} setAlg={setAlg} fit={fit} setFit={setFit}
+                stripMeta={stripMeta} setStripMeta={setStripMeta}
+                keepIcc={keepIcc} setKeepIcc={setKeepIcc}
+              />
+              {/* Phase 4 plan 04-07 — Global pipeline sections (D-05 + D-06 +
+                  D-09 + D-10 amend). UI-SPEC §Surface 4: Resize / Variants is
+                  visible on every codec tab. UI-SPEC §Surface 5: Privacy /
+                  Metadata follows it. Rendered AFTER CodecPanel because
+                  CodecPanel is a closed component owning its own Output
+                  format + per-codec params; interleaving would require a
+                  Phase-5 panel-decomposition refactor that is out of scope. */}
+              <TweaksResizeSection />
+              <TweaksPrivacySection />
+            </>
           )}
           {tab === 'svgo' && (
-            <SvgoPanel
-              plugins={svgoPluginRows}
-              togglePlugin={togglePlugin}
-              unsafeExport={svgSettings.unsafeExport ?? false}
-              setUnsafeExport={setUnsafeExport}
-            />
+            <>
+              <SvgoPanel
+                plugins={svgoPluginRows}
+                togglePlugin={togglePlugin}
+                unsafeExport={svgSettings.unsafeExport ?? false}
+                setUnsafeExport={setUnsafeExport}
+              />
+              {/* Phase 4 plan 04-07 — Tweaks sections visible on SVG tab too
+                  (UI-SPEC §Surface 4 acceptance: "Section visible on all
+                  codec tabs (SVG + each raster)" — SVG variants are a no-op
+                  but the global-config UX should be consistent). */}
+              <TweaksResizeSection />
+              <TweaksPrivacySection />
+            </>
           )}
           {tab === 'output' && (
             <SnippetPanel file={filesById[selectedId] ?? null} />
