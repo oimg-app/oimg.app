@@ -39,6 +39,21 @@ interface RuntimeState {
   // a fresh UUID here on each enqueue; pool.cancel() before re-enqueue means
   // last-toggle-wins (terminate-and-respawn cancel from Phase 2 D-02).
   previewJobId: string | null
+  // Phase 4 D-11(b) — pool-driven aggregate of in-flight job byte estimates.
+  // Surfaced for StatusBar selectors and tests. Pool writes via setInflightBytes
+  // (omitted in P4 — pool tracks internally; this slot mirrors for telemetry only,
+  // updated lazily via the next runtime action). For now keep at 0 unless a future
+  // plan wants live readout. Pool's own state is the source of truth.
+  inflightBytes: number
+  // Phase 4 D-13 — first-throttle toast latch. Flips true on first markThrottle()
+  // per batch; reset by startBatch + cancelBatch.
+  throttleToastFiredThisBatch: boolean
+  // Phase 4 D-13 — persistent indicator. True when pool is throttling new
+  // dispatches. StatusBar BackpressureIndicator subscribes.
+  throttleActive: boolean
+  // Phase 4 D-16 — per-batch collision counter. Reset by startBatch + cancelBatch.
+  // addFile fan-out increments via markRename(count).
+  renameCountThisBatch: number
 
   // Batch lifecycle
   startBatch: (jobIds: string[]) => void
@@ -56,6 +71,16 @@ interface RuntimeState {
   // through the worker pool; rapid toggles within 200ms coalesce; an
   // in-flight preview is cancelled if no batch is running.
   enqueuePreview: (fileId: string) => void
+
+  // Phase 4 D-13 — pool calls this from the onThrottle callback. Sets
+  // throttleActive=true and latches throttleToastFiredThisBatch=true on
+  // first call per batch. Idempotent.
+  markThrottle: () => void
+  // Phase 4 D-13 — App.tsx flips false at batch end (when running goes false).
+  setThrottleActive: (v: boolean) => void
+  // Phase 4 D-16 — addFile fan-out (Plan 04-05) increments per
+  // addSourceWithVariants invocation that produced collisions.
+  markRename: (count: number) => void
 }
 
 // Inline debounce — keeps the runtime store self-contained. Coalesces rapid
@@ -85,6 +110,10 @@ export const useRuntimeStore = create<RuntimeState>()(
     poolSize: POOL_SIZE,
     urlCache: new Map<string, string>(),
     previewJobId: null,
+    inflightBytes: 0,
+    throttleToastFiredThisBatch: false,
+    throttleActive: false,
+    renameCountThisBatch: 0,
 
     startBatch: (jobIds) =>
       set({
@@ -94,6 +123,11 @@ export const useRuntimeStore = create<RuntimeState>()(
         totalJobs: jobIds.length,
         doneCount: 0,
         errorCount: 0,
+        // Phase 4 — reset per-batch flags. inflightBytes is pool-driven; pool
+        // resets it on cancel/terminate; we do NOT clobber here.
+        throttleToastFiredThisBatch: false,
+        throttleActive: false,
+        renameCountThisBatch: 0,
       }),
 
     markStarted: (jobId) =>
@@ -159,6 +193,11 @@ export const useRuntimeStore = create<RuntimeState>()(
         running: false,
         queue: [],
         inFlight: new Set<string>(),
+        // Phase 4 — clear all batch-scoped flags on cancel.
+        inflightBytes: 0,
+        throttleToastFiredThisBatch: false,
+        throttleActive: false,
+        renameCountThisBatch: 0,
         // doneCount, errorCount, totalJobs preserved for post-cancel UI.
       }),
 
@@ -180,6 +219,22 @@ export const useRuntimeStore = create<RuntimeState>()(
       next.delete(fileId)
       set({ urlCache: next })
     },
+
+    markThrottle: () => {
+      // Idempotent: latches throttleToastFiredThisBatch on first call.
+      set((s) => {
+        if (s.throttleActive && s.throttleToastFiredThisBatch) return {}
+        return {
+          throttleActive: true,
+          throttleToastFiredThisBatch: true,
+        }
+      })
+    },
+
+    setThrottleActive: (v) => set({ throttleActive: v }),
+
+    markRename: (count) =>
+      set((s) => ({ renameCountThisBatch: s.renameCountThisBatch + count })),
 
     // Phase 3 (D-08/D-10/D-11) — debounced single-file preview re-optimize.
     //
