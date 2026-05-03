@@ -12,6 +12,7 @@ import type {
   PoolJob,
   WorkerProxyApi,
 } from './types'
+import { computeMemoryBudget } from '../lib/memory-budget'
 
 const POOL_SIZE_MAX = 4
 
@@ -40,6 +41,10 @@ export interface PoolCallbacks {
   onDone?: (jobId: string, result: AdapterRunResult) => void
   /** Adapter rejected OR worker was terminated. */
   onError?: (jobId: string, error: unknown) => void
+  /** Phase 4 D-13 — admission gate held the queue. Fires once per
+   *  tryDispatch call that returns early due to the byte cap. Consumer
+   *  (App.tsx) latches first-throttle-per-batch on its own side. */
+  onThrottle?: () => void
 }
 
 export class WorkerPool {
@@ -55,6 +60,12 @@ export class WorkerPool {
   // the generation no longer matches — preventing stale slot indexes from
   // being pushed back onto the new pool's idle list.
   private generation = 0
+  // Phase 4 D-11(b) — sum of byteEstimates across in-flight jobs.
+  private inflightBytes = 0
+  // Phase 4 D-12 — fixed at construction time. Memory budget is device-static
+  // for the session; recomputing on every dispatch would add cost without
+  // benefit (deviceMemory does not change across a tab's lifetime).
+  private memoryBudgetBytes = computeMemoryBudget()
 
   constructor(private callbacks: PoolCallbacks = {}) {
     this.size = computePoolSize()
@@ -148,6 +159,7 @@ export class WorkerPool {
     }
     this.queue = []
     this.inFlight.clear()
+    this.inflightBytes = 0           // Phase 4 D-11(b) — reset gate accounting on cancel
     this.slots = []
     this.idle = []
     this.spawned = false
@@ -163,6 +175,7 @@ export class WorkerPool {
     this.idle = []
     this.queue = []
     this.inFlight.clear()
+    this.inflightBytes = 0           // Phase 4 D-11(b) — reset gate accounting on terminate
     this.spawned = false
     // WR-07: clear stale abortController so a subsequent re-spawn doesn't
     // observe a controller whose signal is already aborted.
@@ -191,8 +204,19 @@ export class WorkerPool {
 
   private tryDispatch(): void {
     while (this.idle.length > 0 && this.queue.length > 0) {
+      const head = this.queue[0]
+      const estimate = head.byteEstimate ?? 0
+      // Phase 4 D-11(b) admission gate. Hold the queue if pulling head would
+      // push inflightBytes past the budget. NEVER deadlock: when nothing is
+      // in-flight, any job goes through alone — degraded but functional
+      // (RESEARCH §2.3 deadlock-prevention precondition).
+      if (this.inflightBytes > 0 && this.inflightBytes + estimate > this.memoryBudgetBytes) {
+        this.callbacks.onThrottle?.()
+        return
+      }
       const slot = this.idle.shift()!
       const job = this.queue.shift()!
+      this.inflightBytes += estimate
       this.inFlight.set(slot, job)
       this.callbacks.onStarted?.(job.id)
       // Fire-and-forget — do NOT await; tryDispatch is sync drain.
@@ -253,6 +277,9 @@ export class WorkerPool {
       // corrupt the new generation's bookkeeping.
       if (generation !== this.generation) return
       this.inFlight.delete(slot)
+      // Phase 4 D-11(b) — release the job's byte estimate so subsequent
+      // queued jobs become admissible. Must happen BEFORE tryDispatch().
+      this.inflightBytes -= job.byteEstimate ?? 0
       // Worker may have been terminated mid-flight (cancel) — guard.
       if (this.slots[slot]) {
         this.idle.push(slot)

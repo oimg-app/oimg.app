@@ -44,6 +44,11 @@ export interface PoolJob {
   format: AdapterFormat
   settings: unknown
   blob: Blob
+  /** Phase 4 D-11(b) — admission-gate input. Estimated peak working-set
+   *  bytes for this job. SVG / stub jobs leave undefined → gate no-ops.
+   *  PNG variant jobs populate via estimateJobBytes(srcW,srcH,tgtW,tgtH)
+   *  from src/lib/memory-budget.ts (Plan 04-05 wires call site). */
+  byteEstimate?: number
 }
 
 /** Phase 2 starts with one error class; Phase 5 subclasses for retry logic. */
