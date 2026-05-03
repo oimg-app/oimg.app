@@ -16,6 +16,7 @@ import type {
   CodecSettingsWebp,
   CodecSettingsAvif,
   GlobalSettings,
+  ResizeAlg,
 } from '@/types'
 import {
   DEFAULT_CODEC_SVG,
@@ -24,6 +25,7 @@ import {
   DEFAULT_CODEC_WEBP,
   DEFAULT_CODEC_AVIF,
   DEFAULT_GLOBAL_SETTINGS,
+  DEFAULT_RESIZE_SETTINGS,
 } from '@/data/defaults'
 
 interface SettingsState {
@@ -37,6 +39,10 @@ interface SettingsState {
   // in SnippetPanel; Plan B introduces the slot so the store contract is
   // stable when snippet rendering lands.
   snippetTogglesByFileId: Record<string, Record<string, boolean>>
+  // Phase 4 D-05 + D-06 — global resize algorithm (TweaksPanel "Resize /
+  // Variants" section). Per-file override lives on FileEntry.resizeOverride
+  // (Plan 04-01 added field; UI deferred to Phase 5 detail view per D-07).
+  resize: { alg: ResizeAlg }
 
   setSvg: (next: Partial<CodecSettingsSvg>) => void
   setPng: (next: Partial<CodecSettingsPng>) => void
@@ -45,6 +51,7 @@ interface SettingsState {
   setAvif: (next: Partial<CodecSettingsAvif>) => void
   setGlobal: (next: Partial<GlobalSettings>) => void
   setSnippetToggle: (fileId: string, snippetId: string, value: boolean) => void
+  setResize: (next: Partial<{ alg: ResizeAlg }>) => void
 }
 
 export const useSettingsStore = create<SettingsState>()(
@@ -56,6 +63,7 @@ export const useSettingsStore = create<SettingsState>()(
     avif: DEFAULT_CODEC_AVIF,
     global: DEFAULT_GLOBAL_SETTINGS,
     snippetTogglesByFileId: {},
+    resize: DEFAULT_RESIZE_SETTINGS,
 
     setSvg: (next) => set((s) => ({ svg: { ...s.svg, ...next } })),
     setPng: (next) => set((s) => ({ png: { ...s.png, ...next } })),
@@ -73,5 +81,6 @@ export const useSettingsStore = create<SettingsState>()(
           },
         },
       })),
+    setResize: (next) => set((s) => ({ resize: { ...s.resize, ...next } })),
   })),
 )
