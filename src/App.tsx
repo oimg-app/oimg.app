@@ -35,6 +35,7 @@ import type {
   ResizeAlg,
   FitMode,
   MockFile,
+  FormatId,
 } from '@/types'
 
 // Phase 2 plan 02-04 — store + worker pool + ARIA live wiring.
@@ -167,6 +168,50 @@ async function computePluginSavings(fileIds: string[]): Promise<void> {
         console.error('[oimg] computePluginSavings failed:', err)
       }
     }
+  }
+}
+
+// Plan 04-07 — minimal MVP file ingestion (UAT unblock). Detect format from
+// MIME first, then extension. JXL not yet in FormatId; falls through to null
+// and the caller emits a "skipped" toast. Phase 5 will replace with the full
+// "Add Files" popover (From Device / From URL / From Clipboard).
+function formatFromFile(f: File): FormatId | null {
+  const mime = (f.type || '').toLowerCase()
+  const ext = (f.name.toLowerCase().split('.').pop() ?? '')
+  if (mime === 'image/png' || ext === 'png') return 'png'
+  if (mime === 'image/svg+xml' || ext === 'svg') return 'svg'
+  if (mime === 'image/jpeg' || ext === 'jpg' || ext === 'jpeg') return 'jpeg'
+  if (mime === 'image/webp' || ext === 'webp') return 'webp'
+  if (mime === 'image/avif' || ext === 'avif') return 'avif'
+  return null
+}
+
+async function ingestDroppedFiles(files: FileList | File[]): Promise<void> {
+  const list = Array.from(files)
+  let skipped = 0
+  let skippedNames: string[] = []
+  for (const f of list) {
+    const format = formatFromFile(f)
+    if (!format) {
+      skipped++
+      if (skippedNames.length < 3) skippedNames.push(f.name)
+      continue
+    }
+    await useFilesStore.getState().addSourceWithVariants({
+      sourceBlob: f,
+      sourceDensity: '1x',
+      name: f.name,
+      format,
+      // v0.4 — D-01/D-02 SCOPED: targets locked to source density at drop
+      // time. Phase 5 will surface the target-density chooser pre-drop.
+      targets: ['1x'],
+    })
+  }
+  if (skipped > 0) {
+    const tail = skippedNames.length < skipped ? '…' : ''
+    toast.info(
+      `${skipped} unsupported file${skipped === 1 ? '' : 's'} skipped (${skippedNames.join(', ')}${tail})`,
+    )
   }
 }
 
@@ -538,6 +583,39 @@ export default function App() {
   }, [file.type, tab])
 
   const stageRef = useRef<HTMLDivElement | null>(null)
+
+  // Plan 04-07 — file-picker ref (hidden input behind the toolbar Add button
+  // and the dropzone click affordance). Click delegation only; the input's
+  // onChange handler routes through ingestDroppedFiles.
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
+
+  // Plan 04-07 — preview blob-URLs for the compare-stage image-frame layers.
+  // Built from the currently-selected FileEntryWithBlob; cleaned up on
+  // selection change so we don't leak object URLs (D-10). Layer-orig always
+  // points at sourceBlob; layer-opt points at optimizedBlob if the variant
+  // is done, otherwise null (CSS placeholder shows through).
+  const selectedEntry = useFilesStore((s) =>
+    s.selectedId ? s.byId[s.selectedId] : undefined,
+  )
+  const [previewUrls, setPreviewUrls] = useState<{ orig: string | null; opt: string | null }>(
+    { orig: null, opt: null },
+  )
+  useEffect(() => {
+    if (!selectedEntry) {
+      setPreviewUrls({ orig: null, opt: null })
+      return
+    }
+    const origUrl = URL.createObjectURL(selectedEntry.sourceBlob)
+    const optUrl = selectedEntry.optimizedBlob
+      ? URL.createObjectURL(selectedEntry.optimizedBlob)
+      : null
+    setPreviewUrls({ orig: origUrl, opt: optUrl })
+    return () => {
+      URL.revokeObjectURL(origUrl)
+      if (optUrl) URL.revokeObjectURL(optUrl)
+    }
+  }, [selectedEntry?.id, selectedEntry?.sourceBlob, selectedEntry?.optimizedBlob])
+
   const onSplitDrag = () => {
     const rect = stageRef.current?.querySelector<HTMLDivElement>('.image-frame')?.getBoundingClientRect()
     if (!rect) return
@@ -807,13 +885,61 @@ export default function App() {
                 </div>
               ))}
             </Popover>
-            <button className="iconbtn" title="Add" onClick={() => pushToast('File picker opened')}>
+            <button
+              className="iconbtn"
+              title="Add files from device"
+              onClick={() => fileInputRef.current?.click()}
+            >
               <Icons.Plus size={12} />
             </button>
           </div>
         </div>
 
-        <div className="dropzone">
+        {/* Plan 04-07 — hidden file picker; opened by toolbar Add button OR
+            by clicking the dropzone. Reset value after change so re-picking
+            the same file fires onChange again. */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          multiple
+          accept="image/png,image/svg+xml,image/jpeg,image/webp,image/avif,.png,.svg,.jpg,.jpeg,.webp,.avif"
+          style={{ display: 'none' }}
+          onChange={(e) => {
+            const files = e.target.files
+            if (files && files.length > 0) void ingestDroppedFiles(files)
+            e.target.value = ''
+          }}
+        />
+
+        <div
+          className="dropzone"
+          role="button"
+          tabIndex={0}
+          aria-label="Drop or click to add images"
+          style={{ cursor: 'pointer' }}
+          onClick={() => fileInputRef.current?.click()}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault()
+              fileInputRef.current?.click()
+            }
+          }}
+          onDragOver={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy'
+          }}
+          onDragEnter={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+          }}
+          onDrop={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            const files = e.dataTransfer?.files
+            if (files && files.length > 0) void ingestDroppedFiles(files)
+          }}
+        >
           <span className="big">Drop images to optimize</span>
           <span>or click to browse · max 200 files</span>
           <div className="formats">SVG · PNG · JPEG · WEBP · AVIF · JXL</div>
@@ -997,8 +1123,26 @@ export default function App() {
               className="image-frame"
               style={{ ['--split' as string]: split + '%' } as React.CSSProperties}
             >
-              <div className="image-layer layer-orig"></div>
-              <div className="image-layer layer-opt"></div>
+              <div
+                className="image-layer layer-orig"
+                style={
+                  previewUrls.orig
+                    ? {
+                        background: `transparent url("${previewUrls.orig}") center/contain no-repeat`,
+                      }
+                    : undefined
+                }
+              ></div>
+              <div
+                className="image-layer layer-opt"
+                style={
+                  previewUrls.opt || previewUrls.orig
+                    ? {
+                        background: `transparent url("${previewUrls.opt ?? previewUrls.orig}") center/contain no-repeat`,
+                      }
+                    : undefined
+                }
+              ></div>
               <div className="split-tag l">
                 <span className="dot"></span>
                 ORIGINAL · {fmtBytes(file.orig)}
