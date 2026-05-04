@@ -10,5 +10,8 @@ export function fmtBytes(b: number | null | undefined): string {
 export function fmtPct(orig: number, opt: number): string {
   if (!orig || !opt) return '—';
   const saved = ((orig - opt) / orig) * 100;
-  return (saved >= 0 ? '−' : '+') + Math.abs(saved).toFixed(1) + '%';
+
+  if (saved === 0) return '';
+
+  return (saved > 0 ? '−' : '+') + Math.abs(saved).toFixed(1) + '%';
 }

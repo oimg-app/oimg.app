@@ -14,7 +14,7 @@ import { SnippetPanel } from '@/components/panels/SnippetPanel'
 import { ReportPanel } from '@/components/panels/ReportPanel'
 import { AppShell } from '@/components/shell/AppShell'
 import { TitleBar } from '@/components/shell/TitleBar'
-import { Toolbar } from '@/components/shell/Toolbar'
+import {Toolbar, ToolbarChange} from '@/components/shell/Toolbar'
 import { StatusBar } from '@/components/shell/StatusBar'
 import { CommandPalette } from '@/components/shell/CommandPalette'
 import type { CmdGroup } from '@/components/shell/CommandPalette'
@@ -54,7 +54,7 @@ import {
   TweaksResizeSection,
   TweaksPrivacySection,
 } from '@/components/panels/TweaksPanel'
-import { SourceDensityControl } from '@/components/file-row/SourceDensityControl'
+import {ContextMenu} from "@/components/file-row/ContextMenu";
 
 type Tab = 'codec' | 'svgo' | 'output' | 'report'
 type View = 'Batch' | 'Compare' | 'Report'
@@ -223,7 +223,7 @@ export default function App() {
   // PLACEHOLDER_FILE when nothing is selected (Phase 5 will switch this to
   // the first FileEntry once real uploads land).
   const filesSelectedId = useFilesStore((s) => s.selectedId)
-  const selectedId = filesSelectedId ?? 'placeholder'
+  const selectedId = filesSelectedId ?? ''
   const setSelectedId = (id: string) => useFilesStore.getState().setSelected(id)
 
   const [tab, setTab] = useState<Tab>('codec')
@@ -818,6 +818,12 @@ export default function App() {
     setOpen(null)
   }
 
+  const onToolbarChange = (v: ToolbarChange) => {
+    if (v === 'from-device') {
+      fileInputRef.current?.click()
+    }
+  }
+
   // Command palette items.
   // Phase 2 plan 02-04: Optimize meta updated to reflect real worker pool;
   // Cancel batch entry added (visible only while running) per UI-SPEC §3 + §8.
@@ -905,7 +911,9 @@ export default function App() {
           style={{ display: 'none' }}
           onChange={(e) => {
             const files = e.target.files
-            if (files && files.length > 0) void ingestDroppedFiles(files)
+            if (files && files.length > 0) {
+              void ingestDroppedFiles(files)
+            }
             e.target.value = ''
           }}
         />
@@ -936,7 +944,9 @@ export default function App() {
             e.preventDefault()
             e.stopPropagation()
             const files = e.dataTransfer?.files
-            if (files && files.length > 0) void ingestDroppedFiles(files)
+            if (files && files.length > 0) {
+              void ingestDroppedFiles(files)
+            }
           }}
         >
           <span className="big">Drop images to optimize</span>
@@ -980,6 +990,7 @@ export default function App() {
                 <div className={'thumb ' + f.type}>{f.type.toUpperCase().slice(0, 3)}</div>
                 <div className="file-meta">
                   <div className="file-name">{f.name}</div>
+                  {/* move to FileStat component */}
                   <div className="file-stat">
                     <span>{fmtBytes(f.orig)}</span>
                     <span className="arrow">→</span>
@@ -1011,47 +1022,9 @@ export default function App() {
                   {f.status === 'processing' && <div className="progbar"><div /></div>}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  {/* Plan 04-07 — TargetDensityCheckboxes was moved to the
-                      Inspector Resize / Variants section. Source-density
-                      chevron popover stays on the row (per-file action). */}
-                  <SourceDensityControl fileId={f.id} />
-                  <button
-                    className="ctxbtn"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      setRowMenu(rowMenu === f.id ? null : f.id)
-                      setSelectedId(f.id)
-                    }}
-                  >
-                    <Icons.More size={12} />
-                  </button>
+                  <ContextMenu file={f} />
                   <div className={'file-status ' + f.status} title={f.status} />
                 </div>
-                {rowMenu === f.id && (
-                  <Popover
-                    open
-                    onClose={() => setRowMenu(null)}
-                    anchor="br"
-                    style={{ minWidth: 200, top: 28, right: 8, left: 'auto' }}
-                  >
-                    <div className="pi" onClick={() => { setRowMenu(null); pushToast('Re-optimizing ' + f.name) }}>
-                      <Icons.Play size={13} /><span>Re-optimize</span>
-                    </div>
-                    <div className="pi" onClick={() => { setRowMenu(null); pushToast('Saved ' + f.name) }}>
-                      <Icons.Download size={13} /><span>Save as…</span>
-                    </div>
-                    <div className="pi" onClick={() => { setRowMenu(null); pushToast('Copied data URI') }}>
-                      <Icons.Copy size={13} /><span>Copy data URI</span>
-                    </div>
-                    <div className="pi" onClick={() => { setRowMenu(null); setTab('output') }}>
-                      <Icons.Code size={13} /><span>Copy &lt;picture&gt;</span>
-                    </div>
-                    <div className="div" />
-                    <div className="pi danger" onClick={() => { setRowMenu(null); pushToast('Removed ' + f.name) }}>
-                      <Icons.Trash size={13} /><span>Remove from queue</span>
-                    </div>
-                  </Popover>
-                )}
               </div>
             ))}
           </div>
@@ -1388,6 +1361,7 @@ export default function App() {
           openKey={open}
           onOpenKey={setOpen}
           onToast={pushToast}
+          onChange={onToolbarChange}
         />
       }
       workArea={workArea}

@@ -19,6 +19,8 @@ import { useRuntimeStore, useFilesStore } from '@/stores'
 
 type View = 'Batch' | 'Compare' | 'Report'
 
+export type ToolbarChange = 'from-device' | 'from-url' | 'from-clipboard'
+
 interface ToolbarProps {
   /** @deprecated Phase 2 plan 02-04 — Toolbar reads `running` from useRuntimeStore directly.
    *  Prop retained transitionally so App.tsx can still pass it during the staged migration;
@@ -41,6 +43,7 @@ interface ToolbarProps {
   onOpenKey: (k: string | null) => void
   // Toast pump
   onToast: (msg: string, meta?: string) => void
+  onChange: (v: ToolbarChange) => void
 }
 
 export function Toolbar(props: ToolbarProps) {
@@ -56,6 +59,7 @@ export function Toolbar(props: ToolbarProps) {
     openKey,
     onOpenKey,
     onToast,
+    onChange,
   } = props
 
   // Phase 2 plan 02-04: narrow selectors from runtime store (D-09 convention).
@@ -95,7 +99,9 @@ export function Toolbar(props: ToolbarProps) {
         <Icons.Upload size={13} /> Add files
         <Icons.ChevronDown size={9} />
         <Popover open={isPopOpen('add')} onClose={() => onOpenKey(null)}>
-          <div className="pi" onClick={() => { onOpenKey(null); onToast('File picker opened') }}>
+          <div className="pi" onClick={() => {
+            onChange('from-device');
+            onOpenKey(null); }}>
             <Icons.File size={13} /><span>From device…</span><span className="kbd">A</span>
           </div>
           <div className="pi" onClick={() => { onOpenKey(null); onToast('Folder watcher started', '~/Downloads') }}>

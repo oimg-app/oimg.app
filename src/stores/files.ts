@@ -222,7 +222,8 @@ export const useFilesStore = create<FilesState>()(
           if (!nextById[entry.id]) nextOrder.push(entry.id)
           nextById[entry.id] = entry
         }
-        return { byId: nextById, order: nextOrder }
+
+        return {byId: nextById, order: nextOrder, selectedId: s.selectedId || nextOrder[0] || null}
       })
 
       // D-16 — report collisions for the toast latch. Plan 04-06 fires the
