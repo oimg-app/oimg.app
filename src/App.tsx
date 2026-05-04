@@ -55,7 +55,6 @@ import {
   TweaksPrivacySection,
 } from '@/components/panels/TweaksPanel'
 import { SourceDensityControl } from '@/components/file-row/SourceDensityControl'
-import { TargetDensityCheckboxes } from '@/components/file-row/TargetDensityCheckboxes'
 
 type Tab = 'codec' | 'svgo' | 'output' | 'report'
 type View = 'Batch' | 'Compare' | 'Report'
@@ -1012,17 +1011,9 @@ export default function App() {
                   {f.status === 'processing' && <div className="progbar"><div /></div>}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  {/* Phase 4 plan 04-07 — D-01/D-02 SCOPED density controls.
-                      Render TargetDensityCheckboxes for the family (groupBy
-                      sourceFamilyId; fall back to f.id when the entry was
-                      added pre-fanout via addFile). SourceDensityControl
-                      renders the hover-revealed chevron popover. Both are
-                      no-op interactive (mid-flight edits land Phase 5). */}
-                  {filesById[f.id]?.sourceFamilyId && (
-                    <TargetDensityCheckboxes
-                      sourceFamilyId={filesById[f.id]!.sourceFamilyId!}
-                    />
-                  )}
+                  {/* Plan 04-07 — TargetDensityCheckboxes was moved to the
+                      Inspector Resize / Variants section. Source-density
+                      chevron popover stays on the row (per-file action). */}
                   <SourceDensityControl fileId={f.id} />
                   <button
                     className="ctxbtn"

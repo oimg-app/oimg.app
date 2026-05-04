@@ -15,6 +15,7 @@
 import { Section } from '@/components/ui/Section';
 import { Toggle } from '@/components/ui/Toggle';
 import { Seg } from '@/components/ui/Seg';
+import { TargetDensityCheckboxes } from '@/components/file-row/TargetDensityCheckboxes';
 import { useSettingsStore } from '@/stores/settings';
 import { RESIZE_ALG } from '@/data/defaults';
 import type { ResizeAlg } from '@/types';
@@ -62,6 +63,25 @@ export function TweaksResizeSection() {
           onChange={setAlg}
           ariaLabel="Resize algorithm"
         />
+      </div>
+      {/* Plan 04-07 — variant target-density selector moved here from the
+          file-row. Self-binds to the currently-selected FileEntry; renders
+          nothing when no file is selected or the entry has no
+          sourceFamilyId (legacy addFile path). */}
+      <div
+        className="row"
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'auto 1fr',
+          alignItems: 'center',
+          gap: 10,
+          paddingTop: 8,
+        }}
+      >
+        <label style={{ fontSize: 11.5, color: 'var(--fg-2)' }}>
+          Generate variants
+        </label>
+        <TargetDensityCheckboxes />
       </div>
     </Section>
   );
