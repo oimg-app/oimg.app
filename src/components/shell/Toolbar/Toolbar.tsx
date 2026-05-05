@@ -2,20 +2,24 @@
 // Extracted from src/App.tsx (lines 336–430) in plan 01-04.
 // Owns: Add files / Optimize / Export buttons, view segmented control,
 // search input, theme toggle, settings popover.
-// Visual contract: classNames and ARIA roles must NOT change. The outer
-// container's role="toolbar" aria-label="Actions" is asserted by
-// src/tests/shell.spec.ts.
+// Quick task 260505-0hr — Task 5: classes migrated to toolbar.module.css.
+// Shared `.tbtn` / `.seg` flow through composes from primitives.module.css;
+// `.toolbar`, `.tdiv`, `.search` live private. Popover-internal classes
+// (.pi / .lbl / .div / .check / .kbd / .mono) remain global until Popover's
+// own module migration. role="toolbar" still asserted by shell.spec.ts.
 //
 // Phase 2 (plan 02-04): Toolbar subscribes directly to useRuntimeStore
 // (D-09 narrow selectors) so the Workers pill + Optimize button reflect
 // the live worker pool state. App.tsx still owns batch orchestration —
 // onStartOptimize stays as a callback prop.
 
+import clsx from 'clsx'
 import { Icons } from '@/components/icons'
 import { Popover } from '@/components/ui/Popover'
 import { Tooltip } from '@/components/ui/Tooltip'
 import type { ThemeMode } from '@/types'
 import { useRuntimeStore, useFilesStore } from '@/stores'
+import s from './toolbar.module.css'
 
 type View = 'Batch' | 'Compare' | 'Report'
 
@@ -90,9 +94,9 @@ export function Toolbar(props: ToolbarProps) {
   const pillClass = (!running && busy === 0 && errorCount === 0 && poolSize > 0) ? 'pill acc' : 'pill'
 
   return (
-    <div role="toolbar" aria-label="Actions" className="toolbar">
+    <div role="toolbar" aria-label="Actions" className={s.toolbar}>
       <button
-        className={'tbtn primary' + (isPopOpen('add') ? ' open' : '')}
+        className={clsx(s.tbtn, s.tbtnPrimary, isPopOpen('add') && s.tbtnPrimaryOpen)}
         onClick={() => togglePop('add')}
         style={{ position: 'relative' }}
       >
@@ -113,12 +117,12 @@ export function Toolbar(props: ToolbarProps) {
         </Popover>
       </button>
 
-      <button className="tbtn" onClick={onStartOptimize} disabled={running || hasNoFiles}>
+      <button className={s.tbtn} onClick={onStartOptimize} disabled={running || hasNoFiles}>
         {running ? <><Icons.Pause size={13} /> Optimizing…</> : <><Icons.Play size={13} /> Optimize all</>}
       </button>
 
       <button
-        className={'tbtn' + (isPopOpen('export') ? ' open' : '')}
+        className={clsx(s.tbtn, isPopOpen('export') && s.tbtnOpen)}
         onClick={() => togglePop('export')}
         style={{ position: 'relative' }}
       >
@@ -142,15 +146,15 @@ export function Toolbar(props: ToolbarProps) {
         </Popover>
       </button>
 
-      <div className="tdiv" />
-      <div className="seg">
+      <div className={s.tdiv} />
+      <div className={s.seg}>
         {(['Batch', 'Compare', 'Report'] as View[]).map((v) => (
           <button key={v} className={view === v ? 'on' : ''} onClick={() => onSetView(v)}>
             {v}
           </button>
         ))}
       </div>
-      <div className="tdiv" />
+      <div className={s.tdiv} />
 
       {/* Workers pill — UI-SPEC §1. aria-live="off" because the dedicated live region in
           App.tsx owns announcements; the pill is a passive informational status surface. */}
@@ -158,7 +162,7 @@ export function Toolbar(props: ToolbarProps) {
         <span style={{ fontFamily: 'var(--mono)', fontVariantNumeric: 'tabular-nums' }}>{pillCopy}</span>
       </div>
 
-      <div className="search">
+      <div className={s.search}>
         <Icons.Search size={12} />
         <input
           placeholder="Filter files…"
@@ -170,12 +174,12 @@ export function Toolbar(props: ToolbarProps) {
 
       <div style={{ marginLeft: 'auto', display: 'flex', gap: 6, alignItems: 'center' }}>
         <Tooltip label={theme === 'dark' ? 'Light theme' : 'Dark theme'} kbd="⌘⇧L">
-          <button className="tbtn ghost" onClick={onToggleTheme} aria-label="Toggle theme">
+          <button className={clsx(s.tbtn, s.tbtnGhost)} onClick={onToggleTheme} aria-label="Toggle theme">
             {theme === 'dark' ? <Icons.Sun size={13} /> : <Icons.Moon size={13} />}
           </button>
         </Tooltip>
         <button
-          className={'tbtn ghost' + (isPopOpen('settings') ? ' open' : '')}
+          className={clsx(s.tbtn, s.tbtnGhost, isPopOpen('settings') && s.tbtnOpen)}
           onClick={() => togglePop('settings')}
           style={{ position: 'relative' }}
           aria-label="Settings"

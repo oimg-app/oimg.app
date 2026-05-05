@@ -7,8 +7,10 @@
    consumers (Toolbar / CommandPalette / popover .pi) migrate to modules. */
 .kbd { font-family: var(--mono); font-size: 10px; padding: 1px 5px; border: 1px solid var(--line); border-radius: 3px; color: var(--fg-1); background: var(--bg-0); }
 
-/* Toolbar */
-.toolbar { display: flex; align-items: center; padding: 0 10px; gap: 8px; border-bottom: 1px solid var(--line); background: var(--bg-1); }
+/* Toolbar — `.toolbar`, `.tdiv`, `.search`, `.seg` migrated to
+   src/components/shell/Toolbar/toolbar.module.css (quick task 260505-0hr
+   Task 5). `.tbtn*` stays global below — TitleBar's ⌘K Search button and
+   the Compare-stage zoom button still consume it as a global className. */
 .tbtn { appearance: none; border: 1px solid var(--line); background: var(--bg-2); color: var(--fg-0); height: 28px; padding: 0 11px; border-radius: 5px; font: 500 12px var(--sans); display: inline-flex; align-items: center; gap: 7px; cursor: default; }
 .tbtn:hover { background: var(--bg-3); border-color: var(--line-strong); }
 .tbtn:disabled { opacity: 0.6; cursor: not-allowed; }
@@ -18,16 +20,6 @@
 .tbtn.ghost:hover { background: var(--bg-2); }
 .tbtn.open { background: var(--bg-3); border-color: var(--line-strong); }
 .tbtn.primary.open { background: var(--accent); filter: brightness(1.05); }
-.tdiv { width: 1px; height: 18px; background: var(--line); margin: 0 2px; }
-
-.seg { display: inline-flex; height: 28px; border: 1px solid var(--line); border-radius: 5px; background: var(--bg-2); overflow: hidden; }
-.seg button { appearance: none; border: 0; background: transparent; color: var(--fg-1); font: 500 11.5px var(--sans); padding: 0 10px; cursor: default; border-right: 1px solid var(--line); }
-.seg button:last-child { border-right: 0; }
-.seg button.on { background: var(--bg-3); color: var(--fg-0); }
-.seg button:hover:not(.on) { color: var(--fg-0); }
-
-.search { height: 28px; min-width: 220px; background: var(--bg-2); border: 1px solid var(--line); border-radius: 5px; display: flex; align-items: center; padding: 0 9px; gap: 7px; color: var(--fg-2); font-size: 12px; }
-.search input { background: transparent; border: 0; outline: 0; color: var(--fg-0); font: inherit; flex: 1; min-width: 0; }
 
 /* Main grid */
 .work { display: grid; grid-template-columns: 320px 1fr 340px; min-height: 0; }
