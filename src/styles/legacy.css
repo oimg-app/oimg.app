@@ -172,11 +172,10 @@ input[type=range]::-moz-range-thumb { width: 12px; height: 12px; border-radius: 
 .bar.muted { background: var(--bg-3); }
 .chart-axis { display: flex; justify-content: space-between; font: 9.5px var(--mono); color: var(--fg-3); letter-spacing: 0.04em; }
 
-.statusbar { display: flex; align-items: center; padding: 0 12px; border-top: 1px solid var(--line); background: var(--bg-1); gap: 14px; font: 10.5px var(--mono); color: var(--fg-2); letter-spacing: 0.04em; }
-.statusbar .item { display: flex; align-items: center; gap: 6px; }
-.statusbar .item .pip { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
-.statusbar .item .pip.idle { background: var(--fg-3); }
-.statusbar .right { margin-left: auto; }
+/* StatusBar — `.statusbar`, `.item`, `.pip`, `.right` migrated to
+   src/components/shell/StatusBar/statusBar.module.css (quick task 260505-0hr
+   Task 6). The `.pip.warn` variant for BackpressureIndicator is matched
+   inside the module via `.statusbar :global(.item .pip.warn)`. */
 
 .pill { display: inline-flex; align-items: center; gap: 5px; height: 18px; padding: 0 7px; border-radius: 10px; background: var(--bg-2); border: 1px solid var(--line); font: 500 10px var(--mono); color: var(--fg-1); letter-spacing: 0.04em; }
 .pill.acc  { background: var(--accent-dim); border-color: transparent; color: var(--accent); }
