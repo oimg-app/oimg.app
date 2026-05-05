@@ -1,5 +1,6 @@
 /* ─── OIMG App Layout (ported verbatim from example-ui/OIMG.html) ─── */
-.app { display: grid; grid-template-rows: 36px 44px 1fr 22px; height: 100vh; width: 100vw; }
+/* `.app` grid moved to src/components/shell/AppShell/appShell.module.css
+   (quick task 260505-0hr Task 3). */
 
 /* Title bar */
 .titlebar { display: flex; align-items: center; padding: 0 12px; border-bottom: 1px solid var(--line); background: var(--bg-1); gap: 14px; font-size: 12px; color: var(--fg-1); }
