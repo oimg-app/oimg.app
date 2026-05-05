@@ -4,8 +4,11 @@
 // keeping OIMG visual classes (.titlebar, .menu, .popover, .pi, .div, .lbl,
 // .kbd, .check, .on). Owns: brand mark, primary nav menus (Codec / View /
 // Help), right pill cluster (privacy/offline pills, version, ⌘K Search).
-// Visual contract: classNames and ARIA roles must NOT change (src/index.css
-// is the styling contract; src/tests/shell.spec.ts asserts role="banner").
+// Quick task 260505-0hr — Task 4: classes migrated to titleBar.module.css.
+// Visual contract preserved: `.kbd`, `.pill`, `.tbtn`, `.popover`, `.pi`, `.div`,
+// `.lbl`, `.check`, `.on`, `.mono`, `.mark` remain global tokens consumed by
+// child surfaces (Menubar / Tooltip popovers, .pill primitives) until their
+// own module migrations land. role="banner" still asserted by shell.spec.ts.
 
 import { Icons } from '@/components/icons'
 import {
@@ -20,6 +23,7 @@ import { Tooltip } from '@/components/ui/Tooltip'
 import { cn } from '@/lib/utils'
 import type { ThemeMode, CodecLabel } from '@/types'
 import { CODECS } from '@/data/defaults'
+import s from './titleBar.module.css'
 
 type View = 'Batch' | 'Compare' | 'Report'
 
@@ -63,13 +67,13 @@ export function TitleBar(props: TitleBarProps) {
   })
 
   return (
-    <header role="banner" className="titlebar">
-      <div className="brand">
+    <header role="banner" className={s.titlebar}>
+      <div className={s.brand}>
         <span className="mark"></span>
         OIMG <span style={{ color: 'var(--fg-3)', fontWeight: 400 }}>· image optimizer</span>
       </div>
 
-      <Menubar aria-label="Primary" className={cn('menu', MENUBAR_RESET)}>
+      <Menubar aria-label="Primary" className={cn(s.menu, MENUBAR_RESET)}>
         <MenubarMenu {...bindMenu(MENU_KEYS.codec)}>
           <MenubarTrigger className={cn(isOpen(MENU_KEYS.codec) && 'on')}>Codec</MenubarTrigger>
           <MenubarContent className="popover" style={{ minWidth: 220 }}>
@@ -81,7 +85,7 @@ export function TitleBar(props: TitleBarProps) {
                 onClick={() => onSelectCodec(c)}
               >
                 <span className="mono">{c}</span>
-                <span className="kbd">{c[0]}</span>
+                <span className={s.kbd}>{c[0]}</span>
               </MenubarItem>
             ))}
             <MenubarSeparator className="div" />
@@ -91,7 +95,7 @@ export function TitleBar(props: TitleBarProps) {
             >
               <Icons.Zap size={13} />
               <span>Auto (Butteraugli)</span>
-              <span className="kbd">⌘B</span>
+              <span className={s.kbd}>⌘B</span>
             </MenubarItem>
           </MenubarContent>
         </MenubarMenu>
@@ -109,14 +113,14 @@ export function TitleBar(props: TitleBarProps) {
                 {v === 'Compare' && <Icons.Layers size={13} />}
                 {v === 'Report' && <Icons.BarChart size={13} />}
                 <span>{v}</span>
-                <span className="kbd">⌘{i + 1}</span>
+                <span className={s.kbd}>⌘{i + 1}</span>
               </MenubarItem>
             ))}
             <MenubarSeparator className="div" />
             <MenubarItem className="pi" onClick={onToggleTheme}>
               {theme === 'dark' ? <Icons.Sun size={13} /> : <Icons.Moon size={13} />}
               <span>Toggle theme</span>
-              <span className="kbd">⌘⇧L</span>
+              <span className={s.kbd}>⌘⇧L</span>
             </MenubarItem>
           </MenubarContent>
         </MenubarMenu>
@@ -125,14 +129,14 @@ export function TitleBar(props: TitleBarProps) {
           <MenubarTrigger className={cn(isOpen(MENU_KEYS.help) && 'on')}>Help</MenubarTrigger>
           <MenubarContent className="popover">
             <MenubarItem className="pi"><Icons.File size={13} /><span>Documentation</span></MenubarItem>
-            <MenubarItem className="pi"><Icons.Code size={13} /><span>Keyboard shortcuts</span><span className="kbd">?</span></MenubarItem>
+            <MenubarItem className="pi"><Icons.Code size={13} /><span>Keyboard shortcuts</span><span className={s.kbd}>?</span></MenubarItem>
             <MenubarSeparator className="div" />
             <MenubarItem className="pi"><Icons.Eye size={13} /><span>What's new in v0.4.2</span></MenubarItem>
           </MenubarContent>
         </MenubarMenu>
       </Menubar>
 
-      <div className="right">
+      <div className={s.right}>
         <Tooltip label="All processing happens locally · no upload">
           <span className="pill"><Icons.Lock size={10} /> 100% local</span>
         </Tooltip>
@@ -150,7 +154,7 @@ export function TitleBar(props: TitleBarProps) {
           aria-label="Open command palette"
         >
           <Icons.Search size={11} /> <span style={{ color: 'var(--fg-2)' }}>Search</span>
-          <span className="kbd" style={{ marginLeft: 6 }}>⌘K</span>
+          <span className={s.kbd} style={{ marginLeft: 6 }}>⌘K</span>
         </button>
       </div>
     </header>

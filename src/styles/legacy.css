@@ -2,15 +2,9 @@
 /* `.app` grid moved to src/components/shell/AppShell/appShell.module.css
    (quick task 260505-0hr Task 3). */
 
-/* Title bar */
-.titlebar { display: flex; align-items: center; padding: 0 12px; border-bottom: 1px solid var(--line); background: var(--bg-1); gap: 14px; font-size: 12px; color: var(--fg-1); }
-.titlebar .brand { font-family: var(--mono); font-weight: 600; letter-spacing: 0.04em; color: var(--fg-0); font-size: 11.5px; }
-.titlebar .brand .mark { display: inline-block; width: 12px; height: 12px; background: var(--accent); margin-right: 8px; vertical-align: -2px; clip-path: polygon(0 0, 100% 0, 100% 60%, 60% 100%, 0 100%); }
-.titlebar .menu { display: flex; gap: 2px; margin-left: 4px; }
-.titlebar .menu button { appearance: none; border: 0; background: transparent; color: var(--fg-1); padding: 4px 8px; font: inherit; font-size: 12px; border-radius: 4px; cursor: default; position: relative; }
-.titlebar .menu button:hover { background: var(--bg-2); color: var(--fg-0); }
-.titlebar .menu button.on { background: var(--bg-2); color: var(--fg-0); }
-.titlebar .right { margin-left: auto; display: flex; align-items: center; gap: 12px; font-size: 11px; color: var(--fg-2); }
+/* Title bar — migrated to src/components/shell/TitleBar/titleBar.module.css
+   (quick task 260505-0hr Task 4). `.kbd` stays global below until remaining
+   consumers (Toolbar / CommandPalette / popover .pi) migrate to modules. */
 .kbd { font-family: var(--mono); font-size: 10px; padding: 1px 5px; border: 1px solid var(--line); border-radius: 3px; color: var(--fg-1); background: var(--bg-0); }
 
 /* Toolbar */
