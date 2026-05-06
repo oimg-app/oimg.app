@@ -54,6 +54,7 @@ export interface UseFilePickerReturn {
   handleDrop: (e: DragEvent) => void
   handleDragOver: (e: DragEvent) => void
   handleDragLeave: (e: DragEvent) => void
+  handleFileInputChange: (files: FileList) => void
 }
 
 export function useFilePicker(): UseFilePickerReturn {
@@ -83,5 +84,9 @@ export function useFilePicker(): UseFilePickerReturn {
     e.stopPropagation()
   }
 
-  return { fileInputRef, handleFilePick, handleDrop, handleDragOver, handleDragLeave }
+  const handleFileInputChange = (files: FileList) => {
+    if (files.length > 0) void ingestDroppedFiles(files)
+  }
+
+  return { fileInputRef, handleFilePick, handleDrop, handleDragOver, handleDragLeave, handleFileInputChange }
 }
