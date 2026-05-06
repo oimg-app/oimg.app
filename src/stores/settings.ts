@@ -17,6 +17,7 @@ import type {
   CodecSettingsAvif,
   GlobalSettings,
   ResizeAlg,
+  CodecLabel,
 } from '@/types'
 import {
   DEFAULT_CODEC_SVG,
@@ -27,6 +28,15 @@ import {
   DEFAULT_GLOBAL_SETTINGS,
   DEFAULT_RESIZE_SETTINGS,
 } from '@/data/defaults'
+
+// Phase 10 plan 10-01 — store-local codec slice. Phase 5 raster encoders
+// read useSettingsStore.getState().codec to avoid prop-drilling.
+interface CodecSlice {
+  label: CodecLabel   // default: 'WebP'
+  quality: number     // default: 82
+  method: number      // default: 4
+  lossless: boolean   // default: false
+}
 
 interface SettingsState {
   svg: CodecSettingsSvg
@@ -43,6 +53,9 @@ interface SettingsState {
   // Variants" section). Per-file override lives on FileEntry.resizeOverride
   // (Plan 04-01 added field; UI deferred to Phase 5 detail view per D-07).
   resize: { alg: ResizeAlg }
+  // Phase 10 plan 10-01 — active codec + quality/method/lossless. Phase 5
+  // raster encoders read this to know which codec to target.
+  codec: CodecSlice
 
   setSvg: (next: Partial<CodecSettingsSvg>) => void
   setPng: (next: Partial<CodecSettingsPng>) => void
@@ -52,6 +65,7 @@ interface SettingsState {
   setGlobal: (next: Partial<GlobalSettings>) => void
   setSnippetToggle: (fileId: string, snippetId: string, value: boolean) => void
   setResize: (next: Partial<{ alg: ResizeAlg }>) => void
+  setCodec: (patch: Partial<CodecSlice>) => void
 }
 
 export const useSettingsStore = create<SettingsState>()(
@@ -64,6 +78,7 @@ export const useSettingsStore = create<SettingsState>()(
     global: DEFAULT_GLOBAL_SETTINGS,
     snippetTogglesByFileId: {},
     resize: DEFAULT_RESIZE_SETTINGS,
+    codec: { label: 'WebP', quality: 82, method: 4, lossless: false },
 
     setSvg: (next) => set((s) => ({ svg: { ...s.svg, ...next } })),
     setPng: (next) => set((s) => ({ png: { ...s.png, ...next } })),
@@ -82,5 +97,6 @@ export const useSettingsStore = create<SettingsState>()(
         },
       })),
     setResize: (next) => set((s) => ({ resize: { ...s.resize, ...next } })),
+    setCodec: (patch) => set((s) => ({ codec: { ...s.codec, ...patch } })),
   })),
 )
