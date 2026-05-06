@@ -169,10 +169,14 @@ Plans:
 
 ### Phase 10: Component decomposition and MVP wiring: split App.tsx into co-located components and hooks, wire all UI controls to real implementations
 
-**Goal:** [To be planned]
+**Goal:** Split App.tsx (1,381 lines) down to a ~200-300 line composition root by extracting FilePanel, useBatchOrchestrate, useFilePicker hooks and migrating codec settings to useSettingsStore.codec slice
 **Requirements**: TBD
-**Depends on:** Phase 9
-**Plans:** 0 plans
+**Depends on:** Phase 4
+**Plans:** 5 plans
 
 Plans:
-- [ ] TBD (run /gsd-plan-phase 10 to break down)
+- [ ] 10-01-PLAN.md — Add codec slice to useSettingsStore + rewrite CodecPanel to use store + remove 4 useState calls from App()
+- [ ] 10-02-PLAN.md — Create useFilePicker hook (formatFromFile, ingestDroppedFiles, fileInputRef, drag handlers)
+- [ ] 10-03-PLAN.md — Create FilePanel component (left-pane queue + dropzone + SHELL_FILES + density controls)
+- [ ] 10-04-PLAN.md — Create useBatchOrchestrate hook (pool + startOptimize + cancelBatch + subscribers) + useKeyboardShortcuts
+- [ ] 10-05-PLAN.md — Slim App.tsx to composition root + wire FilePanel/useBatchOrchestrate/useKeyboardShortcuts
