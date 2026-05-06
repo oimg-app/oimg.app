@@ -64,23 +64,25 @@ result: pass
 
 total: 9
 passed: 7
-issues: 2
+issues: 1
 skipped: 0
 pending: 0
 
 ## Gaps
 
-- truth: "Drop a PNG → file list shows 3 rows named @1x/@2x/@3x — one per target density"
+- truth: "Checking a density checkbox in Inspector TweaksPanel creates that variant row; unchecking removes it"
   status: failed
-  reason: "User reported: Not it's the way it shoud works like this"
+  reason: "Drop creates 1 row (@1x) correctly. But TargetDensityCheckboxes in Inspector are read-only display — toggling does not trigger addSourceWithVariants or removeFamily. TODO(P5) in TargetDensityCheckboxes.tsx line 65."
   severity: major
   test: 2
-  artifacts: []
-  missing: []
-- truth: "Hover a file row → source density icon button appears → popover with 1x/2x/3x options"
-  status: failed
-  reason: "No per-row source density control. Density+variants both live in Inspector TweaksPanel only"
-  severity: major
+  artifacts:
+    - src/components/file-row/TargetDensityCheckboxes.tsx
+    - src/App.tsx (ingestDroppedFiles — targets:['1x'] is correct)
+  missing:
+    - "Toggle handler in TargetDensityCheckboxes that calls addSourceWithVariants for new target or removeFamily variant for removed target"
+
+- truth: "Source density and variant controls live in Inspector panel only (no per-row popover)"
+  status: intentional
+  reason: "User confirmed: Inspector-only is correct design. SourceDensityControl.tsx is orphaned — can be deleted or kept for Phase 5."
+  severity: n/a
   test: 5
-  artifacts: []
-  missing: []
