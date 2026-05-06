@@ -172,11 +172,11 @@ Plans:
 **Goal:** Split App.tsx (1,381 lines) down to a ~200-300 line composition root by extracting FilePanel, useBatchOrchestrate, useFilePicker hooks and migrating codec settings to useSettingsStore.codec slice
 **Requirements**: TBD
 **Depends on:** Phase 4
-**Plans:** 3/5 plans executed
+**Plans:** 5/5 plans complete
 
 Plans:
 - [x] 10-01-PLAN.md — Add codec slice to useSettingsStore + rewrite CodecPanel to use store + remove 4 useState calls from App()
 - [x] 10-02-PLAN.md — Create useFilePicker hook (formatFromFile, ingestDroppedFiles, fileInputRef, drag handlers)
 - [x] 10-03-PLAN.md — Create FilePanel component (left-pane queue + dropzone + SHELL_FILES + density controls)
-- [ ] 10-04-PLAN.md — Create useBatchOrchestrate hook (pool + startOptimize + cancelBatch + subscribers) + useKeyboardShortcuts
-- [ ] 10-05-PLAN.md — Slim App.tsx to composition root + wire FilePanel/useBatchOrchestrate/useKeyboardShortcuts
+- [x] 10-04-PLAN.md — Create useBatchOrchestrate hook (pool + startOptimize + cancelBatch + subscribers) + useKeyboardShortcuts
+- [x] 10-05-PLAN.md — Slim App.tsx to composition root + wire FilePanel/useBatchOrchestrate/useKeyboardShortcuts
