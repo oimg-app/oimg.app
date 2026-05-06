@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: Completed 04-05-files-fanout-and-settings-PLAN.md
-last_updated: "2026-05-03T17:46:49.112Z"
-last_activity: 2026-05-03
+status: verifying
+stopped_at: Completed 04-07-app-wiring-and-uat-PLAN.md (Phase 4 ready for verification)
+last_updated: "2026-05-05T07:46:18.527Z"
+last_activity: 2026-05-05
 progress:
   total_phases: 8
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 21
-  completed_plans: 20
-  percent: 95
+  completed_plans: 21
+  percent: 100
 ---
 
 # Project State
@@ -27,10 +27,10 @@ See: .planning/PROJECT.md (updated 2026-04-29)
 
 Phase: 04 (decode-resize-memory-model) — EXECUTING
 Plan: 7 of 7
-Status: Ready to execute
-Last activity: 2026-05-03
+Status: Phase complete — ready for verification
+Last activity: 2026-05-05
 
-Progress: [██████████] 95%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -71,6 +71,7 @@ Progress: [██████████] 95%
 | Phase 04 P04-04 | 10min | 2 tasks | 5 files |
 | Phase 04 P04-05 | 18min | 2 tasks | 4 files |
 | Phase 04-decode-resize-memory-model PP04-06 | 7min | 1 task tasks | 5 files files |
+| Phase 04-decode-resize-memory-model P04-07 | ~25h | 3 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -119,6 +120,10 @@ Recent decisions affecting current work:
 - [Phase ?]: [Phase 04-decode-resize-memory-model plan 04-06]: TweaksPanel.tsx exports two named section components (TweaksResizeSection + TweaksPrivacySection) instead of a panel root — Plan 04-07 owns the composition root edit; this keeps the components-only scope honest
 - [Phase ?]: [Phase 04-decode-resize-memory-model plan 04-06]: TargetDensityCheckboxes onToggle is intentionally a no-op (Phase-5 work per CONTEXT.md D-01/D-02 SCOPED) — TODO inline + parameter prefix _density to suppress unused-arg lint
 - [Phase ?]: [Phase 04-decode-resize-memory-model plan 04-06]: BackpressureIndicator returns null when throttleActive=false (zero DOM, never visibility:hidden) so StatusBar reserves no layout space when pool is not throttling
+- [Phase ?]: [Phase 04-decode-resize-memory-model plan 04-07]: PNG-branch gate uses FileEntry.byteEstimate truthiness rather than format==='png' alone — preserves Phase-2/3 raw-addFile stub-stand-in tests end-to-end while routing real Plan-04-05 fanout entries through png-adapter
+- [Phase ?]: [Phase 04-decode-resize-memory-model plan 04-07]: minimal MVP dropzone + Add-from-Device picker pulled forward from Phase 5 to make Phase-4 visual UAT runnable; Phase 5 will replace with full Add-Files popover (From Device / URL / Clipboard)
+- [Phase ?]: [Phase 04-decode-resize-memory-model plan 04-07]: TargetDensityCheckboxes moved from per-row to Inspector-only at user request during UAT polish; sourceFamilyId prop kept as optional Phase-5 escape hatch
+- [Phase ?]: [Phase 04-decode-resize-memory-model plan 04-07]: useShallow guard required on TargetDensityCheckboxes selector — React 19 enforcement of getSnapshot caching surfaced only when component first ran inside live App.tsx file-row, not in isolated Phase-4-06 unit tests
 
 ### Pending Todos
 
@@ -151,6 +156,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-05-03T17:46:01.119Z
-Stopped at: Completed 04-05-files-fanout-and-settings-PLAN.md
+Last session: 2026-05-05T07:46:18.522Z
+Stopped at: Completed 04-07-app-wiring-and-uat-PLAN.md (Phase 4 ready for verification)
 Resume file: None

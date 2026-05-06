@@ -9,7 +9,7 @@ Eight phases take oimg.app from an empty Vite scaffold to a fully-deployed, prod
 - [ ] **Phase 1: Shell + Foundation** - Vite + TS scaffold, design tokens ported from example-ui/, COOP/COEP headers, CI smoke test
 - [x] **Phase 2: Worker Harness + State** - PipelineOrchestrator, generic worker pool, Comlink RPC, Zustand stores, stub adapter
 - [ ] **Phase 3: SVG Pipeline** - SVGO integration, DOMPurify wrap, plugin toggle UI, SVG snippet output
-- [ ] **Phase 4: Decode + Resize + Memory Model** - @jsquash/png decode, @jsquash/resize, streaming concurrency cap, source-density UI
+- [x] **Phase 4: Decode + Resize + Memory Model** - @jsquash/png decode, @jsquash/resize, streaming concurrency cap, source-density UI
 - [ ] **Phase 5: Raster Encoders** - OxiPNG, WebP, JPEG (MozJPEG), AVIF adapters + per-codec settings panels
 - [ ] **Phase 6: Snippet Generation** - All snippet types, per-file toggles, copy-to-clipboard, filename↔srcset sync gate
 - [ ] **Phase 7: ZIP Export + Persistence** - jszip download, per-file download, IndexedDB presets, localStorage theme/settings
@@ -93,7 +93,7 @@ Plans:
 - [x] 04-04-pool-admission-gate-PLAN.md — PoolJob.byteEstimate + WorkerPool admission gate + onThrottle callback + runtime store throttle/rename batch state
 - [x] 04-05-files-fanout-and-settings-PLAN.md — useFilesStore.addSourceWithVariants fan-out + removeFamily + useSettingsStore resize slice
 - [x] 04-06-ui-integration-PLAN.md — TweaksPanel sections + file-row density controls + StatusBar pill (components only)
-- [ ] 04-07-app-wiring-and-uat-PLAN.md — App.tsx pool/PNG/toast wiring + flip raster.spec.ts to live + visual UAT
+- [x] 04-07-app-wiring-and-uat-PLAN.md — App.tsx pool/PNG/toast wiring + flip raster.spec.ts to live + visual UAT
 
 ### Phase 5: Raster Encoders
 **Goal**: Users can optimize PNG, WebP, JPEG, and AVIF files with per-format codec controls, seeing before/after comparison and byte savings
@@ -150,7 +150,7 @@ Plans:
 | 1. Shell + Foundation | 5/5 | Complete | 2026-04-30 |
 | 2. Worker Harness + State | 5/5 | Complete | 2026-04-30 |
 | 3. SVG Pipeline | 0/4 | Not started | - |
-| 4. Decode + Resize + Memory Model | 0/7 | Not started | - |
+| 4. Decode + Resize + Memory Model | 7/7 | Complete | 2026-05-04 |
 | 5. Raster Encoders | 0/TBD | Not started | - |
 | 6. Snippet Generation | 0/TBD | Not started | - |
 | 7. ZIP Export + Persistence | 0/TBD | Not started | - |
