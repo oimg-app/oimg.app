@@ -238,10 +238,7 @@ export default function App() {
   // (PATTERNS.md §Migration map: only `selectedId`, `running`, `toasts` are
   // MUST-MIGRATE in Phase 2; other codec settings are not yet wired to a real
   // codec, so local useState is fine until Phase 5 panel migrations).
-  const [codec, setCodec] = useState<CodecLabel>('WebP')
-  const [q, setQ] = useState<number>(82)
-  const [method, setMethod] = useState<number>(4)
-  const [lossless, setLossless] = useState<boolean>(false)
+  // Phase 10 plan 10-01 — codec/q/method/lossless migrated to useSettingsStore.codec.
   const [resizeOn, setResizeOn] = useState<boolean>(true)
   const [w, setW] = useState<string>('1600')
   const [h, setH] = useState<string>('auto')
@@ -263,6 +260,12 @@ export default function App() {
   // (D-09 global in v1). Toggling a plugin calls setSvg with the updated
   // record; the plugin-change subscriber further down fires enqueuePreview
   // for the selected SVG file (D-08/D-10/D-11).
+  // Phase 10 plan 10-01 — read codec label/quality/method from store for
+  // TitleBar, delta-strip display, and setCodecFromMenu.
+  const codecLabel = useSettingsStore((s) => s.codec.label)
+  const codecQ = useSettingsStore((s) => s.codec.quality)
+  const codecMethod = useSettingsStore((s) => s.codec.method)
+
   const svgSettings = useSettingsStore((s) => s.svg)
   const setSvg = useSettingsStore((s) => s.setSvg)
   const togglePlugin = (id: string) => {
@@ -813,7 +816,7 @@ export default function App() {
   }
 
   const setCodecFromMenu = (c: CodecLabel) => {
-    setCodec(c)
+    useSettingsStore.getState().setCodec({ label: c })
     pushToast('Output set to ' + c)
     setOpen(null)
   }
@@ -1147,7 +1150,7 @@ export default function App() {
             <div className="delta">
               <span className="l">Optimized</span>
               <span className="v">{fmtBytes(file.opt)}</span>
-              <span className="sub">{codec.toLowerCase()} · q{q} · m{method}</span>
+              <span className="sub">{codecLabel.toLowerCase()} · q{codecQ} · m{codecMethod}</span>
             </div>
             <div className="delta savings">
               <span className="l">Saved</span>
@@ -1253,10 +1256,6 @@ export default function App() {
           {tab === 'codec' && (
             <>
               <CodecPanel
-                codec={codec} setCodec={setCodec}
-                q={q} setQ={setQ}
-                method={method} setMethod={setMethod}
-                lossless={lossless} setLossless={setLossless}
                 resizeOn={resizeOn} setResizeOn={setResizeOn}
                 w={w} setW={setW} h={h} setH={setH}
                 alg={alg} setAlg={setAlg} fit={fit} setFit={setFit}
@@ -1339,7 +1338,7 @@ export default function App() {
           onToggleTheme={toggleTheme}
           openKey={open}
           onOpenKey={setOpen}
-          codec={codec}
+          codec={codecLabel}
           onSelectCodec={setCodecFromMenu}
           view={view}
           onSetView={setView}

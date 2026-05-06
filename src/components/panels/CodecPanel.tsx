@@ -4,12 +4,15 @@ import { Seg } from '@/components/ui/Seg';
 import { Toggle } from '@/components/ui/Toggle';
 import { CODECS, RESIZE_ALG, FIT_MODES } from '@/data/defaults';
 import type { CodecLabel, ResizeAlg, FitMode } from '@/types';
+import { useSettingsStore } from '@/stores';
 
+// Phase 10 plan 10-01 — codec/q/method/lossless props removed; these values
+// are now read directly from useSettingsStore.codec. The resize/meta props
+// remain here pending a follow-up migration of the Resize/Metadata sections.
+// TODO Phase 10 Task 2 follow-up: resizeOn/w/h/alg/fit/stripMeta/keepIcc are
+// duplicate of useSettingsStore.resize/.global — remove after CodecPanel resize
+// section reads from store.
 interface CodecPanelProps {
-  codec: CodecLabel; setCodec: (v: CodecLabel) => void;
-  q: number; setQ: (v: number) => void;
-  method: number; setMethod: (v: number) => void;
-  lossless: boolean; setLossless: (v: boolean) => void;
   resizeOn: boolean; setResizeOn: (v: boolean) => void;
   w: string; setW: (v: string) => void;
   h: string; setH: (v: string) => void;
@@ -35,10 +38,20 @@ const codecBadge = (c: CodecLabel) =>
 
 export function CodecPanel(props: CodecPanelProps) {
   const {
-    codec, setCodec, q, setQ, method, setMethod, lossless, setLossless,
     resizeOn, setResizeOn, w, setW, h, setH, alg, setAlg, fit, setFit,
     stripMeta, setStripMeta, keepIcc, setKeepIcc,
   } = props;
+
+  // Phase 10 plan 10-01 — read codec settings directly from store.
+  const codec = useSettingsStore((s) => s.codec.label);
+  const setCodec = (v: CodecLabel) => useSettingsStore.getState().setCodec({ label: v });
+  const q = useSettingsStore((s) => s.codec.quality);
+  const setQ = (v: number) => useSettingsStore.getState().setCodec({ quality: v });
+  const method = useSettingsStore((s) => s.codec.method);
+  const setMethod = (v: number) => useSettingsStore.getState().setCodec({ method: v });
+  const lossless = useSettingsStore((s) => s.codec.lossless);
+  const setLossless = (v: boolean) => useSettingsStore.getState().setCodec({ lossless: v });
+
   const isSvg = codec === 'SVG';
 
   return (
