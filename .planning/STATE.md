@@ -125,6 +125,10 @@ Recent decisions affecting current work:
 - [Phase ?]: [Phase 04-decode-resize-memory-model plan 04-07]: TargetDensityCheckboxes moved from per-row to Inspector-only at user request during UAT polish; sourceFamilyId prop kept as optional Phase-5 escape hatch
 - [Phase ?]: [Phase 04-decode-resize-memory-model plan 04-07]: useShallow guard required on TargetDensityCheckboxes selector — React 19 enforcement of getSnapshot caching surfaced only when component first ran inside live App.tsx file-row, not in isolated Phase-4-06 unit tests
 
+### Roadmap Evolution
+
+- Phase 10 added: Component decomposition and MVP wiring — split App.tsx into co-located components and hooks, wire all UI controls to real implementations
+
 ### Pending Todos
 
 None yet.

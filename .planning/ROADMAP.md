@@ -156,3 +156,23 @@ Plans:
 | 6. Snippet Generation | 0/TBD | Not started | - |
 | 7. ZIP Export + Persistence | 0/TBD | Not started | - |
 | 8. Polish + Deploy | 0/TBD | Not started | - |
+
+### Phase 9: Component decomposition and MVP wiring — split App.tsx into components/hooks, wire all UI controls to real functions
+
+**Goal:** [To be planned]
+**Requirements**: TBD
+**Depends on:** Phase 8
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd-plan-phase 9 to break down)
+
+### Phase 10: Component decomposition and MVP wiring: split App.tsx into co-located components and hooks, wire all UI controls to real implementations
+
+**Goal:** [To be planned]
+**Requirements**: TBD
+**Depends on:** Phase 9
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd-plan-phase 10 to break down)
