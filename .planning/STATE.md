@@ -148,6 +148,16 @@ None yet.
 
 ## Deferred Items
 
+Items acknowledged and deferred at milestone close on 2026-05-07:
+
+| Category | Item | Status |
+|----------|------|--------|
+| uat_gap | Phase 02: 02-HUMAN-UAT.md — 2 pending scenarios | partial |
+| verification_gap | Phase 02: 02-VERIFICATION.md | human_needed |
+| quick_task | 260429-rud-add-usage-of-shadcn-component-library-to | missing |
+| quick_task | 260504-x06-refactor-app-tsx-into-panes-pure-utils-h | missing |
+| quick_task | 260505-0hr-css-modules-migration-full-per-component | missing |
+
 | Category | Item | Status | Deferred At |
 |----------|------|--------|-------------|
 | v2+ | PWA / offline shell | Deferred | Project init |
@@ -168,3 +178,4 @@ None yet.
 Last session: 2026-05-07T00:00:00.000Z
 Stopped at: Completed 10-05-PLAN.md — all phases complete, human-verify approved
 Resume file: None
+| 2026-05-07 | fast | extract useCommandPalette + useTotals from App.tsx | ✅ |

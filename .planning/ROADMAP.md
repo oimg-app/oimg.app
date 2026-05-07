@@ -180,3 +180,14 @@ Plans:
 - [x] 10-03-PLAN.md — Create FilePanel component (left-pane queue + dropzone + SHELL_FILES + density controls)
 - [x] 10-04-PLAN.md — Create useBatchOrchestrate hook (pool + startOptimize + cancelBatch + subscribers) + useKeyboardShortcuts
 - [x] 10-05-PLAN.md — Slim App.tsx to composition root + wire FilePanel/useBatchOrchestrate/useKeyboardShortcuts
+
+
+## Backlog
+
+### Phase 999.1: Follow-up — Phase 4 incomplete plans (BACKLOG)
+
+**Goal:** Resolve plan that ran without producing a summary during Phase 4 execution
+**Source phase:** 4 (Decode + Resize + Memory Model)
+**Deferred at:** 2026-05-07 during /gsd-next advancement to Phase 5
+**Plans:**
+- [ ] 04-08: gap-closure plan (ran, no SUMMARY.md)
