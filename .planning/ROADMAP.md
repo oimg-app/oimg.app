@@ -106,7 +106,16 @@ Plans:
   3. Clicking a file opens the detail view with a Squoosh-style split slider showing original vs. optimized side by side
   4. Global settings (e.g., default quality) propagate to all files; per-file overrides override globals without affecting siblings
   5. AVIF and WebP codecs load lazily — network tab shows their WASM bundles are not fetched until the first AVIF/WebP file is processed
-**Plans**: TBD
+**Plans**: 6 plans
+
+Plans:
+- [ ] 05-01-PLAN.md — Wave 0: install jSquash deps + write failing-stub test scaffolds
+- [ ] 05-02-PLAN.md — Wave 1a: JPEG/WebP/AVIF adapters + OxiPNG png-adapter upgrade + icc.ts
+- [ ] 05-03-PLAN.md — Wave 1b: perFile override slice in settings store + TargetDensity types + files store
+- [ ] 05-04-PLAN.md — Wave 2a: PngPanel/JpegPanel/WebpPanel/AvifPanel + InspectorPane Codec|Snippets tab
+- [ ] 05-05-PLAN.md — Wave 2b: CenterPane real FileEntry data + useBatchOrchestrate raster wiring
+- [ ] 05-06-PLAN.md — Wave 3: activate all test stubs live + visual UAT checkpoint
+
 **UI hint**: yes
 
 ### Phase 6: Snippet Generation
@@ -152,7 +161,7 @@ Plans:
 | 2. Worker Harness + State | 5/5 | Complete | 2026-04-30 |
 | 3. SVG Pipeline | 0/4 | Not started | - |
 | 4. Decode + Resize + Memory Model | 7/8 | Gap closure | 2026-05-04 |
-| 5. Raster Encoders | 0/TBD | Not started | - |
+| 5. Raster Encoders | 0/6 | Not started | - |
 | 6. Snippet Generation | 0/TBD | Not started | - |
 | 7. ZIP Export + Persistence | 0/TBD | Not started | - |
 | 8. Polish + Deploy | 0/TBD | Not started | - |
