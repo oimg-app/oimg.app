@@ -33,7 +33,7 @@ interface FilePanelProps {
   onCancel: () => void
 }
 
-export function FilePanel({ selectedId, onSelect, onOptimize: _onOptimize, onCancel: _onCancel }: FilePanelProps) {
+export function FilesPane({ selectedId, onSelect, onOptimize: _onOptimize, onCancel: _onCancel }: FilePanelProps) {
   const [filterQuery, setFilterQuery] = useState<string>('')
   const [sortBy, setSortBy] = useState<string>('queue order')
   const [open, setOpen] = useState<string | null>(null)

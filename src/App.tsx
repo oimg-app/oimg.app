@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Toaster, toast } from 'sonner'
 import { Icons } from '@/components/icons'
-import { FilePanel } from '@/components/panels/FilePanel/FilePanel'
+import { FilesPane } from '@/components/panels/FilesPane'
 import { CenterPane } from '@/components/panels/CenterPane'
 import { InspectorPane } from '@/components/panels/InspectorPane'
 import { AppShell } from '@/components/shell/AppShell/AppShell'
@@ -110,7 +110,7 @@ export default function App() {
       toolbar={<Toolbar running={running} onStartOptimize={startOptimize} onExportZip={exportZip} view={view} onSetView={setView} filterQuery={''} onSetFilterQuery={() => {}} theme={theme} onToggleTheme={toggleTheme} openKey={open} onOpenKey={setOpen} onToast={pushToast} onChange={onToolbarChange} />}
       workArea={
         <main className="work">
-          <FilePanel selectedId={selectedId || null} onSelect={setSelectedId} onOptimize={startOptimize} onCancel={cancelBatch} />
+          <FilesPane selectedId={selectedId || null} onSelect={setSelectedId} onOptimize={startOptimize} onCancel={cancelBatch} />
           <CenterPane file={file} open={open} setOpen={setOpen} />
           <InspectorPane file={file} selectedId={selectedId} open={open} setOpen={setOpen} onToast={pushToast} />
         </main>
