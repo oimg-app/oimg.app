@@ -4,7 +4,7 @@
 
 import { create } from 'zustand'
 import { subscribeWithSelector } from 'zustand/middleware'
-import type { FileEntry, FormatId, SourceDensity } from '@/types'
+import type { FileEntry, FormatId, SourceDensity, TargetDensity } from '@/types'
 import { applyDensitySuffix, deduplicateName } from '@/lib/filename'
 import { sniffPngDimensions } from '@/lib/sniff'
 import { estimateJobBytes } from '@/lib/memory-budget'
@@ -43,8 +43,15 @@ interface FilesState {
   setSelected: (fileId: string | null) => void
   setStatus: (fileId: string, status: FileEntry['status']) => void
   setSourceDensity: (fileId: string, density: FileEntry['sourceDensity']) => void
+  // Phase 5 D-12 — export-scope density selector. Does NOT trigger re-optimize.
+  setTargetDensities: (fileId: string, targetDensities: TargetDensity[]) => void
   clear: () => void
-  /** Phase 4 D-04 + D-14 — fan out N FileEntryWithBlob entries per source.
+  /** @deprecated Phase 5 D-11: superseded by single-FileEntry model.
+   *  Call useFilesStore.addFile() for new dropped files instead.
+   *  Do NOT remove until Playwright raster.spec.ts tests are updated (they call addSourceWithVariants).
+   *  See .planning/phases/05-raster-encoders/05-CONTEXT.md D-11.
+   *
+   * Phase 4 D-04 + D-14 — fan out N FileEntryWithBlob entries per source.
    *  Each entry has id `${sourceUuid}-${density}`, name = applyDensitySuffix
    *  then deduplicateName, sourceFamilyId = sourceUuid, targetDensity = the
    *  variant density, byteEstimate seeded from sniffPngDimensions (PNG) or
@@ -57,7 +64,11 @@ interface FilesState {
     format: FormatId
     targets: SourceDensity[]
   }) => Promise<void>
-  /** Phase 4 D-04 — remove all variants sharing a sourceFamilyId.
+  /** @deprecated Phase 5 D-11: superseded by single-FileEntry model.
+   *  When using single addFile() model, call removeFile(fileId) directly.
+   *  Do NOT remove until all callers are migrated.
+   *
+   * Phase 4 D-04 — remove all variants sharing a sourceFamilyId.
    *  Loops removeFile(variantId) per entry per RESEARCH §5.2 (preserves URL revoke). */
   removeFamily: (sourceFamilyId: string) => void
 }
@@ -85,6 +96,9 @@ export const useFilesStore = create<FilesState>()(
         const { [fileId]: _drop, ...rest } = s.snippetTogglesByFileId
         return { snippetTogglesByFileId: rest }
       })
+      // T-5-03-02 / T-5-03-03 — clear per-file codec overrides so the perFile
+      // Record does not grow unbounded as files are added and removed.
+      useSettingsStore.getState().clearPerFile(fileId)
       set((s) => {
         const { [fileId]: _removed, ...rest } = s.byId
         return {
@@ -133,6 +147,13 @@ export const useFilesStore = create<FilesState>()(
         const prev = s.byId[fileId]
         if (!prev) return {}
         return { byId: { ...s.byId, [fileId]: { ...prev, sourceDensity } } }
+      }),
+
+    setTargetDensities: (fileId, targetDensities) =>
+      set((s) => {
+        const prev = s.byId[fileId]
+        if (!prev) return {}
+        return { byId: { ...s.byId, [fileId]: { ...prev, targetDensities } } }
       }),
 
     clear: () => {
