@@ -113,7 +113,7 @@ Plans:
 - [x] 05-02-PLAN.md — Wave 1a: JPEG/WebP/AVIF adapters + OxiPNG png-adapter upgrade + icc.ts
 - [x] 05-03-PLAN.md — Wave 1b: perFile override slice in settings store + TargetDensity types + files store
 - [ ] 05-04-PLAN.md — Wave 2a: PngPanel/JpegPanel/WebpPanel/AvifPanel + InspectorPane Codec|Snippets tab
-- [ ] 05-05-PLAN.md — Wave 2b: CenterPane real FileEntry data + useBatchOrchestrate raster wiring
+- [x] 05-05-PLAN.md — Wave 2b: CenterPane real FileEntry data + useBatchOrchestrate raster wiring
 - [ ] 05-06-PLAN.md — Wave 3: activate all test stubs live + visual UAT checkpoint
 
 **UI hint**: yes
