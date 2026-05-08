@@ -45,6 +45,9 @@ interface FilesState {
   setSourceDensity: (fileId: string, density: FileEntry['sourceDensity']) => void
   // Phase 5 D-12 — export-scope density selector. Does NOT trigger re-optimize.
   setTargetDensities: (fileId: string, targetDensities: TargetDensity[]) => void
+  // Phase 5 plan 05-04 — per-file ICC preserve override (D-14 ICC wiring for PngPanel).
+  // Mirrors setSourceDensity pattern.
+  setPreserveIcc: (fileId: string, preserveIcc: boolean) => void
   clear: () => void
   /** @deprecated Phase 5 D-11: superseded by single-FileEntry model.
    *  Call useFilesStore.addFile() for new dropped files instead.
@@ -154,6 +157,13 @@ export const useFilesStore = create<FilesState>()(
         const prev = s.byId[fileId]
         if (!prev) return {}
         return { byId: { ...s.byId, [fileId]: { ...prev, targetDensities } } }
+      }),
+
+    setPreserveIcc: (fileId, preserveIcc) =>
+      set((s) => {
+        const prev = s.byId[fileId]
+        if (!prev) return {}
+        return { byId: { ...s.byId, [fileId]: { ...prev, preserveIcc } } }
       }),
 
     clear: () => {
