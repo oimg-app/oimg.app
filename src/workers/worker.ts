@@ -26,15 +26,12 @@ const ADAPTERS: Record<
   // Phase 4 plan 04-03 — PNG decode + resize + re-encode adapter (D-04 + D-14).
   // Each density variant is its own pool job; adapter sees 1:1 input → output.
   png: () => import('./png-adapter'),
-  jpeg: () => {
-    throw new Error('jpeg adapter not yet implemented (Phase 5)')
-  },
-  webp: () => {
-    throw new Error('webp adapter not yet implemented (Phase 5)')
-  },
-  avif: () => {
-    throw new Error('avif adapter not yet implemented (Phase 5)')
-  },
+  // Phase 5 plan 02 — real adapters replace throw stubs.
+  // Static literal paths so Vite can statically analyze and code-split.
+  // avif-adapter is its own chunk (~2 MB gzipped, D-09 lazy-load only when user picks AVIF).
+  jpeg: () => import('./jpeg-adapter'),
+  webp: () => import('./webp-adapter'),
+  avif: () => import('./avif-adapter'),
 }
 
 const api: WorkerProxyApi = {

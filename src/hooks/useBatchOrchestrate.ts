@@ -347,6 +347,7 @@ export function useBatchOrchestrate(): UseBatchOrchestrateReturn {
           globalPreserveIcc:
             useSettingsStore.getState().global.preserveIccProfile,
           filePreserveIcc: fileEntry?.preserveIcc,
+          globalPng: useSettingsStore.getState().png,
         })
       } else {
         settings = slowMs > 0 ? { slowMs } : {}

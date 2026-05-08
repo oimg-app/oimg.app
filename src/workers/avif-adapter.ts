@@ -29,7 +29,7 @@ export async function run(
   })
   const { decode, encode } = await getAvif()
 
-  let decoded: ImageData
+  let decoded: ImageData | null
   try {
     decoded = await decode(input)
   } catch (err) {
@@ -39,10 +39,13 @@ export async function run(
       err instanceof Error ? err.message : String(err),
     )
   }
+  if (!decoded) {
+    throw new AdapterError('avif', 'decode', 'decode returned null — invalid or unsupported AVIF')
+  }
 
   let encoded: ArrayBuffer
   try {
-    encoded = await encode(decoded, { quality: opts.quality, lossless: opts.lossless ? 1 : 0 })
+    encoded = await encode(decoded, { quality: opts.quality, lossless: opts.lossless })
   } catch (err) {
     throw new AdapterError(
       'avif',
