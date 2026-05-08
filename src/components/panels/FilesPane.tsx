@@ -11,20 +11,7 @@ import { useFilesStore } from '@/stores'
 import { useFilePicker } from '@/hooks/useFilePicker'
 import { fmtBytes, fmtPct } from '@/lib/format'
 import type { MockFile } from '@/types'
-import _s from './FilePanel.module.css'
 
-// Module-level constant — not exported. Shown when queue is empty.
-const PLACEHOLDER_FILE: MockFile = {
-  id: 'placeholder',
-  name: 'No file selected',
-  type: 'png',
-  orig: 0,
-  opt: 0,
-  status: 'queued',
-  target: 'webp',
-  dim: '— x —',
-  q: null,
-}
 
 interface FilePanelProps {
   selectedId: string | null
@@ -34,7 +21,7 @@ interface FilePanelProps {
 }
 
 export function FilesPane({ selectedId, onSelect, onOptimize: _onOptimize, onCancel: _onCancel }: FilePanelProps) {
-  const [filterQuery, setFilterQuery] = useState<string>('')
+  const [filterQuery, _setFilterQuery] = useState<string>('')
   const [sortBy, setSortBy] = useState<string>('queue order')
   const [open, setOpen] = useState<string | null>(null)
   const [rowMenu, setRowMenu] = useState<string | null>(null)
@@ -81,9 +68,6 @@ export function FilesPane({ selectedId, onSelect, onOptimize: _onOptimize, onCan
 
   const isPopOpen = (key: string) => open === key
   const togglePop = (key: string) => setOpen(open === key ? null : key)
-
-  // Suppress unused-variable lint for _s (establishes the CSS module pattern).
-  void _s
 
   return (
     <div className="pane">

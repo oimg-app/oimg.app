@@ -56,6 +56,14 @@ interface SettingsState {
   // Phase 10 plan 10-01 — active codec + quality/method/lossless. Phase 5
   // raster encoders read this to know which codec to target.
   codec: CodecSlice
+  // Phase 5 D-02 — per-file codec overrides keyed by FileEntry.id.
+  // CRITICAL: codec panel components MUST call setPerFileCodec(fileId, patch),
+  // NOT the global setSvg/setPng/setJpeg/setWebp/setAvif. Writing to global
+  // slices triggers full-batch re-optimize for all files (Pitfall 4 — RESEARCH.md).
+  // Resolution order: perFile[fileId] ?? globalFormatSlice.
+  perFile: Record<string, Partial<CodecSettingsPng | CodecSettingsJpeg | CodecSettingsWebp | CodecSettingsAvif>>
+  setPerFileCodec: (fileId: string, patch: Partial<CodecSettingsPng | CodecSettingsJpeg | CodecSettingsWebp | CodecSettingsAvif>) => void
+  clearPerFile: (fileId: string) => void
 
   setSvg: (next: Partial<CodecSettingsSvg>) => void
   setPng: (next: Partial<CodecSettingsPng>) => void
@@ -79,6 +87,7 @@ export const useSettingsStore = create<SettingsState>()(
     snippetTogglesByFileId: {},
     resize: DEFAULT_RESIZE_SETTINGS,
     codec: { label: 'WebP', quality: 82, method: 4, lossless: false },
+    perFile: {},
 
     setSvg: (next) => set((s) => ({ svg: { ...s.svg, ...next } })),
     setPng: (next) => set((s) => ({ png: { ...s.png, ...next } })),
@@ -98,5 +107,18 @@ export const useSettingsStore = create<SettingsState>()(
       })),
     setResize: (next) => set((s) => ({ resize: { ...s.resize, ...next } })),
     setCodec: (patch) => set((s) => ({ codec: { ...s.codec, ...patch } })),
+    setPerFileCodec: (fileId, patch) =>
+      set((s) => ({
+        perFile: {
+          ...s.perFile,
+          [fileId]: { ...s.perFile[fileId], ...patch },
+        },
+      })),
+    clearPerFile: (fileId) =>
+      set((s) => {
+        const next = { ...s.perFile }
+        delete next[fileId]
+        return { perFile: next }
+      }),
   })),
 )

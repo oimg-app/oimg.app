@@ -73,7 +73,8 @@ export default function App() {
     theme, toggleTheme, setView, setOpen, setCodecFromMenu,
   })
 
-  useKeyboardShortcuts({ startOptimize, cancelBatch, cmdkOpen, setCmdkOpen, setOpen })
+  const [_rowMenu, setRowMenu] = useState<string | null>(null)
+  useKeyboardShortcuts({ startOptimize, cancelBatch, cmdkOpen, setCmdkOpen, setOpen, setRowMenu })
 
   return (
     <AppShell
