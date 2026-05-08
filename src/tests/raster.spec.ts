@@ -317,6 +317,82 @@ test('collision rename — duplicate @Nx names auto-suffix (2)', async ({ page }
   expect(result.renameCount).toBe(3)
 })
 
+// ─── Phase 5: Raster Encoders — Wave 0 stubs ──────────────────────────────
+// All tests marked test.fail() per established Phase 2/3/4 convention.
+// Later wave plans flip these to live assertions once implementation ships.
+
+test.fail('OPT-02: PNG + OxiPNG optimization reduces file size vs original', async ({ page }) => {
+  await page.goto('/')
+  await page.waitForFunction(
+    () => typeof (window as { __OIMG_STORES__?: unknown }).__OIMG_STORES__ === 'object',
+  )
+  // Wave 2 plan 05 flips this: drop PNG → optimize → assert optimizedSize < originalSize
+  expect(false).toBe(true)
+})
+
+test.fail('OPT-03: WebP encode produces valid WebP output at quality 80', async ({ page }) => {
+  await page.goto('/')
+  await page.waitForFunction(
+    () => typeof (window as { __OIMG_STORES__?: unknown }).__OIMG_STORES__ === 'object',
+  )
+  // Wave 2 plan 05 flips this: drop WebP → optimize → assert output is valid WebP bytes
+  expect(false).toBe(true)
+})
+
+test.fail('OPT-04: JPEG encode produces valid JPEG at quality 80 progressive', async ({ page }) => {
+  await page.goto('/')
+  await page.waitForFunction(
+    () => typeof (window as { __OIMG_STORES__?: unknown }).__OIMG_STORES__ === 'object',
+  )
+  // Wave 2 plan 05 flips this: drop JPEG → optimize → assert output starts with FF D8 FF
+  expect(false).toBe(true)
+})
+
+test.fail('OPT-05: AVIF encode runs and AVIF WASM chunk absent from initial page load', async ({ page }) => {
+  await page.goto('/')
+  await page.waitForFunction(
+    () => typeof (window as { __OIMG_STORES__?: unknown }).__OIMG_STORES__ === 'object',
+  )
+  // Wave 2 plan 05 flips this: confirm no avif*.wasm in network requests before AVIF file drop
+  expect(false).toBe(true)
+})
+
+test.fail('PIPE-02: settings change for selected file re-optimizes only that file', async ({ page }) => {
+  await page.goto('/')
+  await page.waitForFunction(
+    () => typeof (window as { __OIMG_STORES__?: unknown }).__OIMG_STORES__ === 'object',
+  )
+  // Wave 2 plan 05 flips this: change perFileCodec for one file → assert only that file status flips
+  expect(false).toBe(true)
+})
+
+test.fail('UI-03: file list shows non-zero byte reduction after optimize', async ({ page }) => {
+  await page.goto('/')
+  await page.waitForFunction(
+    () => typeof (window as { __OIMG_STORES__?: unknown }).__OIMG_STORES__ === 'object',
+  )
+  // Wave 2 plan 05 flips this: optimize PNG → assert optimizedSize < originalSize in store
+  expect(false).toBe(true)
+})
+
+test.fail('UI-04: click file row opens split slider in CenterPane with real FileEntry data', async ({ page }) => {
+  await page.goto('/')
+  await page.waitForFunction(
+    () => typeof (window as { __OIMG_STORES__?: unknown }).__OIMG_STORES__ === 'object',
+  )
+  // Wave 2 plan 05 flips this: setSelected(fileId) → assert .center .image-frame is visible
+  expect(false).toBe(true)
+})
+
+test.fail('UI-05: InspectorPane Codec tab shows format-specific controls; Snippets tab shows SnippetPanel', async ({ page }) => {
+  await page.goto('/')
+  await page.waitForFunction(
+    () => typeof (window as { __OIMG_STORES__?: unknown }).__OIMG_STORES__ === 'object',
+  )
+  // Wave 2 plan 05 flips this: select PNG file → assert Codec tab renders PngPanel controls
+  expect(false).toBe(true)
+})
+
 test('metadata strip — output bytes contain no iCCP chunk by default', async ({ page }) => {
   // Plan 04-07 Task 2 — live OPT-06 / SC-3: png-adapter round-trips without ICC.
   // Mirrors the runtime.running poll pattern used elsewhere in this file so an
