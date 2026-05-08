@@ -9,6 +9,12 @@ export type FileStatus = 'idle' | 'queued' | 'processing' | 'done' | 'error'
 
 export type SourceDensity = '1x' | '2x' | '3x'
 
+// Phase 5 D-12 — target density selections for export-time variant generation.
+// Stored as a set on each FileEntry; Phase 7 reads these to generate variants at download.
+// Different from SourceDensity (which density the source IS) and
+// targetDensity (Phase 4 fan-out — which density THIS specific FileEntry represents).
+export type TargetDensity = '1x' | '2x' | '3x'
+
 // UI types — moved from src/data/mock.ts in Phase 2 plan 02-05 (cleanup wave).
 // `FileType` and `MockFile` describe the visual-shell row shape used by the
 // inspector OutputPanel/ReportPanel during the Phase 1→2 transition. Phase 5
@@ -78,6 +84,10 @@ export interface FileEntry {
   // Phase 4 (D-09) — per-file ICC preserve override (data shape only; worker
   // no-op in P4 per Post-Research D-10 amendment).
   preserveIcc?: boolean
+  // Phase 5 D-12 — export-scope density selectors. Checkboxes in InspectorPane
+  // Codec tab record which variants the user wants in the ZIP output. NO re-optimize
+  // is triggered when this changes (D-12: export-scope only, Phase 7 generates variants).
+  targetDensities?: TargetDensity[]
 }
 
 export interface CodecSettingsSvg {
