@@ -14,11 +14,8 @@ import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
 import { useCommandPalette, type View } from '@/hooks/useCommandPalette'
 import { useTotals } from '@/hooks/useTotals'
 import { setLiveRegion } from '@/lib/live-region'
-import type { CodecLabel, MockFile } from '@/types'
+import type { CodecLabel } from '@/types'
 import { useFilesStore, useSettingsStore, useRuntimeStore } from '@/stores'
-
-const EMPTY_FILE: MockFile = { id: 'placeholder', name: 'No file selected', type: 'png', orig: 0, opt: 0, status: 'queued', target: 'webp', dim: '— × —', q: null }
-const fmtToType = (fmt: string): MockFile['type'] => fmt === 'jpeg' ? 'jpg' : (fmt as MockFile['type'])
 
 export default function App() {
   const { theme, setTheme } = useTheme()
@@ -58,11 +55,6 @@ export default function App() {
 
   const totals = useTotals()
 
-  const selectedEntry = useFilesStore((s) => s.selectedId ? s.byId[s.selectedId] : undefined)
-  const file: MockFile = selectedEntry
-    ? { id: selectedEntry.id, name: selectedEntry.name, type: fmtToType(selectedEntry.format), orig: selectedEntry.originalSize, opt: selectedEntry.optimizedSize ?? selectedEntry.originalSize, status: selectedEntry.status === 'idle' ? 'queued' : (selectedEntry.status as MockFile['status']), target: fmtToType(selectedEntry.format), dim: '—', q: null }
-    : EMPTY_FILE
-
   const toggleTheme = () => setTheme(theme === 'dark' ? 'light' : 'dark')
   const exportZip = () => toast.success('Bundled oimg-export.zip', { description: '2.6 MB' })
   const setCodecFromMenu = (c: CodecLabel) => { useSettingsStore.getState().setCodec({ label: c }); pushToast('Output set to ' + c); setOpen(null) }
@@ -84,7 +76,7 @@ export default function App() {
         <main className="work">
           <FilesPane selectedId={selectedId || null} onSelect={setSelectedId} onOptimize={startOptimize} onCancel={cancelBatch} />
           <CenterPane open={open} setOpen={setOpen} />
-          <InspectorPane file={file} selectedId={selectedId} open={open} setOpen={setOpen} onToast={pushToast} />
+          <InspectorPane open={open} setOpen={setOpen} onToast={pushToast} />
         </main>
       }
       statusBar={<StatusBar running={running} filesCount={totals.filesCount} origTotal={totals.orig} optTotal={totals.opt} compressionPct={totals.pct} savedBytes={totals.saved} />}
