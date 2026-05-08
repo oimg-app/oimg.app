@@ -83,7 +83,7 @@ export default function App() {
       workArea={
         <main className="work">
           <FilesPane selectedId={selectedId || null} onSelect={setSelectedId} onOptimize={startOptimize} onCancel={cancelBatch} />
-          <CenterPane file={file} open={open} setOpen={setOpen} />
+          <CenterPane open={open} setOpen={setOpen} />
           <InspectorPane file={file} selectedId={selectedId} open={open} setOpen={setOpen} onToast={pushToast} />
         </main>
       }
