@@ -11,6 +11,10 @@ import type { PoolJob, AdapterFormat } from '@/workers/types'
 import { announce, isQuartileBoundary } from '@/lib/live-region'
 import { sanitizeSvg } from '@/lib/sanitize-svg'
 import { buildPngResizeSettings } from '@/workers/png-config'
+import { buildJpegSettings } from '@/workers/jpeg-config'
+import { buildWebpSettings } from '@/workers/webp-config'
+import { buildAvifSettings } from '@/workers/avif-config'
+import type { CodecSettingsJpeg, CodecSettingsWebp, CodecSettingsAvif } from '@/types'
 
 // Phase 3 plan 03-B (D-06) — post-batch per-plugin live savings.
 // Wall-time cap: 5s. On timeout, pluginSavings stays empty (or partially
@@ -117,6 +121,85 @@ async function computePluginSavings(fileIds: string[]): Promise<void> {
 // to prevent inflating doneCount past totalJobs.
 function isAuxiliaryJob(jobId: string): boolean {
   return jobId.startsWith('preview-') || jobId.startsWith('savings-')
+}
+
+// Phase 5 plan 05-05 — Debounced raster re-optimize for InspectorPane codec panel.
+// D-04: 200ms debounce + cancel-and-restart, identical to Phase 3 SVG enqueuePreview.
+// T-5-05-01 mitigation: cancelByPrefix('preview-') cancels ALL pending preview jobs
+// before each new enqueue, preventing unbounded queue growth from rapid slider drags.
+// T-5-05-04 mitigation: cross-file preview cancellation is intentional — only one
+// file is selected at a time in Phase 5.
+//
+// Placed as a standalone exported function (not inside the hook) to avoid circular
+// dependency with runtime.ts (which already exports enqueuePreview for SVG).
+export async function enqueueRasterPreview(fileId: string): Promise<void> {
+  const pool = getWorkerPool()
+  // Cancel all pending preview jobs (not just this fileId) to prevent queue buildup.
+  pool.cancelByPrefix('preview-')
+
+  const fileEntry = useFilesStore.getState().byId[fileId]
+  if (!fileEntry) return
+  const format = fileEntry.format
+  if (format === 'svg') return // SVG uses enqueuePreview from runtime.ts
+
+  let settings: unknown
+  if (format === 'jpeg') {
+    const globalJpeg = useSettingsStore.getState().jpeg
+    const perFile = useSettingsStore.getState().perFile[fileId] ?? {}
+    settings = buildJpegSettings({ globalJpeg, fileOverride: perFile as Partial<CodecSettingsJpeg> })
+  } else if (format === 'webp') {
+    const globalWebp = useSettingsStore.getState().webp
+    const perFile = useSettingsStore.getState().perFile[fileId] ?? {}
+    settings = buildWebpSettings({ globalWebp, fileOverride: perFile as Partial<CodecSettingsWebp> })
+  } else if (format === 'avif') {
+    const globalAvif = useSettingsStore.getState().avif
+    const perFile = useSettingsStore.getState().perFile[fileId] ?? {}
+    settings = buildAvifSettings({ globalAvif, fileOverride: perFile as Partial<CodecSettingsAvif> })
+  } else if (format === 'png') {
+    const perFile = useSettingsStore.getState().perFile[fileId] ?? {}
+    settings = buildPngResizeSettings({
+      sourceDensity: fileEntry.sourceDensity ?? '1x',
+      targetDensity: fileEntry.targetDensity ?? fileEntry.sourceDensity ?? '1x',
+      globalAlg: useSettingsStore.getState().resize.alg,
+      fileOverride: fileEntry.resizeOverride,
+      globalPreserveIcc: useSettingsStore.getState().global.preserveIccProfile,
+      filePreserveIcc: fileEntry.preserveIcc,
+      globalPng: useSettingsStore.getState().png,
+      ...perFile,
+    })
+  } else {
+    return
+  }
+
+  const jobId = `preview-${crypto.randomUUID()}`
+  const job: PoolJob = {
+    id: jobId,
+    fileId,
+    format: format as AdapterFormat,
+    settings,
+    blob: fileEntry.sourceBlob,
+  }
+
+  try {
+    const result = await pool.enqueue(job)
+    // Guard: file may have been removed while the preview job was running.
+    if (!useFilesStore.getState().byId[fileId]) return
+    const mimeByFormat: Record<string, string> = {
+      png: 'image/png',
+      jpeg: 'image/jpeg',
+      webp: 'image/webp',
+      avif: 'image/avif',
+    }
+    const mime = mimeByFormat[format] ?? 'application/octet-stream'
+    const optimizedBlob = new Blob([result.output], { type: mime })
+    useFilesStore.getState().markDone(fileId, optimizedBlob, optimizedBlob.size)
+  } catch (err) {
+    // AbortError = job was superseded by a newer preview — discard silently.
+    const isAbort = err instanceof DOMException && err.name === 'AbortError'
+    if (!isAbort) {
+      console.error(`[enqueueRasterPreview] ${fileId}:`, err)
+    }
+  }
 }
 
 export interface UseBatchOrchestrateReturn {
@@ -308,9 +391,13 @@ export function useBatchOrchestrate(): UseBatchOrchestrateReturn {
         : 0
       // Phase 3 plan 03-A — route SVG files through the real SVG adapter.
       // Phase 4 plan 04-07 — route PNG files through the real PNG adapter
-      // (decode → resize → encode). All other raster formats still fall back
-      // to the stub until Phase 5 ships JPEG/WebP/AVIF encoders.
+      // (decode → resize → encode). PNG branch is gated on byteEstimate
+      // (set ONLY by addSourceWithVariants, never by Phase-2 test affordances
+      // calling addFile directly). This preserves Phase 4 test contract.
+      // Phase 5 plan 05-05 — route JPEG/WebP/AVIF through real adapters
+      // with per-file override merge (D-02).
       const isSvg = f.format === 'svg'
+      const fileEntry = useFilesStore.getState().byId[fileId]
       // Plan 04-07 Rule 1 fix — PNG branch is gated on the byteEstimate field
       // (set ONLY by addSourceWithVariants, never by Phase-2 test affordances
       // calling addFile directly). Without this gate, the worker-pool VR-01/02,
@@ -319,16 +406,26 @@ export function useBatchOrchestrate(): UseBatchOrchestrateReturn {
       // started routing through the real png-adapter, which threw AdapterError
       // on the bogus PNG header and the tests timed out on never-'done' status.
       // Real user-dropped PNGs always carry byteEstimate (Plan 04-05 seeds it
-      // during fan-out), so this preserves the Phase 4 contract end-to-end.
-      const fileEntry = useFilesStore.getState().byId[fileId]
+      // during fan-out via addSourceWithVariants), so this preserves the Phase 4
+      // contract end-to-end.
+      // Phase 5 plan 05-05: useFilePicker.ts confirmed to call addSourceWithVariants
+      // (not addFile), so byteEstimate IS set for real user-dropped PNG files.
+      // Case A (byteEstimate is reliable) applies here.
       const hasPngFanoutShape =
         f.format === 'png' &&
         typeof (fileEntry as { byteEstimate?: number } | undefined)?.byteEstimate ===
           'number'
+      // Phase 5: JPEG/WebP/AVIF always route to real adapters (no synthetic stubs in tests).
+      const isRealRasterFile = (
+        f.format === 'jpeg' ||
+        f.format === 'webp' ||
+        f.format === 'avif' ||
+        hasPngFanoutShape
+      )
       const adapterFormat: AdapterFormat = isSvg
         ? 'svg'
-        : hasPngFanoutShape
-          ? 'png'
+        : isRealRasterFile
+          ? f.format  // 'jpeg' | 'webp' | 'avif' | 'png'
           : 'stub'
       let settings: unknown
       if (isSvg) {
@@ -338,6 +435,7 @@ export function useBatchOrchestrate(): UseBatchOrchestrateReturn {
         // for PNG variants emitted by addSourceWithVariants; resizeOverride +
         // preserveIcc are optional per-file overrides (UI deferred to Phase 5
         // per D-07/D-09; data shape only).
+        const perFile = useSettingsStore.getState().perFile[fileId] ?? {}
         settings = buildPngResizeSettings({
           sourceDensity: fileEntry?.sourceDensity ?? '1x',
           targetDensity:
@@ -348,7 +446,24 @@ export function useBatchOrchestrate(): UseBatchOrchestrateReturn {
             useSettingsStore.getState().global.preserveIccProfile,
           filePreserveIcc: fileEntry?.preserveIcc,
           globalPng: useSettingsStore.getState().png,
+          ...perFile,
         })
+      } else if (f.format === 'jpeg') {
+        // Phase 5 — MozJPEG encode with per-file override merge (D-02).
+        const globalJpeg = useSettingsStore.getState().jpeg
+        const perFile = useSettingsStore.getState().perFile[fileId] ?? {}
+        settings = buildJpegSettings({ globalJpeg, fileOverride: perFile as Partial<CodecSettingsJpeg> })
+      } else if (f.format === 'webp') {
+        // Phase 5 — libwebp encode with per-file override merge (D-02).
+        const globalWebp = useSettingsStore.getState().webp
+        const perFile = useSettingsStore.getState().perFile[fileId] ?? {}
+        settings = buildWebpSettings({ globalWebp, fileOverride: perFile as Partial<CodecSettingsWebp> })
+      } else if (f.format === 'avif') {
+        // Phase 5 — libavif encode with per-file override merge (D-02).
+        // Lazy-loaded by avif-adapter.ts on first use (D-09 / D-10).
+        const globalAvif = useSettingsStore.getState().avif
+        const perFile = useSettingsStore.getState().perFile[fileId] ?? {}
+        settings = buildAvifSettings({ globalAvif, fileOverride: perFile as Partial<CodecSettingsAvif> })
       } else {
         settings = slowMs > 0 ? { slowMs } : {}
       }
@@ -396,15 +511,19 @@ export function useBatchOrchestrate(): UseBatchOrchestrateReturn {
             useFilesStore
               .getState()
               .markDone(fileId, sanitizedBlob, sanitizedBlob.size, sanitizedCount)
-          } else if (hasPngFanoutShape) {
-            // Phase 4 plan 04-07 — encoded PNG bytes from png-adapter (decode
-            // → resize → encode). Wrap as Blob and store; thumbnail / object
-            // URL is auto-managed by useRuntimeStore.getOrCreateObjectURL on
-            // the next render. markDone revokes the OLD url before writing
-            // the new optimizedBlob (Pitfall 3).
-            const optimizedBlob = new Blob([result.output], {
-              type: 'image/png',
-            })
+          } else if (isRealRasterFile) {
+            // Phase 4 plan 04-07 (PNG) / Phase 5 plan 05-05 (JPEG/WebP/AVIF) —
+            // encoded raster bytes from jSquash adapter. Wrap as Blob with correct
+            // MIME type and store. No main-thread post-processing needed (unlike SVG DOMPurify).
+            // markDone revokes the OLD object URL before writing the new optimizedBlob (Pitfall 3).
+            const mimeByFormat: Record<string, string> = {
+              png: 'image/png',
+              jpeg: 'image/jpeg',
+              webp: 'image/webp',
+              avif: 'image/avif',
+            }
+            const mime = mimeByFormat[f.format] ?? 'application/octet-stream'
+            const optimizedBlob = new Blob([result.output], { type: mime })
             useFilesStore
               .getState()
               .markDone(fileId, optimizedBlob, optimizedBlob.size)
