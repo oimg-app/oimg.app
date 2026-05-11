@@ -1,5 +1,5 @@
 // Phase 4 plan 04-06 + 04-07 — target-density variant selector.
-// Source: 04-CONTEXT.md D-01 + D-02 (SCOPED amendment); 04-UI-SPEC.md
+// Source: 04-CONTEXT.md D-01 + D-02; 04-UI-SPEC.md
 // §Surface 2 + §Copywriting Contract; 04-PATTERNS.md §TargetDensityCheckboxes.
 //
 // Composition: lives inside TweaksPanel "Resize / Variants" section
@@ -13,10 +13,10 @@
 // fill + aria-disabled="true" + tooltip "Source density (Nx) —
 // included automatically".
 //
-// Scope (CONTEXT.md `<post_research_amendments>` D-01/D-02 SCOPED): toggling
-// a non-locked button is a NO-OP in Phase 4. Initial drop already takes
-// targets[]; mid-flight target edit is Phase-5 enhancement. TODO(P5)
-// comment below marks the wiring point.
+// Plan 04-08: onToggle wired to addSourceWithVariants / removeFile / removeFamily.
+// Check path → addSourceWithVariants({ targets: [density] })
+// Uncheck path (siblings remain) → removeFile(entry.id)
+// Uncheck path (last variant) → removeFamily(selectedFamilyId)
 
 import { useFilesStore } from '@/stores/files';
 import { useShallow } from 'zustand/react/shallow';
@@ -81,6 +81,15 @@ export function TargetDensityCheckboxes({
     ),
   );
 
+  // Plan 04-08 — store actions for add/remove variant.
+  const { addSourceWithVariants, removeFile, removeFamily } = useFilesStore(
+    useShallow((s) => ({
+      addSourceWithVariants: s.addSourceWithVariants,
+      removeFile: s.removeFile,
+      removeFamily: s.removeFamily,
+    })),
+  );
+
   if (!selectedFamilyId) return null;
 
   if (family.length === 0) {
@@ -105,11 +114,31 @@ export function TargetDensityCheckboxes({
     family.map((e) => e.targetDensity).filter((d): d is SourceDensity => !!d),
   );
 
-  const onToggle = (_density: SourceDensity) => {
-    // TODO(P5): toggle handler should add/remove family member via
-    // addSourceWithVariants/removeFile — see CONTEXT.md D-01/D-02 SCOPED
-    // amendment. For Phase 4 mid-flight target edits are no-ops; the initial
-    // drop's targets[] is the authoritative variant set.
+  const onToggle = (density: SourceDensity) => {
+    if (!selectedFamilyId || family.length === 0) return;
+
+    if (!targetSet.has(density)) {
+      // ADD: fan out a new variant. sourceBlob is shared across all family members.
+      // applyDensitySuffix (called inside addSourceWithVariants) is idempotent —
+      // passing any family member's name is safe; @Nx is stripped then re-applied.
+      const ref = family.find((e) => e.targetDensity === sourceDensity) ?? family[0];
+      void addSourceWithVariants({
+        sourceBlob: ref.sourceBlob,
+        sourceDensity: ref.sourceDensity,
+        name: ref.name,
+        format: ref.format,
+        targets: [density],
+      });
+    } else {
+      // REMOVE: specific variant, or the whole family if it is the last one.
+      const toRemove = family.find((e) => e.targetDensity === density);
+      if (!toRemove) return;
+      if (family.length === 1) {
+        removeFamily(selectedFamilyId);
+      } else {
+        removeFile(toRemove.id);
+      }
+    }
   };
 
   return (
