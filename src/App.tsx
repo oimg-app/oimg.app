@@ -65,8 +65,7 @@ export default function App() {
     theme, toggleTheme, setView, setOpen, setCodecFromMenu,
   })
 
-  const [_rowMenu, setRowMenu] = useState<string | null>(null)
-  useKeyboardShortcuts({ startOptimize, cancelBatch, cmdkOpen, setCmdkOpen, setOpen, setRowMenu })
+  useKeyboardShortcuts({ startOptimize, cancelBatch, cmdkOpen, setCmdkOpen, setOpen })
 
   return (
     <AppShell
@@ -75,7 +74,7 @@ export default function App() {
       workArea={
         <main className="work">
           <FilesPane selectedId={selectedId || null} onSelect={setSelectedId} onOptimize={startOptimize} onCancel={cancelBatch} />
-          <CenterPane open={open} setOpen={setOpen} />
+          <CenterPane />
           <InspectorPane open={open} setOpen={setOpen} onToast={pushToast} />
         </main>
       }

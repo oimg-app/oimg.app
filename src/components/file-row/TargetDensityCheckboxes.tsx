@@ -5,9 +5,9 @@
 
 import { useFilesStore } from '@/stores/files';
 import { useShallow } from 'zustand/react/shallow';
-import type { SourceDensity } from '@/types';
+import type { Density } from '@/types';
 
-const DENSITIES: readonly SourceDensity[] = ['1x', '2x', '3x'] as const;
+const DENSITIES: readonly Density[] = ['1x', '2x', '3x'] as const;
 
 interface TargetDensityCheckboxesProps {
   /** Override the file whose export targets are shown. Defaults to selectedId. */
@@ -32,10 +32,10 @@ export function TargetDensityCheckboxes({
 
   const sourceDensity = entry.sourceDensity;
   // Default: only source density is selected until the user picks more.
-  const exportSet = new Set<SourceDensity>(entry.targetDensities ?? [sourceDensity]);
+  const exportSet = new Set<Density>(entry.targetDensities ?? [sourceDensity]);
   exportSet.add(sourceDensity); // source is always present
 
-  const onToggle = (density: SourceDensity) => {
+  const onToggle = (density: Density) => {
     if (density === sourceDensity) return;
     const next = new Set(exportSet);
     if (next.has(density)) {

@@ -7,13 +7,7 @@ export type FormatId = 'svg' | 'png' | 'jpeg' | 'webp' | 'avif'
 
 export type FileStatus = 'idle' | 'queued' | 'processing' | 'done' | 'error'
 
-export type SourceDensity = '1x' | '2x' | '3x'
-
-// Phase 5 D-12 — target density selections for export-time variant generation.
-// Stored as a set on each FileEntry; Phase 7 reads these to generate variants at download.
-// Different from SourceDensity (which density the source IS) and
-// targetDensity (Phase 4 fan-out — which density THIS specific FileEntry represents).
-export type TargetDensity = '1x' | '2x' | '3x'
+export type Density = '1x' | '2x' | '3x'
 
 // UI types — moved from src/data/mock.ts in Phase 2 plan 02-05 (cleanup wave).
 // `FileType` and `MockFile` describe the visual-shell row shape used by the
@@ -21,6 +15,12 @@ export type TargetDensity = '1x' | '2x' | '3x'
 // raster encoders will replace MockFile with FileEntry-derived view models.
 export type FileType = 'png' | 'jpg' | 'svg' | 'webp' | 'avif'
 export type FileStatusMock = 'queued' | 'processing' | 'done' | 'error'
+
+export type FileMeta = {
+  width: number
+  height: number
+  profile: string
+}
 
 export interface MockFile {
   id: string
@@ -33,6 +33,7 @@ export interface MockFile {
   dim: string
   q: number | null
   prog?: number
+  sanitizedCount?: number
 }
 
 // Codec UI label set + resize/fit enums — moved from src/data/mock.ts in
@@ -66,7 +67,7 @@ export interface FileEntry {
   originalSize: number
   optimizedSize: number | null
   status: FileStatus
-  sourceDensity: SourceDensity
+  sourceDensity: Density
   thumbnail: string | null // Object URL — must be revoked when no longer needed (see threat T-03-02)
   // Phase 3 (D-03) — count of dangerous elements/attributes removed by DOMPurify.
   // undefined = file has not yet been processed; 0 = processed and clean;
@@ -78,7 +79,7 @@ export interface FileEntry {
   sourceFamilyId?: string
   // Density THIS entry produces. Mirrors `sourceDensity` semantics but for
   // the OUTPUT slot. addSourceWithVariants populates this on each variant.
-  targetDensity?: SourceDensity
+  targetDensity?: Density
   // Phase 4 (D-07) — per-file resize algorithm override (UI deferred to Phase 5).
   resizeOverride?: ResizeAlg
   // Phase 4 (D-09) — per-file ICC preserve override (data shape only; worker
@@ -87,7 +88,7 @@ export interface FileEntry {
   // Phase 5 D-12 — export-scope density selectors. Checkboxes in InspectorPane
   // Codec tab record which variants the user wants in the ZIP output. NO re-optimize
   // is triggered when this changes (D-12: export-scope only, Phase 7 generates variants).
-  targetDensities?: TargetDensity[]
+  targetDensities?: Density[]
 }
 
 export interface CodecSettingsSvg {

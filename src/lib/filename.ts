@@ -3,11 +3,11 @@
 // Pure functions — no React, no zustand. Unit-tested via --experimental-strip-types
 // (src/tests/filename.test.ts).
 
-import type { SourceDensity } from '../types/index.ts'
+import type { Density } from '@/types'
 
 /** Idempotent: strip an existing @1x/@2x/@3x before re-appending. So
  *  applyDensitySuffix('logo@2x.png', '1x') === 'logo@1x.png', NOT 'logo@2x@1x.png'. */
-export function applyDensitySuffix(originalName: string, density: SourceDensity): string {
+export function applyDensitySuffix(originalName: string, density: Density): string {
   const dot = originalName.lastIndexOf('.')
   const base = dot > 0 ? originalName.slice(0, dot) : originalName
   const ext = dot > 0 ? originalName.slice(dot) : ''

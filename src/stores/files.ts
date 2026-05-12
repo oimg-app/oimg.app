@@ -4,7 +4,7 @@
 
 import { create } from 'zustand'
 import { subscribeWithSelector } from 'zustand/middleware'
-import type { FileEntry, FormatId, SourceDensity, TargetDensity } from '@/types'
+import {FileEntry, FormatId, Density} from '@/types'
 import { applyDensitySuffix, deduplicateName } from '@/lib/filename'
 import { sniffPngDimensions } from '@/lib/sniff'
 import { estimateJobBytes } from '@/lib/memory-budget'
@@ -13,7 +13,18 @@ import { useSettingsStore } from './settings'
 
 export interface FileEntryWithBlob extends FileEntry {
   sourceBlob: Blob
+  sourceMeta: {
+      width: number
+      height: number
+      profile: string
+  }
   optimizedBlob: Blob | null
+  optimizedMeta: {
+      width: number
+      height: number
+      profile: string
+      format: string
+  }
   /** Phase 4 D-11(b) — peak working-set estimate for this variant.
    *  Computed at addSourceWithVariants time via estimateJobBytes (PNG path)
    *  or compression-ratio heuristic (other rasters). App.tsx threads this
@@ -41,10 +52,11 @@ interface FilesState {
     sanitizedCount?: number,
   ) => void
   setSelected: (fileId: string | null) => void
+  setSort: (sortBy: string) => void
   setStatus: (fileId: string, status: FileEntry['status']) => void
   setSourceDensity: (fileId: string, density: FileEntry['sourceDensity']) => void
   // Phase 5 D-12 — export-scope density selector. Does NOT trigger re-optimize.
-  setTargetDensities: (fileId: string, targetDensities: TargetDensity[]) => void
+  setTargetDensities: (fileId: string, targetDensities: Density[]) => void
   // Phase 5 plan 05-04 — per-file ICC preserve override (D-14 ICC wiring for PngPanel).
   // Mirrors setSourceDensity pattern.
   setPreserveIcc: (fileId: string, preserveIcc: boolean) => void
@@ -62,10 +74,10 @@ interface FilesState {
    *  via markRename(count). Returns void; entries are pushed atomically. */
   addSourceWithVariants: (args: {
     sourceBlob: Blob
-    sourceDensity: SourceDensity
+    sourceDensity: Density
     name: string
     format: FormatId
-    targets: SourceDensity[]
+    targets: Density[]
   }) => Promise<void>
   /** @deprecated Phase 5 D-11: superseded by single-FileEntry model.
    *  When using single addFile() model, call removeFile(fileId) directly.
@@ -102,6 +114,7 @@ export const useFilesStore = create<FilesState>()(
       // T-5-03-02 / T-5-03-03 — clear per-file codec overrides so the perFile
       // Record does not grow unbounded as files are added and removed.
       useSettingsStore.getState().clearPerFile(fileId)
+
       set((s) => {
         const { [fileId]: _removed, ...rest } = s.byId
         return {
@@ -137,6 +150,24 @@ export const useFilesStore = create<FilesState>()(
     },
 
     setSelected: (fileId) => set({ selectedId: fileId }),
+
+    setSort: (sortBy: string) => set((s) => {
+        if (sortBy === 'queue order') {
+            return ({
+                order: s.order
+            })
+        }
+
+        if (sortBy === 'file size') {
+            const sorted = [...s.order.sort((a, b) => s.byId[a].originalSize - s.byId[b].originalSize)]
+
+            return ({
+                order: sorted
+            })
+        }
+
+        return s
+    }),
 
     setStatus: (fileId, status) =>
       set((s) => {
@@ -239,7 +270,21 @@ export const useFilesStore = create<FilesState>()(
           sourceFamilyId: sourceUuid,
           thumbnail: null,
           sourceBlob: args.sourceBlob,
+          sourceMeta: {
+            width: dims?.width ?? 0,
+            height: dims?.height ?? 0,
+            profile: 'sRGB',
+          },
           optimizedBlob: null,
+          optimizedMeta: {
+              // @TODO: extract from codec settings
+              width: dims?.width ?? 0,
+              height: dims?.width ?? 0,
+              // @TODO: extract from codec settings
+              profile: 'sRGB',
+              // @TODO: extract from codec settings
+              format: 'WebP q82'
+          },
           byteEstimate,
         })
       }
