@@ -46,11 +46,18 @@ Store actions selector added via `useShallow` — consistent with the existing f
 | Task | Name | Commit | Files |
 |------|------|--------|-------|
 | 1 | Wire onToggle in TargetDensityCheckboxes | 32fce5a | src/components/file-row/TargetDensityCheckboxes.tsx |
-| 2 | checkpoint:human-verify | — | (awaiting user verification) |
+| 2 | checkpoint:human-verify + post-verify bug fix | ea0d0b9 | src/components/panels/InspectorPane.tsx |
 
 ## Deviations from Plan
 
-None — plan executed exactly as written.
+### Auto-fixed Issues
+
+**1. [Rule 1 - Bug] Wrapped perFileOverride selector with useShallow to prevent getSnapshot infinite loop**
+- **Found during:** Post-checkpoint user verification (browser console error)
+- **Issue:** `useSettingsStore((s) => selectedId ? (s.perFile[selectedId] ?? {}) : {})` returned a new `{}` object literal on every call when `selectedId` was null or the key was absent. Zustand's `useSyncExternalStore` requires stable snapshot references — the new object reference each render caused: `The result of getSnapshot should be cached to avoid an infinite loop`
+- **Fix:** Added `import { useShallow } from 'zustand/react/shallow'` and wrapped the selector: `useSettingsStore(useShallow((s) => selectedId ? (s.perFile[selectedId] ?? {}) : {}))`
+- **Files modified:** `src/components/panels/InspectorPane.tsx`
+- **Commit:** ea0d0b9
 
 ## Known Stubs
 
@@ -64,7 +71,10 @@ No new network endpoints, auth paths, file access patterns, or schema changes in
 
 - [x] `src/components/file-row/TargetDensityCheckboxes.tsx` modified
 - [x] Commit 32fce5a exists
+- [x] `src/components/panels/InspectorPane.tsx` fixed (useShallow)
+- [x] Commit ea0d0b9 exists
 - [x] TypeScript compiles with zero errors (`npx tsc --noEmit` exit 0)
 - [x] TODO(P5) comment removed — handler calls store actions
+- [x] getSnapshot infinite loop resolved — useShallow stabilizes object reference
 
 ## Self-Check: PASSED
