@@ -15,7 +15,7 @@ export function CenterPane({ open, setOpen }: CenterPaneProps) {
   const stageRef = useRef<HTMLDivElement | null>(null)
 
   const frameStyle = (): React.CSSProperties => {
-    if (zoom === 'Fit') return {}
+    if (zoom === 'Fit') return { width: 'min(78%, 96%)', maxWidth: 'min(78%, 96%)' }
     const w = zoom === '25%' ? '25%' : zoom === '50%' ? '50%' : zoom === '100%' ? 'calc(100% - 32px)' : '160%'
     return { width: w, maxWidth: w }
   }
