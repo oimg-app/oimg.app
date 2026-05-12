@@ -14,7 +14,11 @@ export function CenterPane({ open, setOpen }: CenterPaneProps) {
   const [zoom, setZoom] = useState('Fit')
   const stageRef = useRef<HTMLDivElement | null>(null)
 
-  const zoomSize = zoom === 'Fit' ? 'contain' : zoom
+  const frameStyle = (): React.CSSProperties => {
+    if (zoom === 'Fit') return {}
+    const w = zoom === '25%' ? '25%' : zoom === '50%' ? '50%' : zoom === '100%' ? 'calc(100% - 32px)' : '160%'
+    return { width: w, maxWidth: w }
+  }
 
   const selectedEntry = useFilesStore((s) => s.selectedId ? s.byId[s.selectedId] : undefined)
 
@@ -71,9 +75,9 @@ export function CenterPane({ open, setOpen }: CenterPaneProps) {
       </div>
       <div className="compare" ref={stageRef}>
         <div className="compare-stage">
-          <div className="image-frame" style={{ ['--split' as string]: split + '%' } as React.CSSProperties}>
-            <div className="image-layer layer-orig" style={previewUrls.orig ? { background: `transparent url("${previewUrls.orig}") center/${zoomSize} no-repeat` } : undefined} />
-            <div className="image-layer layer-opt" style={previewUrls.opt || previewUrls.orig ? { background: `transparent url("${previewUrls.opt ?? previewUrls.orig}") center/${zoomSize} no-repeat` } : undefined} />
+          <div className="image-frame" style={{ ['--split' as string]: split + '%', ...frameStyle() } as React.CSSProperties}>
+            <div className="image-layer layer-orig" style={previewUrls.orig ? { background: `transparent url("${previewUrls.orig}") center/contain no-repeat` } : undefined} />
+            <div className="image-layer layer-opt" style={previewUrls.opt || previewUrls.orig ? { background: `transparent url("${previewUrls.opt ?? previewUrls.orig}") center/contain no-repeat` } : undefined} />
             <div className="split-tag l"><span className="dot" />ORIGINAL · {fmtBytes(origSize)}</div>
             <div className="split-tag r"><span className="dot" />{format.toUpperCase()} · {fmtBytes(optSize)}</div>
             <div className="split-handle" role="slider" aria-label="Compare split position" aria-valuemin={2} aria-valuemax={98} aria-valuenow={Math.round(split)} tabIndex={0} style={{ left: split + '%' }}
