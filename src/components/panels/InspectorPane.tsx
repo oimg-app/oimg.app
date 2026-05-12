@@ -14,6 +14,7 @@ import { PngPanel } from '@/components/panels/PngPanel'
 import { JpegPanel } from '@/components/panels/JpegPanel'
 import { WebpPanel } from '@/components/panels/WebpPanel'
 import { AvifPanel } from '@/components/panels/AvifPanel'
+import { useShallow } from 'zustand/react/shallow'
 import { useFilesStore, useSettingsStore } from '@/stores'
 import { enqueueRasterPreview } from '@/hooks/useBatchOrchestrate'
 import type { CodecSettingsPng, CodecSettingsJpeg, CodecSettingsWebp, CodecSettingsAvif } from '@/types'
@@ -36,7 +37,9 @@ export function InspectorPane({ open, setOpen, onToast }: InspectorPaneProps) {
   const format = selectedEntry?.format
 
   // Per-file overrides + global codec slices.
-  const perFileOverride = useSettingsStore((s) => selectedId ? (s.perFile[selectedId] ?? {}) : {})
+  const perFileOverride = useSettingsStore(
+    useShallow((s) => selectedId ? (s.perFile[selectedId] ?? {}) : {})
+  )
   const globalPng = useSettingsStore((s) => s.png)
   const globalJpeg = useSettingsStore((s) => s.jpeg)
   const globalWebp = useSettingsStore((s) => s.webp)
