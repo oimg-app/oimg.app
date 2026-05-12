@@ -11,7 +11,10 @@ interface CenterPaneProps {
 
 export function CenterPane({ open, setOpen }: CenterPaneProps) {
   const [split, setSplit] = useState(50)
+  const [zoom, setZoom] = useState('Fit')
   const stageRef = useRef<HTMLDivElement | null>(null)
+
+  const zoomSize = zoom === 'Fit' ? 'contain' : zoom
 
   const selectedEntry = useFilesStore((s) => s.selectedId ? s.byId[s.selectedId] : undefined)
 
@@ -57,10 +60,10 @@ export function CenterPane({ open, setOpen }: CenterPaneProps) {
               ? <span className="pill">{selectedEntry.status}</span>
               : null}
           <button className={'tbtn ghost' + (isPopOpen('zoom') ? ' open' : '')} style={{ height: 24, padding: '0 8px', position: 'relative' }} onClick={() => togglePop('zoom')}>
-            <Icons.Eye size={12} /> 100% <Icons.ChevronDown size={9} />
+            <Icons.Eye size={12} /> {zoom} <Icons.ChevronDown size={9} />
             <Popover open={isPopOpen('zoom')} onClose={() => setOpen(null)} anchor="br">
               {['25%', '50%', '100%', '200%', 'Fit'].map((z) => (
-                <div key={z} className={'pi check' + (z === '100%' ? ' on' : '')} onClick={() => setOpen(null)}><span>{z}</span></div>
+                <div key={z} className={'pi check' + (z === zoom ? ' on' : '')} onClick={() => { setZoom(z); setOpen(null) }}><span>{z}</span></div>
               ))}
             </Popover>
           </button>
@@ -69,8 +72,8 @@ export function CenterPane({ open, setOpen }: CenterPaneProps) {
       <div className="compare" ref={stageRef}>
         <div className="compare-stage">
           <div className="image-frame" style={{ ['--split' as string]: split + '%' } as React.CSSProperties}>
-            <div className="image-layer layer-orig" style={previewUrls.orig ? { background: `transparent url("${previewUrls.orig}") center/contain no-repeat` } : undefined} />
-            <div className="image-layer layer-opt" style={previewUrls.opt || previewUrls.orig ? { background: `transparent url("${previewUrls.opt ?? previewUrls.orig}") center/contain no-repeat` } : undefined} />
+            <div className="image-layer layer-orig" style={previewUrls.orig ? { background: `transparent url("${previewUrls.orig}") center/${zoomSize} no-repeat` } : undefined} />
+            <div className="image-layer layer-opt" style={previewUrls.opt || previewUrls.orig ? { background: `transparent url("${previewUrls.opt ?? previewUrls.orig}") center/${zoomSize} no-repeat` } : undefined} />
             <div className="split-tag l"><span className="dot" />ORIGINAL · {fmtBytes(origSize)}</div>
             <div className="split-tag r"><span className="dot" />{format.toUpperCase()} · {fmtBytes(optSize)}</div>
             <div className="split-handle" role="slider" aria-label="Compare split position" aria-valuemin={2} aria-valuemax={98} aria-valuenow={Math.round(split)} tabIndex={0} style={{ left: split + '%' }}
