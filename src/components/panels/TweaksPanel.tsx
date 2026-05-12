@@ -64,10 +64,9 @@ export function TweaksResizeSection() {
           ariaLabel="Resize algorithm"
         />
       </div>
-      {/* Plan 04-07 — variant target-density selector moved here from the
-          file-row. Self-binds to the currently-selected FileEntry; renders
-          nothing when no file is selected or the entry has no
-          sourceFamilyId (legacy addFile path). */}
+      {/* Export-density selector — records which densities go into ZIP output.
+          Self-binds to the currently-selected FileEntry; renders nothing when
+          no file is selected. */}
       <div
         className="row"
         style={{
