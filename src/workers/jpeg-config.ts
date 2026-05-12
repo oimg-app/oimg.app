@@ -3,7 +3,7 @@
 // Phase 4 png-config.ts precedent — Vite alias @/types unresolvable under
 // node --experimental-strip-types; use relative ../types/index.ts.
 
-import type { CodecSettingsJpeg } from '../types/index.ts'
+import type { CodecSettingsJpeg } from '@/types'
 
 export interface JpegEncodeSettings {
   quality: number

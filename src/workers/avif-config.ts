@@ -2,7 +2,7 @@
 // Extracted into own module so unit tests import without evaluating @jsquash/avif.
 // Phase 4 png-config.ts precedent — use relative ../types/index.ts (no @/ alias).
 
-import type { CodecSettingsAvif } from '../types/index.ts'
+import type { CodecSettingsAvif } from '@/types'
 
 export interface AvifEncodeSettings {
   quality: number

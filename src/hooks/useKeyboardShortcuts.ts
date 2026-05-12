@@ -11,7 +11,6 @@ interface UseKeyboardShortcutsParams {
   cancelBatch: () => void
   cmdkOpen: boolean
   setCmdkOpen: (v: boolean | ((prev: boolean) => boolean)) => void
-  setOpen: (v: string | null) => void
 }
 
 export function useKeyboardShortcuts({
@@ -19,7 +18,6 @@ export function useKeyboardShortcuts({
   cancelBatch,
   cmdkOpen,
   setCmdkOpen,
-  setOpen,
 }: UseKeyboardShortcutsParams): void {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -34,7 +32,6 @@ export function useKeyboardShortcuts({
         setCmdkOpen((v) => !v)
       } else if (e.key === 'Escape') {
         setCmdkOpen(false)
-        setOpen(null)
       } else if ((e.metaKey || e.ctrlKey) && e.key === 'Enter' && !isInput) {
         e.preventDefault()
         startOptimize()

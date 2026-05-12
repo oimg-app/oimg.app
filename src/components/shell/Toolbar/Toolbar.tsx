@@ -17,184 +17,274 @@ import clsx from 'clsx'
 import { Icons } from '@/components/icons'
 import { Popover } from '@/components/ui/Popover'
 import { Tooltip } from '@/components/ui/Tooltip'
-import type { ThemeMode } from '@/types'
-import { useRuntimeStore, useFilesStore } from '@/stores'
+import {useRuntimeStore, useFilesStore, useSettingsStore} from '@/stores'
 import s from './toolbar.module.css'
+import {useState} from "react";
+import {ExportType} from "@/stores/runtime.ts";
+import {useTheme} from "@/hooks/useTheme.ts";
 
-type View = 'Batch' | 'Compare' | 'Report'
+export type ToolbarChange = 'from-device' | 'from-url' | 'from-clipboard' | 'file-watcher'
 
-export type ToolbarChange = 'from-device' | 'from-url' | 'from-clipboard'
-
-interface ToolbarProps {
-  /** @deprecated Phase 2 plan 02-04 — Toolbar reads `running` from useRuntimeStore directly.
-   *  Prop retained transitionally so App.tsx can still pass it during the staged migration;
-   *  the value is ignored. Will be removed once App.tsx drops the local `running` useState. */
-  running?: boolean
-  // Optimize trigger — App.tsx owns the worker pool reference.
-  onStartOptimize: () => void
-  onExportZip: () => void
-  // View segmented control
-  view: View
-  onSetView: (v: View) => void
-  // Search input
-  filterQuery: string
-  onSetFilterQuery: (q: string) => void
-  // Theme
-  theme: ThemeMode
-  onToggleTheme: () => void
-  // Popover open keying — App owns
-  openKey: string | null
-  onOpenKey: (k: string | null) => void
-  // Toast pump
-  onToast: (msg: string, meta?: string) => void
+type AddFilesButtonProps = {
   onChange: (v: ToolbarChange) => void
 }
 
-export function Toolbar(props: ToolbarProps) {
-  const {
-    onStartOptimize,
-    onExportZip,
-    view,
-    onSetView,
-    filterQuery,
-    onSetFilterQuery,
-    theme,
-    onToggleTheme,
-    openKey,
-    onOpenKey,
-    onToast,
-    onChange,
-  } = props
-
-  // Phase 2 plan 02-04: narrow selectors from runtime store (D-09 convention).
-  const running = useRuntimeStore((s) => s.running)
-  const busy = useRuntimeStore((s) => s.inFlight.size)
-  const poolSize = useRuntimeStore((s) => s.poolSize)
-  const errorCount = useRuntimeStore((s) => s.errorCount)
-  // Optimize button is enabled when there is at least one file in the FILES
-  // store (the source of truth for "is there work to do") — NOT the runtime
-  // queue, which only has entries WHILE a batch is dispatching.
-  const fileCount = useFilesStore((s) => s.order.length)
-  const hasNoFiles = fileCount === 0
+const AddFilesButton = (props: AddFilesButtonProps) => {
+  const {onChange} = props
+  const [openKey, setOpen] = useState<string | null>(null)
+  const [showUrlModal, setShowUrlModal] = useState(false)
 
   const isPopOpen = (key: string) => openKey === key
-  const togglePop = (key: string) => onOpenKey(openKey === key ? null : key)
+  const togglePop = (key: string) => setOpen(openKey === key ? null : key)
 
-  // Workers pill copy + ARIA label, per UI-SPEC §1 (lines 109-114).
-  const pillCopy = !running && busy === 0 && poolSize > 0
-    ? (errorCount > 0 ? `${poolSize} idle · errors` : `${poolSize} idle`)
-    : running
-      ? `${busy}/${poolSize} busy`
-      : 'Workers idle'
-  const pillAria = !running && busy === 0
-    ? (errorCount > 0 ? `${poolSize} workers idle, last batch had errors` : `${poolSize} workers idle`)
-    : running
-      ? `${busy} of ${poolSize} workers busy`
-      : 'Worker pool idle'
-  const pillClass = (!running && busy === 0 && errorCount === 0 && poolSize > 0) ? 'pill acc' : 'pill'
+  const urlModal = (
+      <Popover open={showUrlModal} onClose={() => setShowUrlModal(false)} anchor="br" style={{minWidth: 240}}>
+        <div className="lbl">Code</div>
+        <div className="pi" onClick={() => {
+          setShowUrlModal(false);
+          // @T
+        }}>
+          <Icons.Code size={13}/><span>Copy &lt;picture&gt; HTML</span>
+        </div>
+        <div className="pi" onClick={() => {
+          setShowUrlModal(false);
+          // @T
+        }}>
+          <Icons.Code size={13}/><span>Copy as data URIs</span>
+        </div>
+      </Popover>
+  )
+
+  return (
+      <>
+        <button
+            className={clsx(s.tbtn, s.tbtnPrimary, isPopOpen('add') && s.tbtnPrimaryOpen)}
+            onClick={() => togglePop('add')}
+            style={{position: 'relative'}}
+        >
+          <Icons.Upload size={13}/> Add files
+          <Icons.ChevronDown size={9}/>
+          <Popover open={isPopOpen('add')} onClose={() => setOpen(null)}>
+            <div className="pi" onClick={() => {
+              onChange('from-device');
+              setOpen(null);
+            }}>
+              <Icons.File size={13}/><span>From device…</span><span className="kbd">A</span>
+            </div>
+            <div className="pi" onClick={() => {
+              setOpen(null);
+              onChange('file-watcher');
+            }}>
+              <Icons.Layers size={13}/><span>Watch folder…</span>
+            </div>
+            <div className="pi" onClick={() => {
+              setOpen(null);
+              // @T
+            }}>
+              <Icons.Code size={13}/><span>From URL or paste</span><span className="kbd">⌘V</span>
+            </div>
+          </Popover>
+        </button>
+        {urlModal}
+      </>
+  )
+}
+
+const ExportButton = () => {
+    const runtime = useRuntimeStore()
+    const [openKey, setOpen] = useState<string | null>(null)
+    const isPopOpen = (key: string) => openKey === key
+    const togglePop = (key: string) => setOpen(openKey === key ? null : key)
+
+    const onExport = (type: ExportType) => {
+        runtime.export(type)
+    }
+
+    return (
+        <button
+            className={clsx(s.tbtn, isPopOpen('export') && s.tbtnOpen)}
+            onClick={() => togglePop('export')}
+            style={{position: 'relative'}}
+        >
+            <Icons.Download size={13}/> Export
+            <Icons.ChevronDown size={9}/>
+            <Popover open={isPopOpen('export')} onClose={() => setOpen(null)} style={{minWidth: 240}}>
+                <div className="pi" onClick={() => {
+                    setOpen(null);
+                    onExport('zip')
+                }}>
+                    <Icons.Layers size={13}/><span>All as ZIP</span><span className="kbd">⌘E</span>
+                </div>
+                <div className="pi" onClick={() => {
+                    setOpen(null);
+                    onExport('individual')
+                }}>
+                    <Icons.Download size={13}/><span>Save individually</span>
+                </div>
+                <div className="div"/>
+                <div className="lbl">Code</div>
+                <div className="pi" onClick={() => {
+                    setOpen(null);
+                    onExport('snippets')
+                }}>
+                    <Icons.Code size={13}/><span>Copy &lt;picture&gt; HTML</span>
+                </div>
+                <div className="pi" onClick={() => {
+                    setOpen(null);
+                    onExport('data-uris')
+                }}>
+                    <Icons.Code size={13}/><span>Copy as data URIs</span>
+                </div>
+            </Popover>
+        </button>
+    )
+}
+
+const ViewSegmentedControl = () => {
+    const views = useSettingsStore((s) => s.views)
+    const settings = useSettingsStore()
+
+    return (
+        <div className={s.seg}>
+            {(views).map((v) => (
+                <button key={v} className={settings.view === v ? 'on' : ''} onClick={() => settings.setView(v)}>
+                    {v}
+                </button>
+            ))}
+        </div>
+    )
+}
+
+const WorkersStatus = () => {
+    const running = useRuntimeStore((s) => s.running)
+    const busy = useRuntimeStore((s) => s.inFlight.size)
+    const poolSize = useRuntimeStore((s) => s.poolSize)
+    const errorCount = useRuntimeStore((s) => s.errorCount)
+
+    // Workers pill copy + ARIA label, per UI-SPEC §1 (lines 109-114).
+    const pillCopy = !running && busy === 0 && poolSize > 0
+        ? (errorCount > 0 ? `${poolSize} idle · errors` : `${poolSize} idle`)
+        : running
+            ? `${busy}/${poolSize} busy`
+            : 'Workers idle'
+    const pillAria = !running && busy === 0
+        ? (errorCount > 0 ? `${poolSize} workers idle, last batch had errors` : `${poolSize} workers idle`)
+        : running
+            ? `${busy} of ${poolSize} workers busy`
+            : 'Worker pool idle'
+    const pillClass = (!running && busy === 0 && errorCount === 0 && poolSize > 0) ? 'pill acc' : 'pill'
+
+    return (
+        <div className={pillClass} aria-label={pillAria} role="status" aria-live="off">
+            <span style={{fontFamily: 'var(--mono)', fontVariantNumeric: 'tabular-nums'}}>{pillCopy}</span>
+        </div>
+    )
+}
+
+const OptimizeButton = () => {
+    // Phase 2 plan 02-04: narrow selectors from runtime store (D-09 convention).
+    const running = useRuntimeStore((s) => s.running)
+    // Optimize button is enabled when there is at least one file in the FILES
+    // store (the source of truth for "is there work to do") — NOT the runtime
+    // queue, which only has entries WHILE a batch is dispatching.
+    const fileCount = useFilesStore((s) => s.order.length)
+    const hasNoFiles = fileCount === 0
+
+    const runtime = useRuntimeStore()
+
+    return (
+        <button className={s.tbtn} onClick={runtime.optimizeAll} disabled={running || hasNoFiles}>
+            {running ? <><Icons.Pause size={13}/> Optimizing…</> : <><Icons.Play size={13}/> Optimize all</>}
+        </button>
+    )
+}
+
+const SearchField = () => {
+    const filesState = useFilesStore()
+
+    return (
+        <div className={s.search}>
+            <Icons.Search size={12}/>
+            <input
+                placeholder="Filter files…"
+                value={filesState.filterQuery}
+                onChange={(e) => filesState.filterBy(e.target.value)}
+            />
+            <span className="kbd" style={{marginLeft: 4}}>/</span>
+        </div>
+    )
+}
+
+const SettingsButton = () => {
+    const [openKey, setOpen] = useState<string | null>(null)
+    const isPopOpen = (key: string) => openKey === key
+    const togglePop = (key: string) => setOpen(openKey === key ? null : key)
+    const poolSize = useRuntimeStore((s) => s.poolSize)
+
+    return (
+        <button
+            className={clsx(s.tbtn, s.tbtnGhost, isPopOpen('settings') && s.tbtnOpen)}
+            onClick={() => togglePop('settings')}
+            style={{position: 'relative'}}
+            aria-label="Settings"
+        >
+            <Icons.Settings size={13}/>
+            <Popover open={isPopOpen('settings')} onClose={() => setOpen(null)} anchor="br" style={{minWidth: 240}}>
+                <div className="lbl">Workers</div>
+                <div className="pi"><span>Pool size</span><span className="kbd mono">{poolSize}</span></div>
+                <div className="pi"><span>WASM threading</span><span className="kbd">on</span></div>
+                <div className="div"/>
+                <div className="lbl">Privacy</div>
+                <div className="pi check on"><span>Strip metadata by default</span></div>
+                <div className="pi check"><span>Telemetry</span></div>
+            </Popover>
+        </button>
+    )
+}
+
+const ThemeToggleButton = () => {
+    const { theme, setTheme } = useTheme()
+    const toggleTheme = () => setTheme(theme === 'dark' ? 'light' : 'dark')
+
+    return (
+        <Tooltip label={theme === 'dark' ? 'Light theme' : 'Dark theme'} kbd="⌘⇧L">
+            <button className={clsx(s.tbtn, s.tbtnGhost)} onClick={toggleTheme} aria-label="Toggle theme">
+                {theme === 'dark' ? <Icons.Sun size={13} /> : <Icons.Moon size={13} />}
+            </button>
+        </Tooltip>
+    )
+}
+
+const ToolbarDivider = () => {
+    return <div className={s.tdiv}/>
+}
+
+interface ToolbarProps {
+    onChange: (v: ToolbarChange) => void
+}
+
+export function Toolbar(props: ToolbarProps) {
+    const {
+        onChange,
+    } = props
 
   return (
     <div role="toolbar" aria-label="Actions" className={s.toolbar}>
-      <button
-        className={clsx(s.tbtn, s.tbtnPrimary, isPopOpen('add') && s.tbtnPrimaryOpen)}
-        onClick={() => togglePop('add')}
-        style={{ position: 'relative' }}
-      >
-        <Icons.Upload size={13} /> Add files
-        <Icons.ChevronDown size={9} />
-        <Popover open={isPopOpen('add')} onClose={() => onOpenKey(null)}>
-          <div className="pi" onClick={() => {
-            onChange('from-device');
-            onOpenKey(null); }}>
-            <Icons.File size={13} /><span>From device…</span><span className="kbd">A</span>
-          </div>
-          <div className="pi" onClick={() => { onOpenKey(null); onToast('Folder watcher started', '~/Downloads') }}>
-            <Icons.Layers size={13} /><span>Watch folder…</span>
-          </div>
-          <div className="pi" onClick={() => { onOpenKey(null); onToast('Paste URL or data:image…') }}>
-            <Icons.Code size={13} /><span>From URL or paste</span><span className="kbd">⌘V</span>
-          </div>
-        </Popover>
-      </button>
+      <AddFilesButton onChange={onChange} />
 
-      <button className={s.tbtn} onClick={onStartOptimize} disabled={running || hasNoFiles}>
-        {running ? <><Icons.Pause size={13} /> Optimizing…</> : <><Icons.Play size={13} /> Optimize all</>}
-      </button>
+      <OptimizeButton />
 
-      <button
-        className={clsx(s.tbtn, isPopOpen('export') && s.tbtnOpen)}
-        onClick={() => togglePop('export')}
-        style={{ position: 'relative' }}
-      >
-        <Icons.Download size={13} /> Export
-        <Icons.ChevronDown size={9} />
-        <Popover open={isPopOpen('export')} onClose={() => onOpenKey(null)} style={{ minWidth: 240 }}>
-          <div className="pi" onClick={() => { onOpenKey(null); onExportZip() }}>
-            <Icons.Layers size={13} /><span>All as ZIP</span><span className="kbd">⌘E</span>
-          </div>
-          <div className="pi" onClick={() => { onOpenKey(null); onToast('Saved to ~/Downloads', '12 files') }}>
-            <Icons.Download size={13} /><span>Save individually</span>
-          </div>
-          <div className="div" />
-          <div className="lbl">Code</div>
-          <div className="pi" onClick={() => { onOpenKey(null); onToast('Copied <picture> snippets', '12 files') }}>
-            <Icons.Code size={13} /><span>Copy &lt;picture&gt; HTML</span>
-          </div>
-          <div className="pi" onClick={() => { onOpenKey(null); onToast('Copied as data URIs') }}>
-            <Icons.Code size={13} /><span>Copy as data URIs</span>
-          </div>
-        </Popover>
-      </button>
+      <ExportButton />
 
-      <div className={s.tdiv} />
-      <div className={s.seg}>
-        {(['Batch', 'Compare', 'Report'] as View[]).map((v) => (
-          <button key={v} className={view === v ? 'on' : ''} onClick={() => onSetView(v)}>
-            {v}
-          </button>
-        ))}
-      </div>
-      <div className={s.tdiv} />
-
-      {/* Workers pill — UI-SPEC §1. aria-live="off" because the dedicated live region in
-          App.tsx owns announcements; the pill is a passive informational status surface. */}
-      <div className={pillClass} aria-label={pillAria} role="status" aria-live="off">
-        <span style={{ fontFamily: 'var(--mono)', fontVariantNumeric: 'tabular-nums' }}>{pillCopy}</span>
-      </div>
-
-      <div className={s.search}>
-        <Icons.Search size={12} />
-        <input
-          placeholder="Filter files…"
-          value={filterQuery}
-          onChange={(e) => onSetFilterQuery(e.target.value)}
-        />
-        <span className="kbd" style={{ marginLeft: 4 }}>/</span>
-      </div>
+      <ToolbarDivider />
+      <ViewSegmentedControl />
+      <ToolbarDivider />
+      <WorkersStatus />
+      <SearchField />
 
       <div style={{ marginLeft: 'auto', display: 'flex', gap: 6, alignItems: 'center' }}>
-        <Tooltip label={theme === 'dark' ? 'Light theme' : 'Dark theme'} kbd="⌘⇧L">
-          <button className={clsx(s.tbtn, s.tbtnGhost)} onClick={onToggleTheme} aria-label="Toggle theme">
-            {theme === 'dark' ? <Icons.Sun size={13} /> : <Icons.Moon size={13} />}
-          </button>
-        </Tooltip>
-        <button
-          className={clsx(s.tbtn, s.tbtnGhost, isPopOpen('settings') && s.tbtnOpen)}
-          onClick={() => togglePop('settings')}
-          style={{ position: 'relative' }}
-          aria-label="Settings"
-        >
-          <Icons.Settings size={13} />
-          <Popover open={isPopOpen('settings')} onClose={() => onOpenKey(null)} anchor="br" style={{ minWidth: 240 }}>
-            <div className="lbl">Workers</div>
-            <div className="pi"><span>Pool size</span><span className="kbd mono">{poolSize}</span></div>
-            <div className="pi"><span>WASM threading</span><span className="kbd">on</span></div>
-            <div className="div" />
-            <div className="lbl">Privacy</div>
-            <div className="pi check on"><span>Strip metadata by default</span></div>
-            <div className="pi check"><span>Telemetry</span></div>
-          </Popover>
-        </button>
+           <ThemeToggleButton />
+          <SettingsButton />
       </div>
     </div>
   )

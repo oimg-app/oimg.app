@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { Toaster, toast } from 'sonner'
 import { FilesPane } from '@/components/panels/FilesPane'
 import { CenterPane } from '@/components/panels/CenterPane'
@@ -8,27 +8,25 @@ import { TitleBar } from '@/components/shell/TitleBar/TitleBar'
 import { Toolbar, ToolbarChange } from '@/components/shell/Toolbar/Toolbar'
 import { StatusBar } from '@/components/shell/StatusBar/StatusBar'
 import { CommandPalette } from '@/components/shell/CommandPalette/CommandPalette'
-import { useTheme } from '@/hooks/useTheme'
 import { useBatchOrchestrate } from '@/hooks/useBatchOrchestrate'
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
-import { useCommandPalette, type View } from '@/hooks/useCommandPalette'
+import { useCommandPalette } from '@/hooks/useCommandPalette'
 import { useTotals } from '@/hooks/useTotals'
 import { setLiveRegion } from '@/lib/live-region'
-import type { CodecLabel } from '@/types'
 import { useFilesStore, useSettingsStore, useRuntimeStore } from '@/stores'
 
 export default function App() {
-  const { theme, setTheme } = useTheme()
+  // const { theme } = useTheme()
   const filesSelectedId = useFilesStore((s) => s.selectedId)
   const selectedId = filesSelectedId ?? ''
   const setSelectedId = (id: string) => useFilesStore.getState().setSelected(id)
 
-  const [view, setView] = useState<View>('Batch')
-  const [open, setOpen] = useState<string | null>(null)
+  // const [view, setView] = useState<View>('Batch')
+  // const [open, setOpen] = useState<string | null>(null)
 
   const { startOptimize, cancelBatch, running } = useBatchOrchestrate()
 
-  const codecLabel = useSettingsStore((s) => s.codec.label)
+  // const codecLabel = useSettingsStore((s) => s.codec.label)
   const pushToast = (msg: string, meta?: string) => meta ? toast(msg, { description: meta }) : toast(msg)
 
   // Dev-only store exposure for Playwright.
@@ -55,27 +53,23 @@ export default function App() {
 
   const totals = useTotals()
 
-  const toggleTheme = () => setTheme(theme === 'dark' ? 'light' : 'dark')
-  const exportZip = () => toast.success('Bundled oimg-export.zip', { description: '2.6 MB' })
-  const setCodecFromMenu = (c: CodecLabel) => { useSettingsStore.getState().setCodec({ label: c }); pushToast('Output set to ' + c); setOpen(null) }
   const onToolbarChange = (_v: ToolbarChange) => pushToast('Use the + button in the file queue or drop files')
 
   const { cmdkOpen, setCmdkOpen, cmdGroups } = useCommandPalette({
-    startOptimize, cancelBatch, running, exportZip, pushToast,
-    theme, toggleTheme, setView, setOpen, setCodecFromMenu,
+    startOptimize, cancelBatch, running,
   })
 
-  useKeyboardShortcuts({ startOptimize, cancelBatch, cmdkOpen, setCmdkOpen, setOpen })
+  useKeyboardShortcuts({ startOptimize, cancelBatch, cmdkOpen, setCmdkOpen })
 
   return (
     <AppShell
-      titleBar={<TitleBar theme={theme} onToggleTheme={toggleTheme} openKey={open} onOpenKey={setOpen} codec={codecLabel} onSelectCodec={setCodecFromMenu} view={view} onSetView={setView} onToast={pushToast} onOpenCommandPalette={() => setCmdkOpen(true)} />}
-      toolbar={<Toolbar running={running} onStartOptimize={startOptimize} onExportZip={exportZip} view={view} onSetView={setView} filterQuery={''} onSetFilterQuery={() => {}} theme={theme} onToggleTheme={toggleTheme} openKey={open} onOpenKey={setOpen} onToast={pushToast} onChange={onToolbarChange} />}
+      titleBar={<TitleBar />}
+      toolbar={<Toolbar onChange={onToolbarChange} />}
       workArea={
         <main className="work">
           <FilesPane selectedId={selectedId || null} onSelect={setSelectedId} onOptimize={startOptimize} onCancel={cancelBatch} />
           <CenterPane />
-          <InspectorPane open={open} setOpen={setOpen} onToast={pushToast} />
+          <InspectorPane />
         </main>
       }
       statusBar={<StatusBar running={running} filesCount={totals.filesCount} origTotal={totals.orig} optTotal={totals.opt} compressionPct={totals.pct} savedBytes={totals.saved} />}

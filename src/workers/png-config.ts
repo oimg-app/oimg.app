@@ -7,13 +7,13 @@
 // the Vite browser bundle, not under Node's --experimental-strip-types
 // runner. Mirrors the Phase 3 svg-config.ts pattern.
 
-import type { ResizeAlg, SourceDensity, CodecSettingsPng } from '../types/index.ts'
+import type { ResizeAlg, Density, CodecSettingsPng } from '@/types'
 
 export interface PngResizeSettings {
   /** '1x' | '2x' | '3x' — the density of the SOURCE FileEntry. */
-  sourceDensity: SourceDensity
+  sourceDensity: Density
   /** '1x' | '2x' | '3x' — the density THIS variant produces. */
-  targetDensity: SourceDensity
+  targetDensity: Density
   /** Curated UI subset (matches src/types/index.ts ResizeAlg).
    *  RESEARCH §1.2 confirms full @jsquash/resize enum is wider; UI ships these four. */
   method: ResizeAlg
@@ -25,8 +25,8 @@ export interface PngResizeSettings {
 }
 
 export function buildPngResizeSettings(args: {
-  sourceDensity: SourceDensity
-  targetDensity: SourceDensity
+  sourceDensity: Density
+  targetDensity: Density
   globalAlg: ResizeAlg
   fileOverride?: ResizeAlg
   globalPreserveIcc: boolean

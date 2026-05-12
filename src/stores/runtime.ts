@@ -7,6 +7,7 @@
 // protection). Plugin-toggle subscriber wired in App.tsx fires this.
 
 import { create } from 'zustand'
+import { toast } from 'sonner'
 import { subscribeWithSelector } from 'zustand/middleware'
 import { getWorkerPool } from '@/workers/pool'
 import type { PoolJob } from '@/workers/types'
@@ -34,6 +35,7 @@ interface RuntimeState {
   errorCount: number
   poolSize: number // exposed for Toolbar Workers pill (UI-SPEC §1)
   urlCache: Map<string, string> // FileEntry.id → object URL (D-10, A3)
+    presets: Map<string, Record<string, string>>
   // Phase 3 (D-11) — id of the currently-pending single-file preview job,
   // or null if no preview is in flight. The plugin-toggle subscriber writes
   // a fresh UUID here on each enqueue; pool.cancel() before re-enqueue means
@@ -81,6 +83,12 @@ interface RuntimeState {
   // Phase 4 D-16 — addFile fan-out (Plan 04-05) increments per
   // addSourceWithVariants invocation that produced collisions.
   markRename: (count: number) => void
+
+ savePreset: (settings: Record<string, string>) => void
+
+ optimizeAll: () => void
+
+ export: (type: ExportType) => void
 }
 
 // Inline debounce — keeps the runtime store self-contained. Coalesces rapid
@@ -99,6 +107,9 @@ function debounce<TArgs extends unknown[]>(
   }
 }
 
+
+export type ExportType = 'zip' | 'individual' | 'snippets' | 'data-uris'
+
 export const useRuntimeStore = create<RuntimeState>()(
   subscribeWithSelector((set, get) => ({
     running: false,
@@ -114,7 +125,25 @@ export const useRuntimeStore = create<RuntimeState>()(
     throttleToastFiredThisBatch: false,
     throttleActive: false,
     renameCountThisBatch: 0,
+      presets: new Map<string, Record<string, string>>(),
 
+      savePreset: (settings: Record<string, string>) => {
+          const next = new Map(get().presets)
+
+          next.set('WebP q82 1600w', settings)
+
+          toast.success('Saved as preset', { description: "WebP q82 1600w" })
+
+          set({ presets: next })
+      },
+
+      optimizeAll: () => {
+        // @TODO: fetch all files, and optimize them using given settings and global
+      },
+
+      export: (_: ExportType) => {
+            // @TODO: export files using given settings and global
+      },
     startBatch: (jobIds) =>
       set({
         running: jobIds.length > 0,

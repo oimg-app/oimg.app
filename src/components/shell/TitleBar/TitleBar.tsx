@@ -11,6 +11,7 @@
 // own module migrations land. role="banner" still asserted by shell.spec.ts.
 
 import { Icons } from '@/components/icons'
+import { useState } from 'react'
 import {
   Menubar,
   MenubarMenu,
@@ -21,30 +22,11 @@ import {
 } from '@/components/ui/menubar'
 import { Tooltip } from '@/components/ui/Tooltip'
 import { cn } from '@/lib/utils'
-import type { ThemeMode, CodecLabel } from '@/types'
-import { CODECS } from '@/data/defaults'
+import type { CodecLabel } from '@/types'
+import {APP_VERSION, CODECS} from '@/data/defaults'
 import s from './titleBar.module.css'
-
-type View = 'Batch' | 'Compare' | 'Report'
-
-interface TitleBarProps {
-  // Theme
-  theme: ThemeMode
-  onToggleTheme: () => void
-  // Menu open keying — App owns so multiple menus close together
-  openKey: string | null
-  onOpenKey: (key: string | null) => void
-  // Codec menu
-  codec: CodecLabel
-  onSelectCodec: (c: CodecLabel) => void
-  // View menu
-  view: View
-  onSetView: (v: View) => void
-  // Toast pump
-  onToast: (msg: string, meta?: string) => void
-  // Command palette opener
-  onOpenCommandPalette: () => void
-}
+import {useSettingsStore} from "@/stores";
+import {useTheme} from "@/hooks/useTheme.ts";
 
 const MENU_KEYS = {
   codec: 'menu-codec',
@@ -58,66 +40,71 @@ const MENU_KEYS = {
 // shadcn's @layer utilities in the cascade.
 const MENUBAR_RESET = 'h-auto rounded-none border-0 p-0 gap-[2px]'
 
-export function TitleBar(props: TitleBarProps) {
-  const { theme, onToggleTheme, openKey, onOpenKey, codec, onSelectCodec, view, onSetView, onToast, onOpenCommandPalette } = props
+const FileMenu = () => {
+  const [openKey, onOpenKey] = useState<string | null>(null)
   const isOpen = (key: string) => openKey === key
+  const { theme, setTheme } = useTheme()
+
+  const toggleTheme = () => setTheme(theme === 'dark' ? 'light' : 'dark')
+
   const bindMenu = (key: string) => ({
     open: isOpen(key),
     onOpenChange: (open: boolean) => onOpenKey(open ? key : null),
   })
 
-  return (
-    <header role="banner" className={s.titlebar}>
-      <div className={s.brand}>
-        <span className="mark"></span>
-        OIMG <span style={{ color: 'var(--fg-3)', fontWeight: 400 }}>· image optimizer</span>
-      </div>
+  const codec = useSettingsStore((s) => s.codec.label)
+  const settings = useSettingsStore()
 
+  const onSelectCodec = (c: CodecLabel) => {
+    useSettingsStore.getState().setCodec({ label: c });
+  }
+
+  return (
       <Menubar aria-label="Primary" className={cn(s.menu, MENUBAR_RESET)}>
         <MenubarMenu {...bindMenu(MENU_KEYS.codec)}>
           <MenubarTrigger className={cn(isOpen(MENU_KEYS.codec) && 'on')}>Codec</MenubarTrigger>
           <MenubarContent className="popover" style={{ minWidth: 220 }}>
             <div className="lbl">Output format</div>
             {CODECS.map((c) => (
-              <MenubarItem
-                key={c}
-                className={cn('pi check', codec === c && 'on')}
-                onClick={() => onSelectCodec(c)}
-              >
-                <span className="mono">{c}</span>
-                <span className={s.kbd}>{c[0]}</span>
-              </MenubarItem>
+                <MenubarItem
+                    key={c}
+                    className={cn('pi check', codec === c && 'on')}
+                    onClick={() => onSelectCodec(c)}
+                >
+                  <span className="mono">{c}</span>
+                  <span className={s.kbd}>{c[0]}</span>
+                </MenubarItem>
             ))}
             <MenubarSeparator className="div" />
-            <MenubarItem
-              className="pi"
-              onClick={() => onToast('Auto-optimizing…', 'butteraugli ≤ 1.4')}
-            >
-              <Icons.Zap size={13} />
-              <span>Auto (Butteraugli)</span>
-              <span className={s.kbd}>⌘B</span>
-            </MenubarItem>
+            {/*<MenubarItem*/}
+            {/*    className="pi"*/}
+            {/*    onClick={() => onToast('Auto-optimizing…', 'butteraugli ≤ 1.4')}*/}
+            {/*>*/}
+            {/*  <Icons.Zap size={13} />*/}
+            {/*  <span>Auto (Butteraugli)</span>*/}
+            {/*  <span className={s.kbd}>⌘B</span>*/}
+            {/*</MenubarItem>*/}
           </MenubarContent>
         </MenubarMenu>
 
         <MenubarMenu {...bindMenu(MENU_KEYS.view)}>
           <MenubarTrigger className={cn(isOpen(MENU_KEYS.view) && 'on')}>View</MenubarTrigger>
           <MenubarContent className="popover">
-            {(['Batch', 'Compare', 'Report'] as View[]).map((v, i) => (
-              <MenubarItem
-                key={v}
-                className={cn('pi check', view === v && 'on')}
-                onClick={() => onSetView(v)}
-              >
-                {v === 'Batch' && <Icons.Grid size={13} />}
-                {v === 'Compare' && <Icons.Layers size={13} />}
-                {v === 'Report' && <Icons.BarChart size={13} />}
-                <span>{v}</span>
-                <span className={s.kbd}>⌘{i + 1}</span>
-              </MenubarItem>
+            {settings.views.map((v, i) => (
+                <MenubarItem
+                    key={v}
+                    className={cn('pi check', settings.view === v && 'on')}
+                    onClick={() => settings.setView(v)}
+                >
+                  {v === 'Batch' && <Icons.Grid size={13} />}
+                  {v === 'Compare' && <Icons.Layers size={13} />}
+                  {v === 'Report' && <Icons.BarChart size={13} />}
+                  <span>{v}</span>
+                  <span className={s.kbd}>⌘{i + 1}</span>
+                </MenubarItem>
             ))}
             <MenubarSeparator className="div" />
-            <MenubarItem className="pi" onClick={onToggleTheme}>
+            <MenubarItem className="pi" onClick={toggleTheme}>
               {theme === 'dark' ? <Icons.Sun size={13} /> : <Icons.Moon size={13} />}
               <span>Toggle theme</span>
               <span className={s.kbd}>⌘⇧L</span>
@@ -135,8 +122,36 @@ export function TitleBar(props: TitleBarProps) {
           </MenubarContent>
         </MenubarMenu>
       </Menubar>
+  )
+}
 
-      <div className={s.right}>
+const CommandPaletteButton = () => {
+  const settings = useSettingsStore()
+
+  return (
+      <button
+          className="tbtn ghost"
+          style={{height: 22, padding: '0 8px', fontSize: 11}}
+          onClick={() => settings.setCommandPaletteOpen(true)}
+          aria-label="Open command palette"
+      >
+        <Icons.Search size={11}/> <span style={{color: 'var(--fg-2)'}}>Search</span>
+        <span className={s.kbd} style={{marginLeft: 6}}>⌘K</span>
+      </button>
+  )
+}
+
+export function TitleBar() {
+  return (
+      <header role="banner" className={s.titlebar}>
+        <div className={s.brand}>
+          <span className="mark"></span>
+          OIMG <span style={{color: 'var(--fg-3)', fontWeight: 400}}>· image optimizer</span>
+        </div>
+
+        <FileMenu/>
+
+        <div className={s.right}>
         <Tooltip label="All processing happens locally · no upload">
           <span className="pill"><Icons.Lock size={10} /> 100% local</span>
         </Tooltip>
@@ -146,16 +161,8 @@ export function TitleBar(props: TitleBarProps) {
             Offline-ready
           </span>
         </Tooltip>
-        <span style={{ color: 'var(--fg-3)' }}>v0.4.2</span>
-        <button
-          className="tbtn ghost"
-          style={{ height: 22, padding: '0 8px', fontSize: 11 }}
-          onClick={onOpenCommandPalette}
-          aria-label="Open command palette"
-        >
-          <Icons.Search size={11} /> <span style={{ color: 'var(--fg-2)' }}>Search</span>
-          <span className={s.kbd} style={{ marginLeft: 6 }}>⌘K</span>
-        </button>
+        <span style={{ color: 'var(--fg-3)' }}>{APP_VERSION}</span>
+        <CommandPaletteButton />
       </div>
     </header>
   )

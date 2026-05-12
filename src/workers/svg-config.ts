@@ -15,7 +15,7 @@
  *     disabled by default; user toggle to on ⇒ append the plugin id to the
  *     plugins array.
  */
-import type { CodecSettingsSvg } from '../types/index.ts'
+import type { CodecSettingsSvg } from '@/types'
 
 // Plugins shipped enabled in SVGO v4 preset-default (subset of the 34-plugin
 // preset that the curated 12-plugin UI surfaces). Enabling/disabling is done

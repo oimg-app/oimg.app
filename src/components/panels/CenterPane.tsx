@@ -1,4 +1,4 @@
-import {useEffect, useRef, useState} from 'react'
+import {useEffect, useRef, useState, CSSProperties} from 'react'
 import {Icons} from '@/components/icons'
 import {Popover} from '@/components/ui/Popover'
 import {fmtBytes, fmtPct} from '@/lib/format'
@@ -21,7 +21,7 @@ interface ImageFrameProps {
 function ImageFrame(props: ImageFrameProps) {
     const {zoom, split, origSize, optSize, origUrl, optUrl, origParams, optParams, format, onSplit, onSplitDrag} = props
 
-    const frameStyle = (): React.CSSProperties => {
+    const frameStyle = (): CSSProperties => {
         if (zoom === 'Fit') return {width: 'min(78%, 96%)', maxWidth: 'min(78%, 96%)'}
         const w = zoom === '25%' ? '25%' : zoom === '50%' ? '50%' : zoom === '100%' ? 'calc(100% - 32px)' : '160%'
         return {width: w, maxWidth: w}
@@ -29,7 +29,7 @@ function ImageFrame(props: ImageFrameProps) {
 
     return (
         <div className="image-frame"
-             style={{['--split' as string]: split + '%', ...frameStyle()} as React.CSSProperties}>
+             style={{['--split' as string]: split + '%', ...frameStyle()} as CSSProperties}>
             <div className="image-layer layer-orig"
                  style={origUrl ? {background: `transparent url("${origUrl}") center/contain no-repeat`} : undefined}/>
             <div className="image-layer layer-opt"
@@ -174,7 +174,7 @@ export function CenterPane() {
     const optSize = selectedEntry?.optimizedBlob?.size ?? origSize
     const optRes = [selectedEntry?.optimizedMeta.width, selectedEntry?.optimizedMeta.height].filter(Boolean).join(' × ')
     const optFormat = selectedEntry?.optimizedMeta.format
-    const isDone = selectedEntry?.status === 'done' && selectedEntry?.optimizedBlob != null
+    // const isDone = selectedEntry?.status === 'done' && selectedEntry?.optimizedBlob != null
 
     const origParams = [`ORIGINAL`, origRes, origProfile].filter(Boolean).join(' · ')
     const optParams = [`OPTIMIZED`, optFormat, optRes].filter(Boolean).join(' · ')

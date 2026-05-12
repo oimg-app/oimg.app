@@ -8,6 +8,7 @@
 // updates without further changes here.
 
 import { create } from 'zustand'
+import { toast } from 'sonner'
 import { subscribeWithSelector } from 'zustand/middleware'
 import type {
   CodecSettingsSvg,
@@ -29,6 +30,8 @@ import {
   DEFAULT_RESIZE_SETTINGS,
 } from '@/data/defaults'
 
+export type View = 'Batch' | 'Compare' | 'Report'
+
 // Phase 10 plan 10-01 — store-local codec slice. Phase 5 raster encoders
 // read useSettingsStore.getState().codec to avoid prop-drilling.
 interface CodecSlice {
@@ -39,6 +42,9 @@ interface CodecSlice {
 }
 
 interface SettingsState {
+    commandPaletteOpen: boolean
+    views: View[]
+    view: View
   svg: CodecSettingsSvg
   png: CodecSettingsPng
   jpeg: CodecSettingsJpeg
@@ -74,6 +80,8 @@ interface SettingsState {
   setSnippetToggle: (fileId: string, snippetId: string, value: boolean) => void
   setResize: (next: Partial<{ alg: ResizeAlg }>) => void
   setCodec: (patch: Partial<CodecSlice>) => void
+    setView: (next: View) => void
+    setCommandPaletteOpen: (open: boolean) => void
 }
 
 export const useSettingsStore = create<SettingsState>()(
@@ -88,6 +96,13 @@ export const useSettingsStore = create<SettingsState>()(
     resize: DEFAULT_RESIZE_SETTINGS,
     codec: { label: 'WebP', quality: 82, method: 4, lossless: false },
     perFile: {},
+      commandPaletteOpen: false,
+      views: ['Batch', 'Compare', 'Report'] as View[],
+      view: 'Batch',
+
+      setView: (view: View) => set({ view }),
+
+      setCommandPaletteOpen: (open: boolean) => set({ commandPaletteOpen: open }),
 
     setSvg: (next) => set((s) => ({ svg: { ...s.svg, ...next } })),
     setPng: (next) => set((s) => ({ png: { ...s.png, ...next } })),
@@ -106,7 +121,11 @@ export const useSettingsStore = create<SettingsState>()(
         },
       })),
     setResize: (next) => set((s) => ({ resize: { ...s.resize, ...next } })),
-    setCodec: (patch) => set((s) => ({ codec: { ...s.codec, ...patch } })),
+    setCodec: (patch) => {
+        toast.info(`Output set to ${patch.label}`)
+        set((s) => ({ codec: { ...s.codec, ...patch } }))
+
+    },
     setPerFileCodec: (fileId, patch) =>
       set((s) => ({
         perFile: {

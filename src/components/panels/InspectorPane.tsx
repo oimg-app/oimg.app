@@ -15,20 +15,67 @@ import { JpegPanel } from '@/components/panels/JpegPanel'
 import { WebpPanel } from '@/components/panels/WebpPanel'
 import { AvifPanel } from '@/components/panels/AvifPanel'
 import { useShallow } from 'zustand/react/shallow'
-import { useFilesStore, useSettingsStore } from '@/stores'
+import {useFilesStore, useRuntimeStore, useSettingsStore} from '@/stores'
 import { enqueueRasterPreview } from '@/hooks/useBatchOrchestrate'
 import type { CodecSettingsPng, CodecSettingsJpeg, CodecSettingsWebp, CodecSettingsAvif } from '@/types'
 
 // D-03: Exactly two tabs.
 type Tab = 'codec' | 'snippets'
 
-interface InspectorPaneProps {
-  open: string | null
-  setOpen: (v: string | null) => void
-  onToast: (msg: string, meta?: string) => void
+function InspectorMoreButton() {
+  const [open, setOpen] = useState<string | null>(null)
+  const isPopOpen = (key: string) => open === key
+  const togglePop = (key: string) => setOpen(open === key ? null : key)
+
+  const selectedId = useFilesStore(s => s.selectedId)
+  const fileState = useFilesStore()
+    const runtime = useRuntimeStore()
+
+  return (
+      <>
+        <button
+            className={'iconbtn' + (isPopOpen('insp') ? ' on' : '')}
+            onClick={() => togglePop('insp')}
+        >
+          <Icons.More size={12}/>
+        </button>
+        <Popover open={isPopOpen('insp')} onClose={() => setOpen(null)} anchor="br" style={{minWidth: 220}}>
+          <div
+              className="pi"
+              onClick={() => {
+                setOpen(null);
+                fileState.applyToAllFiles(selectedId)
+              }}
+          >
+            <Icons.Layers size={13}/><span>Apply to all files</span>
+          </div>
+          <div
+              className="pi"
+              onClick={() => {
+                  const files = useFilesStore.getState()
+                  const file = selectedId ? files.byId[selectedId] : null
+
+                  if (!file) return
+
+                  runtime.savePreset(file?.settings)
+
+                setOpen(null);
+
+              }}
+          >
+            <Icons.Plus size={13}/><span>Save as preset…</span>
+          </div>
+          <div className="div"/>
+          <div className="lbl">Presets</div>
+          <div className="pi check on"><span>Web · WebP q82</span></div>
+          <div className="pi check"><span>Email · JPEG q70 800w</span></div>
+          <div className="pi check"><span>Print · PNG lossless</span></div>
+        </Popover>
+      </>
+  )
 }
 
-export function InspectorPane({ open, setOpen, onToast }: InspectorPaneProps) {
+export function InspectorPane() {
   const [tab, setTab] = useState<Tab>('codec')
 
   // Read selectedEntry and format from store — no prop-drilling needed.
@@ -38,7 +85,7 @@ export function InspectorPane({ open, setOpen, onToast }: InspectorPaneProps) {
 
   // Per-file overrides + global codec slices.
   const perFileOverride = useSettingsStore(
-    useShallow((s) => selectedId ? (s.perFile[selectedId] ?? {}) : {})
+      useShallow((s) => selectedId ? (s.perFile[selectedId] ?? {}) : {})
   )
   const globalPng = useSettingsStore((s) => s.png)
   const globalJpeg = useSettingsStore((s) => s.jpeg)
@@ -48,8 +95,8 @@ export function InspectorPane({ open, setOpen, onToast }: InspectorPaneProps) {
 
   // Resolved settings: global merged with perFile override.
   const resolvedPng = useMemo(
-    (): CodecSettingsPng => ({ ...globalPng, ...perFileOverride }) as CodecSettingsPng,
-    [globalPng, perFileOverride],
+      (): CodecSettingsPng => ({...globalPng, ...perFileOverride}) as CodecSettingsPng,
+      [globalPng, perFileOverride],
   )
   const resolvedJpeg = useMemo(
     (): CodecSettingsJpeg => ({ ...globalJpeg, ...perFileOverride }) as CodecSettingsJpeg,
@@ -103,9 +150,6 @@ export function InspectorPane({ open, setOpen, onToast }: InspectorPaneProps) {
   useEffect(() => {
     if (selectedId) setTab('codec')
   }, [selectedId])
-
-  const isPopOpen = (key: string) => open === key
-  const togglePop = (key: string) => setOpen(open === key ? null : key)
 
   // CodecTabContent — format discriminant switch inside InspectorPane.
   // T-5-04-02 mitigation: unknown format returns null (no error, no panel).
@@ -182,30 +226,7 @@ export function InspectorPane({ open, setOpen, onToast }: InspectorPaneProps) {
       <div className="pane-hd">
         <span>Inspector</span>
         <div className="actions" style={{ position: 'relative' }}>
-          <button
-            className={'iconbtn' + (isPopOpen('insp') ? ' on' : '')}
-            onClick={() => togglePop('insp')}
-          >
-            <Icons.More size={12} />
-          </button>
-          <Popover open={isPopOpen('insp')} onClose={() => setOpen(null)} anchor="br" style={{ minWidth: 220 }}>
-            <div
-              className="pi"
-              onClick={() => { setOpen(null); onToast('Settings copied to all files') }}
-            >
-              <Icons.Layers size={13} /><span>Apply to all files</span>
-            </div>
-            <div
-              className="pi"
-              onClick={() => { setOpen(null); onToast('Saved as preset', '"WebP q82 1600w"') }}
-            >
-              <Icons.Plus size={13} /><span>Save as preset…</span>
-            </div>
-            <div className="div" /><div className="lbl">Presets</div>
-            <div className="pi check on"><span>Web · WebP q82</span></div>
-            <div className="pi check"><span>Email · JPEG q70 800w</span></div>
-            <div className="pi check"><span>Print · PNG lossless</span></div>
-          </Popover>
+          <InspectorMoreButton />
         </div>
       </div>
 

@@ -1,3 +1,4 @@
+export const APP_VERSION = 'v0.4.2'
 // Production codec defaults consumed by the Phase 2+ pipeline.
 // Single source of truth for "what should this codec do by default."
 // Phase 2 plan 02-05 (cleanup wave) deleted src/data/mock.ts; the visual-shell

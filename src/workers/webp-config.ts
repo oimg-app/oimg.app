@@ -2,7 +2,7 @@
 // Extracted into own module so unit tests import without evaluating @jsquash/webp.
 // Phase 4 png-config.ts precedent — use relative ../types/index.ts (no @/ alias).
 
-import type { CodecSettingsWebp } from '../types/index.ts'
+import type { CodecSettingsWebp } from '@/types'
 
 export interface WebpEncodeSettings {
   quality: number

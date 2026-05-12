@@ -24,7 +24,7 @@
 import { optimize } from 'svgo/browser'
 import type { AdapterMeta } from './types'
 import { AdapterError } from './types'
-import type { CodecSettingsSvg } from '../types/index'
+import type { CodecSettingsSvg } from '@/types'
 // buildSvgoConfig was extracted to svg-config.ts (Plan 03-D) so the unit
 // tests can import it without evaluating the `svgo/browser` package — that
 // path only resolves inside the Vite browser bundle, not under Node's

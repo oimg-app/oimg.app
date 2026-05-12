@@ -3,6 +3,7 @@
 // Persistent in spirit (Phase 7 wires IndexedDB).
 
 import { create } from 'zustand'
+import { toast } from 'sonner'
 import { subscribeWithSelector } from 'zustand/middleware'
 import {FileEntry, FormatId, Density} from '@/types'
 import { applyDensitySuffix, deduplicateName } from '@/lib/filename'
@@ -30,13 +31,18 @@ export interface FileEntryWithBlob extends FileEntry {
    *  or compression-ratio heuristic (other rasters). App.tsx threads this
    *  into PoolJob.byteEstimate when enqueuing the pool job. */
   byteEstimate?: number
+  settings: Record<string, string>
 }
 
 interface FilesState {
   byId: Record<string, FileEntryWithBlob>
   order: string[] // ordered FileEntry.ids for stable list rendering
   selectedId: string | null
+  filterQuery: string
 
+  filterBy: (value: string) => void
+
+  applyToAllFiles: (fileId: string | null) => void
   addFile: (entry: FileEntryWithBlob) => void
   removeFile: (fileId: string) => void
   // Called by WorkerPool consumer (App.tsx) when an adapter run completes
@@ -93,6 +99,18 @@ export const useFilesStore = create<FilesState>()(
     byId: {},
     order: [],
     selectedId: null,
+
+  filterQuery: '',
+  filterBy: (_: string) => {
+        // @TODO: filter files list by query
+
+  },
+
+      applyToAllFiles: (_: string | null) => {
+    // @TODO: apply to all files
+      // @TODO: find settings applied for fileId, apply to all files with the same extension
+      toast.info('Settings applied to all {Extension} files')
+  },
 
     addFile: (entry) =>
       set((s) => ({
@@ -285,6 +303,7 @@ export const useFilesStore = create<FilesState>()(
               // @TODO: extract from codec settings
               format: 'WebP q82'
           },
+          settings: {},
           byteEstimate,
         })
       }
