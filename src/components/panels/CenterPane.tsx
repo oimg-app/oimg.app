@@ -2,7 +2,8 @@ import {useEffect, useRef, useState, CSSProperties} from 'react'
 import {Icons} from '@/components/icons'
 import {Popover} from '@/components/ui/Popover'
 import {fmtBytes, fmtPct} from '@/lib/format'
-import {useFilesStore} from '@/stores'
+import { useStore } from '@nanostores/react'
+import { filesStore } from '@/stores'
 
 interface ImageFrameProps {
     zoom: string
@@ -120,7 +121,8 @@ const ZoomControls = (props: ZoomControlsProps) => {
 }
 
 const OptimizeStatus = () => {
-    const selectedEntry = useFilesStore((s) => s.selectedId ? s.byId[s.selectedId] : undefined)
+    const { byId, selectedId: selId } = useStore(filesStore)
+    const selectedEntry = selId ? byId[selId] : undefined
     const isDone = selectedEntry?.status === 'done' && selectedEntry?.optimizedBlob != null
 
     return isDone
@@ -135,7 +137,8 @@ export function CenterPane() {
     const [zoom, setZoom] = useState('Fit')
     const stageRef = useRef<HTMLDivElement | null>(null)
 
-    const selectedEntry = useFilesStore((s) => s.selectedId ? s.byId[s.selectedId] : undefined)
+    const { byId: filesById, selectedId: currentSelectedId } = useStore(filesStore)
+    const selectedEntry = currentSelectedId ? filesById[currentSelectedId] : undefined
 
     const [previewUrls, setPreviewUrls] = useState<{ orig: string | null; opt: string | null }>({orig: null, opt: null})
 

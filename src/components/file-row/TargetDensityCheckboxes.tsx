@@ -3,48 +3,41 @@
 // No file rows are added; setTargetDensities writes to FileEntry.targetDensities.
 // Source density is always locked — always included in the export set.
 
-import { useFilesStore } from '@/stores/files';
-import { useShallow } from 'zustand/react/shallow';
-import type { Density } from '@/types';
+import { useStore } from '@nanostores/react'
+import { filesStore, setTargetDensities } from '@/stores/files'
+import type { Density } from '@/types'
 
-const DENSITIES: readonly Density[] = ['1x', '2x', '3x'] as const;
+const DENSITIES: readonly Density[] = ['1x', '2x', '3x'] as const
 
 interface TargetDensityCheckboxesProps {
   /** Override the file whose export targets are shown. Defaults to selectedId. */
-  fileId?: string;
+  fileId?: string
 }
 
 export function TargetDensityCheckboxes({
   fileId: fileIdProp,
 }: TargetDensityCheckboxesProps = {}) {
-  const { activeId, entry, setTargetDensities } = useFilesStore(
-    useShallow((s) => {
-      const id = fileIdProp ?? s.selectedId;
-      return {
-        activeId: id,
-        entry: id ? s.byId[id] : undefined,
-        setTargetDensities: s.setTargetDensities,
-      };
-    }),
-  );
+  const { byId, selectedId } = useStore(filesStore)
+  const activeId = fileIdProp ?? selectedId
+  const entry = activeId ? byId[activeId] : undefined
 
-  if (!entry || !activeId) return null;
+  if (!entry || !activeId) return null
 
-  const sourceDensity = entry.sourceDensity;
+  const sourceDensity = entry.sourceDensity
   // Default: only source density is selected until the user picks more.
-  const exportSet = new Set<Density>(entry.targetDensities ?? [sourceDensity]);
-  exportSet.add(sourceDensity); // source is always present
+  const exportSet = new Set<Density>(entry.targetDensities ?? [sourceDensity])
+  exportSet.add(sourceDensity) // source is always present
 
   const onToggle = (density: Density) => {
-    if (density === sourceDensity) return;
-    const next = new Set(exportSet);
+    if (density === sourceDensity) return
+    const next = new Set(exportSet)
     if (next.has(density)) {
-      next.delete(density);
+      next.delete(density)
     } else {
-      next.add(density);
+      next.add(density)
     }
-    setTargetDensities(activeId, [...next]);
-  };
+    setTargetDensities(activeId, [...next])
+  }
 
   return (
     <div
@@ -54,8 +47,8 @@ export function TargetDensityCheckboxes({
       style={{ width: '100%' }}
     >
       {DENSITIES.map((d) => {
-        const checked = exportSet.has(d);
-        const locked = d === sourceDensity;
+        const checked = exportSet.has(d)
+        const locked = d === sourceDensity
         return (
           <button
             key={d}
@@ -79,19 +72,19 @@ export function TargetDensityCheckboxes({
                 : {}),
             }}
             onClick={() => {
-              if (!locked) onToggle(d);
+              if (!locked) onToggle(d)
             }}
             onKeyDown={(e) => {
               if (!locked && (e.key === ' ' || e.key === 'Enter')) {
-                e.preventDefault();
-                onToggle(d);
+                e.preventDefault()
+                onToggle(d)
               }
             }}
           >
             {d}
           </button>
-        );
+        )
       })}
     </div>
-  );
+  )
 }

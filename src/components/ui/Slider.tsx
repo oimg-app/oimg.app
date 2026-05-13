@@ -1,42 +1,72 @@
-import { useId } from 'react';
+import * as React from "react"
+import { Slider as SliderPrimitive } from "radix-ui"
 
-interface SliderProps {
-  label: string;
-  value: number;
-  min?: number;
-  max?: number;
-  step?: number;
-  suffix?: string;
-  onChange: (v: number) => void;
+import { cn } from "@/lib/utils"
+
+type SliderProps = Omit<
+  React.ComponentProps<typeof SliderPrimitive.Root>,
+  "value" | "defaultValue" | "onValueChange"
+> & {
+  value?: number | number[]
+  defaultValue?: number | number[]
+  onChange?: (value: number) => void
+  label?: string
 }
 
-// Hand-rolled slider — Phase 1 deviation D-06 (see deferred-items.md).
-// Native input[type=range] has implicit role="slider"; we set explicit
-// aria-value* so screen readers announce the current value reliably even
-// when the input is wrapped inside a styled container. aria-valuetext gives
-// a friendly readout including any unit suffix (e.g. "82%").
-export function Slider({ label, value, min = 0, max = 100, step = 1, suffix = '', onChange }: SliderProps) {
-  const id = useId();
+function Slider({
+  className,
+  defaultValue,
+  value,
+  min = 0,
+  max = 100,
+  onChange,
+  label: _label,
+  ...props
+}: SliderProps) {
+  const toArray = (v: number | number[] | undefined): number[] | undefined =>
+    v === undefined ? undefined : Array.isArray(v) ? v : [v]
+
+  const valueArr = toArray(value)
+  const defaultValueArr = toArray(defaultValue)
+
+  const _values = React.useMemo(
+    () => valueArr ?? defaultValueArr ?? [min],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [JSON.stringify(valueArr), JSON.stringify(defaultValueArr), min]
+  )
+
   return (
-    <div className="row" style={{ gridTemplateColumns: '90px 1fr' }}>
-      <label htmlFor={id}>{label}</label>
-      <div className="slider-block">
-        <input
-          id={id}
-          type="range"
-          min={min}
-          max={max}
-          step={step}
-          value={value}
-          aria-label={label}
-          aria-valuemin={min}
-          aria-valuemax={max}
-          aria-valuenow={value}
-          aria-valuetext={String(value) + (suffix || '')}
-          onChange={(e) => onChange(+e.target.value)}
+    <SliderPrimitive.Root
+      data-slot="slider"
+      defaultValue={defaultValueArr}
+      value={valueArr}
+      min={min}
+      max={max}
+      onValueChange={onChange ? (vals) => onChange(vals[0]) : undefined}
+      className={cn(
+        "relative flex w-full touch-none items-center select-none data-disabled:opacity-50 data-vertical:h-full data-vertical:min-h-40 data-vertical:w-auto data-vertical:flex-col",
+        className
+      )}
+      {...props}
+    >
+      <SliderPrimitive.Track
+        data-slot="slider-track"
+        className="relative grow overflow-hidden rounded-none bg-muted data-horizontal:h-1 data-horizontal:w-full data-vertical:h-full data-vertical:w-1"
+      >
+        <SliderPrimitive.Range
+          data-slot="slider-range"
+          className="absolute bg-primary select-none data-horizontal:h-full data-vertical:w-full"
         />
-        <span className="v">{value}{suffix}</span>
-      </div>
-    </div>
-  );
+      </SliderPrimitive.Track>
+      {Array.from({ length: _values.length }, (_, index) => (
+        <SliderPrimitive.Thumb
+          data-slot="slider-thumb"
+          key={index}
+          className="relative block size-3 shrink-0 rounded-none border border-ring bg-white ring-ring/50 transition-[color,box-shadow] select-none after:absolute after:-inset-2 hover:ring-1 focus-visible:ring-1 focus-visible:outline-hidden active:ring-1 disabled:pointer-events-none disabled:opacity-50"
+        />
+      ))}
+    </SliderPrimitive.Root>
+  )
 }
+
+export { Slider }

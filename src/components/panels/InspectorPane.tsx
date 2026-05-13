@@ -5,6 +5,7 @@
 // D-04: Every codec setting change triggers enqueueRasterPreview with 200ms debounce.
 
 import { useState, useMemo, useRef, useCallback, useEffect } from 'react'
+import { useStore } from '@nanostores/react'
 import { Icons } from '@/components/icons'
 import { Popover } from '@/components/ui/Popover'
 import { SvgoPanel, PLUGIN_FOOTGUNS } from '@/components/panels/SvgoPanel'
@@ -14,8 +15,18 @@ import { PngPanel } from '@/components/panels/PngPanel'
 import { JpegPanel } from '@/components/panels/JpegPanel'
 import { WebpPanel } from '@/components/panels/WebpPanel'
 import { AvifPanel } from '@/components/panels/AvifPanel'
-import { useShallow } from 'zustand/react/shallow'
-import {useFilesStore, useRuntimeStore, useSettingsStore} from '@/stores'
+import {
+  filesStore,
+  applyToAllFiles,
+  setPreserveIcc,
+} from '@/stores/files'
+import {
+  settingsStore,
+  setSvg,
+  setPerFileCodec,
+  savePreset,
+} from '@/stores'
+import { runtimeStore } from '@/stores/runtime'
 import { enqueueRasterPreview } from '@/hooks/useBatchOrchestrate'
 import type { CodecSettingsPng, CodecSettingsJpeg, CodecSettingsWebp, CodecSettingsAvif } from '@/types'
 
@@ -27,76 +38,64 @@ function InspectorMoreButton() {
   const isPopOpen = (key: string) => open === key
   const togglePop = (key: string) => setOpen(open === key ? null : key)
 
-  const selectedId = useFilesStore(s => s.selectedId)
-  const fileState = useFilesStore()
-    const runtime = useRuntimeStore()
+  const { selectedId } = useStore(filesStore)
+  const { byId } = useStore(filesStore)
+  // savePreset is imported directly — no need to select from store
 
   return (
-      <>
-        <button
-            className={'iconbtn' + (isPopOpen('insp') ? ' on' : '')}
-            onClick={() => togglePop('insp')}
+    <>
+      <button
+        className={'iconbtn' + (isPopOpen('insp') ? ' on' : '')}
+        onClick={() => togglePop('insp')}
+      >
+        <Icons.More size={12} />
+      </button>
+      <Popover open={isPopOpen('insp')} onClose={() => setOpen(null)} anchor="br" style={{ minWidth: 220 }}>
+        <div
+          className="pi"
+          onClick={() => {
+            setOpen(null)
+            applyToAllFiles(selectedId)
+          }}
         >
-          <Icons.More size={12}/>
-        </button>
-        <Popover open={isPopOpen('insp')} onClose={() => setOpen(null)} anchor="br" style={{minWidth: 220}}>
-          <div
-              className="pi"
-              onClick={() => {
-                setOpen(null);
-                fileState.applyToAllFiles(selectedId)
-              }}
-          >
-            <Icons.Layers size={13}/><span>Apply to all files</span>
-          </div>
-          <div
-              className="pi"
-              onClick={() => {
-                  const files = useFilesStore.getState()
-                  const file = selectedId ? files.byId[selectedId] : null
-
-                  if (!file) return
-
-                  runtime.savePreset(file?.settings)
-
-                setOpen(null);
-
-              }}
-          >
-            <Icons.Plus size={13}/><span>Save as preset…</span>
-          </div>
-          <div className="div"/>
-          <div className="lbl">Presets</div>
-          <div className="pi check on"><span>Web · WebP q82</span></div>
-          <div className="pi check"><span>Email · JPEG q70 800w</span></div>
-          <div className="pi check"><span>Print · PNG lossless</span></div>
-        </Popover>
-      </>
+          <Icons.Layers size={13} /><span>Apply to all files</span>
+        </div>
+        <div
+          className="pi"
+          onClick={() => {
+            const file = selectedId ? byId[selectedId] : null
+            if (!file) return
+            savePreset(file.settings)
+            setOpen(null)
+          }}
+        >
+          <Icons.Plus size={13} /><span>Save as preset…</span>
+        </div>
+        <div className="div" />
+        <div className="lbl">Presets</div>
+        <div className="pi check on"><span>Web · WebP q82</span></div>
+        <div className="pi check"><span>Email · JPEG q70 800w</span></div>
+        <div className="pi check"><span>Print · PNG lossless</span></div>
+      </Popover>
+    </>
   )
 }
 
 export function InspectorPane() {
   const [tab, setTab] = useState<Tab>('codec')
 
-  // Read selectedEntry and format from store — no prop-drilling needed.
-  const selectedEntry = useFilesStore((s) => s.selectedId ? s.byId[s.selectedId] : undefined)
-  const selectedId = useFilesStore((s) => s.selectedId)
+  const { byId, selectedId } = useStore(filesStore)
+  const selectedEntry = selectedId ? byId[selectedId] : undefined
   const format = selectedEntry?.format
 
   // Per-file overrides + global codec slices.
-  const perFileOverride = useSettingsStore(
-      useShallow((s) => selectedId ? (s.perFile[selectedId] ?? {}) : {})
-  )
-  const globalPng = useSettingsStore((s) => s.png)
-  const globalJpeg = useSettingsStore((s) => s.jpeg)
-  const globalWebp = useSettingsStore((s) => s.webp)
-  const globalAvif = useSettingsStore((s) => s.avif)
-  const setPerFileCodec = useSettingsStore((s) => s.setPerFileCodec)
+  const { perFile, png: globalPng, jpeg: globalJpeg, webp: globalWebp, avif: globalAvif, svg: svgSettings } = useStore(settingsStore)
+  const perFileOverride = selectedId ? (perFile[selectedId] ?? {}) : {}
 
   // Resolved settings: global merged with perFile override.
   const resolvedPng = useMemo(
-      (): CodecSettingsPng => ({...globalPng, ...perFileOverride}) as CodecSettingsPng,
-      [globalPng, perFileOverride],
+    (): CodecSettingsPng => ({ ...globalPng, ...perFileOverride }) as CodecSettingsPng,
+    [globalPng, perFileOverride],
   )
   const resolvedJpeg = useMemo(
     (): CodecSettingsJpeg => ({ ...globalJpeg, ...perFileOverride }) as CodecSettingsJpeg,
@@ -111,11 +110,8 @@ export function InspectorPane() {
     [globalAvif, perFileOverride],
   )
 
-  // SVG settings (SvgoPanel unchanged from Phase 3).
-  const svgSettings = useSettingsStore((s) => s.svg)
-  const setSvg = useSettingsStore((s) => s.setSvg)
   const togglePlugin = (id: string) => {
-    const cur = useSettingsStore.getState().svg.plugins
+    const cur = settingsStore.get().svg.plugins
     if (!(id in cur)) return
     setSvg({ plugins: { ...cur, [id]: !cur[id] } })
   }
@@ -131,12 +127,7 @@ export function InspectorPane() {
     [svgSettings.plugins, svgSettings.pluginSavings],
   )
 
-  // setPreserveIcc from files store — added in 05-04 (Rule 2: missing ICC wiring).
-  const setPreserveIcc = useFilesStore((s) => s.setPreserveIcc)
-
   // D-04: 200ms debounce wrapper for raster re-optimize.
-  // Mirrors Phase 3 SVG enqueuePreview debounce (03-B D-08).
-  // T-5-04-05 mitigation: rapid slider drag fires only one encode on settle.
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const debouncedPreview = useCallback((fileId: string) => {
     if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current)
@@ -146,13 +137,11 @@ export function InspectorPane() {
   }, [])
 
   // Auto-switch to Codec tab when a new file is selected (D-01).
-  // If user is already on Snippets, keep it there — they may be reviewing output.
   useEffect(() => {
     if (selectedId) setTab('codec')
   }, [selectedId])
 
   // CodecTabContent — format discriminant switch inside InspectorPane.
-  // T-5-04-02 mitigation: unknown format returns null (no error, no panel).
   function CodecTabContent() {
     if (!format || !selectedId) {
       return (
@@ -217,9 +206,11 @@ export function InspectorPane() {
         />
       )
     }
-    // T-5-04-02: unknown format — no panel, no error.
     return null
   }
+
+  // Suppress unused import warning for runtimeStore (it's kept for the debug window).
+  void runtimeStore
 
   return (
     <div className="pane insp">
@@ -263,10 +254,6 @@ export function InspectorPane() {
         {tab === 'codec' && (
           <>
             <CodecTabContent />
-            {/* D-12: Density checkboxes (export-scope only — no re-optimize).
-                TargetDensityCheckboxes reads selected entry from store.
-                setTargetDensities referenced here to satisfy lint but wired
-                in TargetDensityCheckboxes internally; Phase 7 handles export. */}
             <TweaksResizeSection />
             <TweaksPrivacySection />
           </>

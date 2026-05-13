@@ -25,7 +25,12 @@
 .tbtn:hover { background: var(--bg-3); border-color: var(--line-strong); }
 .tbtn:disabled { opacity: 0.6; cursor: not-allowed; }
 
-.tbtnPrimary { background: var(--accent); color: var(--accent-fg); border-color: transparent; font-weight: 600; }
+.tbtnPrimary {
+    background: var(--accent);
+    color: var(--accent-fg);
+    border-color: transparent;
+    font-weight: 600;
+}
 .tbtnPrimary:hover { filter: brightness(1.05); }
 
 .tbtnGhost { background: transparent; }

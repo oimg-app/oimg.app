@@ -6,7 +6,8 @@ import { useState, useMemo } from 'react'
 import { Icons } from '@/components/icons'
 import { Popover } from '@/components/ui/Popover'
 import { ContextMenu } from '@/components/file-row/ContextMenu'
-import { useFilesStore } from '@/stores'
+import { useStore } from '@nanostores/react'
+import { filesStore, setSort } from '@/stores'
 import { useFilePicker } from '@/hooks/useFilePicker'
 import { fmtBytes, fmtPct } from '@/lib/format'
 import type { MockFile } from '@/types'
@@ -97,10 +98,9 @@ function SortFilesButton() {
   const [open, setOpen] = useState<string | null>(null)
   const isPopOpen = (key: string) => open === key
   const togglePop = (key: string) => setOpen(open === key ? null : key)
-  const filesState = useFilesStore()
   const onSort = (s: string) => {
     setSortBy(s)
-    filesState.setSort(s)
+    setSort(s)
   }
 
 
@@ -226,9 +226,7 @@ interface FilePanelProps {
 
 export function FilesPane({selectedId, onSelect, onOptimize: _onOptimize, onCancel: _onCancel}: FilePanelProps) {
   const [filterQuery, _setFilterQuery] = useState<string>('')
-  // Narrow store selectors — one per field to minimise re-renders.
-  const filesById = useFilesStore((s) => s.byId)
-  const filesOrder = useFilesStore((s) => s.order)
+  const { byId: filesById, order: filesOrder } = useStore(filesStore)
 
   // Derive a MockFile array from the store. Status maps from FileEntry's wider
   // FileStatus to the narrower visual MockFile status set ('idle' → 'queued').

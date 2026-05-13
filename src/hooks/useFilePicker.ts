@@ -2,7 +2,7 @@ import { useRef } from 'react'
 import type { DragEvent, RefObject } from 'react'
 import { toast } from 'sonner'
 import type { FormatId } from '@/types'
-import { useFilesStore } from '@/stores'
+import { addSourceWithVariants } from '@/stores'
 
 // Private helper — detect format from MIME then extension.
 // Verbatim from App.tsx lines 177–186 (Plan 04-07 origin).
@@ -30,7 +30,7 @@ async function ingestDroppedFiles(files: FileList | File[]): Promise<void> {
       if (skippedNames.length < 3) skippedNames.push(f.name)
       continue
     }
-    await useFilesStore.getState().addSourceWithVariants({
+    await addSourceWithVariants({
       sourceBlob: f,
       sourceDensity: '1x',
       name: f.name,

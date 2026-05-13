@@ -5,7 +5,7 @@ import { CODECS } from '@/data/defaults'
 import type { CodecLabel } from '@/types'
 import type { CmdGroup } from '@/components/shell/CommandPalette/CommandPalette'
 import {useTheme} from "@/hooks/useTheme.ts";
-import {useRuntimeStore, useSettingsStore} from "@/stores";
+import { setCodec, setView, exportFiles } from "@/stores";
 
 interface Params {
   startOptimize: () => void
@@ -23,11 +23,11 @@ export function useCommandPalette({
 
   const toggleTheme = () => setTheme(theme === 'dark' ? 'light' : 'dark')
   const setCodecFromMenu = (c: CodecLabel) => {
-    useSettingsStore.getState().setCodec({ label: c });
+    setCodec({ label: c })
   }
 
   const exportZip = () => {
-    useRuntimeStore.getState().export('zip')
+    exportFiles('zip')
   }
 
   const cmdGroups: CmdGroup[] = [
@@ -39,9 +39,9 @@ export function useCommandPalette({
       // { ic: <Icons.Zap size={13} />, label: 'Auto (Butteraugli 1.4)', meta: 'B', do: () => pushToast('Auto-optimizing…', 'butteraugli ≤ 1.4') },
     ]},
     { group: 'View', items: [
-      { ic: <Icons.Grid size={13} />, label: 'Switch to Batch', do: () => useSettingsStore.getState().setView('Batch') },
-      { ic: <Icons.Layers size={13} />, label: 'Switch to Compare', do: () => useSettingsStore.getState().setView('Compare') },
-      { ic: <Icons.BarChart size={13} />, label: 'Switch to Report', do: () => useSettingsStore.getState().setView('Report') },
+      { ic: <Icons.Grid size={13} />, label: 'Switch to Batch', do: () => setView('Batch') },
+      { ic: <Icons.Layers size={13} />, label: 'Switch to Compare', do: () => setView('Compare') },
+      { ic: <Icons.BarChart size={13} />, label: 'Switch to Report', do: () => setView('Report') },
       { ic: theme === 'dark' ? <Icons.Sun size={13} /> : <Icons.Moon size={13} />, label: 'Toggle ' + (theme === 'dark' ? 'light' : 'dark') + ' theme', do: toggleTheme },
     ]},
     { group: 'Codec', items: CODECS.filter((c) => c !== 'SVG').map((c) => ({

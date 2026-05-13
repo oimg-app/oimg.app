@@ -4,7 +4,8 @@ import { Seg } from '@/components/ui/Seg';
 import { Toggle } from '@/components/ui/Toggle';
 import { CODECS, RESIZE_ALG, FIT_MODES } from '@/data/defaults';
 import type { CodecLabel, ResizeAlg, FitMode } from '@/types';
-import { useSettingsStore } from '@/stores';
+import { useStore } from '@nanostores/react'
+import { settingsStore, setCodec } from '@/stores';
 
 // Phase 10 plan 10-01 — codec/q/method/lossless props removed; these values
 // are now read directly from useSettingsStore.codec. The resize/meta props
@@ -43,14 +44,15 @@ export function CodecPanel(props: CodecPanelProps) {
   } = props;
 
   // Phase 10 plan 10-01 — read codec settings directly from store.
-  const codec = useSettingsStore((s) => s.codec.label);
-  const setCodec = (v: CodecLabel) => useSettingsStore.getState().setCodec({ label: v });
-  const q = useSettingsStore((s) => s.codec.quality);
-  const setQ = (v: number) => useSettingsStore.getState().setCodec({ quality: v });
-  const method = useSettingsStore((s) => s.codec.method);
-  const setMethod = (v: number) => useSettingsStore.getState().setCodec({ method: v });
-  const lossless = useSettingsStore((s) => s.codec.lossless);
-  const setLossless = (v: boolean) => useSettingsStore.getState().setCodec({ lossless: v });
+  const { codec: codecSlice } = useStore(settingsStore)
+  const codec = codecSlice.label
+  const q = codecSlice.quality
+  const method = codecSlice.method
+  const lossless = codecSlice.lossless
+  const setCodecLabel = (v: CodecLabel) => setCodec({ label: v })
+  const setQ = (v: number) => setCodec({ quality: v })
+  const setMethod = (v: number) => setCodec({ method: v })
+  const setLossless = (v: boolean) => setCodec({ lossless: v })
 
   const isSvg = codec === 'SVG';
 
@@ -59,7 +61,7 @@ export function CodecPanel(props: CodecPanelProps) {
       <Section title="Output format">
         <div className="seg-sm" style={{ marginBottom: 8 }}>
           {CODECS.map((c) => (
-            <button key={c} className={codec === c ? 'on' : ''} onClick={() => setCodec(c)}>
+            <button key={c} className={codec === c ? 'on' : ''} onClick={() => setCodecLabel(c)}>
               {c}
             </button>
           ))}

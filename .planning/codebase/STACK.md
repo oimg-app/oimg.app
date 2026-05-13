@@ -1,112 +1,97 @@
 # Technology Stack
 
-**Analysis Date:** 2026-05-07
+**Analysis Date:** 2026-05-12
 
 ## Languages
 
 **Primary:**
 - TypeScript 5.9 — all source files under `src/`
-- CSS (CSS Modules + Tailwind v4) — component-scoped styles in `*.module.css`
 
 **Secondary:**
-- JavaScript — `scripts/ensure-rollup-binding.mjs` (postinstall helper)
+- CSS (CSS Modules) — co-located `*.module.css` files per component, plus `src/index.css` and `src/styles/`
 
 ## Runtime
 
 **Environment:**
-- Browser (no Node.js server) — 100% client-side, zero-server
-- Requires: WebAssembly + Web Workers + crossOriginIsolated (COOP/COEP headers)
+- Browser-only (no Node server). Requires `crossOriginIsolated = true` for SharedArrayBuffer / threaded WASM; COOP + COEP headers set in `vite.config.ts` dev server and must be replicated on Cloudflare Pages.
 
 **Package Manager:**
-- npm — `package-lock.json` present (lockfile committed)
+- npm — `package-lock.json` present (committed)
 
 ## Frameworks
 
 **Core:**
-- React 19.2 — UI framework; `StrictMode` wrapper in `src/main.tsx`
-- Vite 7.3 — build and dev server; `vite.config.ts` at repo root
+- React 19.2 — UI layer; `useTransition` / `useDeferredValue` available for non-blocking codec work
+- Vite 7.3 — dev server + build (ES module workers via `worker: { format: 'es' }`); path alias `@` → `src/`
 
-**UI Components:**
-- `@base-ui/react` ^1.4.1 — accessible primitives (Popover, Slider, Tooltip, Seg, Toggle, Switch)
-- 'components.json' - shadcn components 
+**UI Primitives:**
+- `@base-ui/react` ^1.4.1 — headless Popover, Tooltip, Slider, Toggle, Seg components in `src/components/ui/`
 - `lucide-react` ^0.468.0 — icon set
+- `next-themes` ^0.4.6 — theme (dark/light) switching
+- `tw-animate-css` ^1.4.0 — animation utilities
 
 **Styling:**
-- Tailwind CSS 4.1 (via `@tailwindcss/vite` plugin) — utility classes
-- CSS Modules — co-located `*.module.css` files for shell components
-- `class-variance-authority` ^0.7.1 + `clsx` ^2.1.1 + `tailwind-merge` ^2.6.1 — variant/conditional class helpers
-- `tw-animate-css` ^1.4.0 — Tailwind animation utilities
-
-**Testing:**
-- Playwright 1.59.1 — E2E and integration tests (`*.spec.ts` in `src/tests/`)
-- Node `--experimental-strip-types` — runs unit/logic `.test.ts` files directly (no Jest/Vitest)
+- Tailwind CSS 4.1 (via `@tailwindcss/vite` plugin) + CSS Modules per component
+- `clsx` + `tailwind-merge` + `class-variance-authority` — className composition utilities
+- Fonts: `@fontsource-variable/inter`, `@fontsource-variable/jetbrains-mono`, `@fontsource-variable/geist`
 
 **Build/Dev:**
 - `@vitejs/plugin-react` ^5.2 — React Fast Refresh
-- `typescript` ^5.9 — `tsc -b && vite build`
-- Vite workers configured as ES modules (`worker.format: 'es'`)
+- TypeScript compiler (`tsc -b`) runs before `vite build`
+- `shadcn` ^4.6.0 (devDep) — component scaffolding CLI; config at `components.json`
 
 ## Key Dependencies
 
-**Critical:**
+**WASM Codecs (jSquash):**
+- `@jsquash/jpeg` ^1.6.0 — MozJPEG encode/decode; the JPEG package IS MozJPEG (no separate `@jsquash/mozjpeg`); adapter at `src/workers/jpeg-adapter.ts`
+- `@jsquash/webp` ^1.5.0 — libwebp encode/decode; adapter at `src/workers/webp-adapter.ts`
+- `@jsquash/avif` ^2.1.1 — libavif encode/decode; ~8.4 MB unpacked; lazy-loaded only when user picks AVIF; adapter at `src/workers/avif-adapter.ts`
+- `@jsquash/png` ^3.1.1 — rust-png decode (feeds into oxipng resize pipeline); adapter at `src/workers/png-adapter.ts`
+- `@jsquash/oxipng` ^2.3.0 — OxiPNG lossless optimizer; encode-only; input must be PNG bytes, NOT ImageData; lazy-loaded inside `png-adapter.ts`
+- `@jsquash/resize` ^2.1.1 — hqx/lanczos3/mitchell/catrom resize for density variants
 
-| Package | Version | Purpose |
-|---------|---------|---------|
-| `zustand` | ^5.0.12 | Global state — three sliced stores: files, settings, runtime |
-| `comlink` | ^4.4.2 | Worker proxy — wraps `postMessage` in Promise/proxy API |
-| `svgo` | ^4.0.1 | SVG optimizer — browser ESM build (`svgo/browser`) |
-| `dompurify` | ^3.4.2 | SVG XSS sanitization — main-thread only (requires `document`) |
-| `@jsquash/png` | ^3.1.1 | PNG decode + encode (WASM, inside worker) |
-| `@jsquash/resize` | ^2.1.1 | Image resize (WASM, inside worker — lanczos3/mitchell/catrom/triangle) |
-| `sonner` | ^2.0.7 | Toast notifications — `toast.promise()` for async flows |
+**SVG:**
+- `svgo` ^4.0.1 — SVG optimizer; imported as `svgo/browser` ESM build inside the worker (`src/workers/svg-adapter.ts`); pre-bundled via `optimizeDeps.include`
+- `dompurify` ^3.4.2 — XSS sanitization post-SVGO; requires `document`, runs on main thread only (`src/lib/sanitize-svg.ts`); pre-bundled via `optimizeDeps.include`
 
-**Infrastructure:**
+**State:**
+- `zustand` ^5.0.12 with `subscribeWithSelector` middleware — three sliced stores exported from `src/stores/`
 
-| Package | Version | Purpose |
-|---------|---------|---------|
-| `next-themes` | ^0.4.6 | Dark/light theme management |
-| `@fontsource-variable/inter` | ^5.2.8 | Inter variable font |
-| `@fontsource-variable/jetbrains-mono` | ^5.2.8 | JetBrains Mono variable font |
-| `@fontsource-variable/geist` | ^5.2.8 | Geist variable font |
-| `shadcn` | ^4.6.0 (devDep) | UI component scaffold CLI |
+**Worker Communication:**
+- `comlink` ^4.4.2 — wraps `postMessage` in Promise/proxy API; pool singleton at `src/workers/pool.ts`
 
-**Not yet in use (planned):**
-- `@jsquash/jpeg` — JPEG encoding (Phase 5)
-- `@jsquash/webp` — WebP encoding (Phase 5)
-- `@jsquash/avif` — AVIF encoding (Phase 5+, lazy-load only)
-- `@jsquash/oxipng` — OxiPNG optimization (Phase 5)
-- `jszip` — batch ZIP export (Phase 5+)
+**Toasts:**
+- `sonner` ^2.0.7 — promise-aware toast notifications; component at `src/components/ui/sonner.tsx`
+
+**Testing:**
+- `@playwright/test` ^1.59.1 — all tests (e2e + integration + unit-style) in `src/tests/`; config at `playwright.config.ts`
+
+**Misc:**
+- `@rollup/rollup-darwin-arm64`, `@rollup/rollup-darwin-x64` — optional native Rollup bindings
+- `scripts/ensure-rollup-binding.mjs` — postinstall hook ensures correct native Rollup binding
 
 ## Configuration
 
 **Environment:**
-- No `.env` file required for local dev — all processing is client-side
-- `crossOriginIsolated` required at runtime; dev server sets COOP/COEP headers in `vite.config.ts`
-- `import.meta.env.DEV` gates test affordances (e.g. `__OIMG_SLOW_MS__`)
-
-**Path Alias:**
-- `@` → `src/` (configured in `vite.config.ts` via `resolve.alias`)
+- No `.env` secrets files — zero-server, zero-telemetry design
+- COOP/COEP headers required at hosting: `Cross-Origin-Opener-Policy: same-origin`, `Cross-Origin-Embedder-Policy: require-corp`
+- `crossOriginIsolated` check in `src/main.tsx` logs error on startup if headers missing
 
 **Build:**
-- `tsconfig.json` at repo root; `tsc -b && vite build`
-- Workers build as ES modules (`worker.format: 'es'` in `vite.config.ts`)
-- `optimizeDeps.include: ['svgo/browser', 'dompurify']` for dev pre-bundling
-
-**Postinstall:**
-- `scripts/ensure-rollup-binding.mjs` — ensures correct Rollup native binding on Darwin x64
+- `vite.config.ts` — plugins, `worker: { format: 'es' }`, `@` alias, `optimizeDeps.include: ['svgo/browser', 'dompurify']`
+- `tsconfig.json`, `tsconfig.app.json`, `tsconfig.node.json` — TypeScript project references
+- `components.json` — shadcn CLI component configuration
 
 ## Platform Requirements
 
 **Development:**
-- Node.js (for Vite dev server and build)
-- Chrome required for Playwright tests (Chromium only in `playwright.config.ts`)
-- `crossOriginIsolated = true` required for codec workers
+- Node.js (for Vite + TypeScript tooling)
+- macOS arm64 or x64 — Rollup optional native bindings declared
 
 **Production:**
-- Cloudflare Pages — free tier, edge CDN
-- Must serve COOP (`same-origin`) + COEP (`require-corp`) headers for SharedArrayBuffer/worker support
-- Target: modern browsers (Chrome, Firefox, Safari, Edge — last 2 stable)
+- Cloudflare Pages — static CDN; must set COOP/COEP response headers
+- No server-side runtime — 100% static bundle
 
 ---
 
-*Stack analysis: 2026-05-07*
+*Stack analysis: 2026-05-12*

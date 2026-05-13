@@ -16,7 +16,8 @@ import { Section } from '@/components/ui/Section';
 import { Toggle } from '@/components/ui/Toggle';
 import { Seg } from '@/components/ui/Seg';
 import { TargetDensityCheckboxes } from '@/components/file-row/TargetDensityCheckboxes';
-import { useSettingsStore } from '@/stores/settings';
+import { useStore } from '@nanostores/react'
+import { settingsStore, setResize, setGlobal } from '@/stores/settings';
 import { RESIZE_ALG } from '@/data/defaults';
 import type { ResizeAlg } from '@/types';
 
@@ -38,9 +39,9 @@ const helperStyle = {
  * are a no-op but the global-config UX should be consistent).
  */
 export function TweaksResizeSection() {
-  const alg = useSettingsStore((s) => s.resize.alg);
-  const setAlg = (next: ResizeAlg) =>
-    useSettingsStore.getState().setResize({ alg: next });
+  const { resize } = useStore(settingsStore)
+  const alg = resize.alg
+  const setAlg = (next: ResizeAlg) => setResize({ alg: next })
   return (
     <Section title="Resize / Variants">
       <div
@@ -100,12 +101,11 @@ export function TweaksResizeSection() {
  * Inter regular, 1.45 line-height, var(--fg-2) color (UI-SPEC §Surface 9).
  */
 export function TweaksPrivacySection() {
-  const stripMetadata = useSettingsStore((s) => s.global.stripMetadata);
-  const setStripMetadata = (v: boolean) =>
-    useSettingsStore.getState().setGlobal({ stripMetadata: v });
-  const preserveIcc = useSettingsStore((s) => s.global.preserveIccProfile);
-  const setPreserveIcc = (v: boolean) =>
-    useSettingsStore.getState().setGlobal({ preserveIccProfile: v });
+  const { global: globalSettings } = useStore(settingsStore)
+  const stripMetadata = globalSettings.stripMetadata
+  const preserveIcc = globalSettings.preserveIccProfile
+  const setStripMetadata = (v: boolean) => setGlobal({ stripMetadata: v })
+  const setPreserveIcc = (v: boolean) => setGlobal({ preserveIccProfile: v })
   return (
     <Section title="Privacy / Metadata">
       <div

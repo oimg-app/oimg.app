@@ -1,80 +1,43 @@
 # External Integrations
 
-**Analysis Date:** 2026-05-07
+**Analysis Date:** 2026-05-12
 
 ## APIs & External Services
 
-This app is intentionally zero-server and zero-telemetry. **No external API calls are made at runtime.** All processing is client-side. The integrations below are build-time or codec-level WASM bundles, not network APIs.
+**None** — oimg.app is 100% client-side. No external API calls, no analytics, no remote feature flags, no error tracking SaaS. Non-negotiable privacy constraint.
 
 ## Data Storage
 
 **Databases:**
-- None in production — all state is in-memory (Zustand stores)
-- Persistence: Phase 7 deferred — `IndexedDB` + `idb-keyval` planned for named presets
+- None (in-memory only). Phase 7 plans IndexedDB persistence via `idb-keyval` (not yet implemented). Zustand stores are in-memory and reset on page reload.
 
 **File Storage:**
-- Browser `Blob` + `URL.createObjectURL()` — object URL cache managed in `src/stores/runtime.ts` (`urlCache: Map<string, string>`)
-- No cloud storage; files never leave the browser
+- Browser Object URLs (`URL.createObjectURL`) — managed via `useRuntimeStore.urlCache` (`src/stores/runtime.ts`). Revoked on file removal via `revokeObjectURL`.
+- ZIP output — generated in-browser via jszip (not yet fully wired; planned for batch download).
 
 **Caching:**
-- Object URL cache: `useRuntimeStore.urlCache` (Map, in-memory, lifecycle-managed per file)
-- No service worker / browser cache layer for file data
+- None (no service worker, no HTTP cache layer beyond Cloudflare CDN for static assets).
 
 ## Authentication & Identity
 
 **Auth Provider:**
-- None — no login, no accounts, no user identity
-
-## Codec Libraries (WASM, bundled)
-
-These run entirely inside Web Workers — no network calls, no remote endpoints.
-
-**Active (Phase 1–4):**
-- `svgo` ^4.0.1 — SVG optimization, browser ESM build (`svgo/browser`), runs in worker
-  - Import: `import { optimize } from 'svgo/browser'` in `src/workers/svg-adapter.ts`
-- `@jsquash/png` ^3.1.1 — PNG decode + encode (WASM), runs in worker
-  - Import: `import { decode, encode } from '@jsquash/png'` in `src/workers/png-adapter.ts`
-- `@jsquash/resize` ^2.1.1 — ImageData resize (WASM), runs in worker
-  - Import: `import resize from '@jsquash/resize'` in `src/workers/png-adapter.ts`
-- `dompurify` ^3.4.2 — SVG XSS sanitization, runs on **main thread** only
-  - Import: `import DOMPurify from 'dompurify'` in `src/lib/sanitize-svg.ts`
-
-**Planned (Phase 5+):**
-- `@jsquash/jpeg` — JPEG encode/decode (MozJPEG-based) — Phase 5
-- `@jsquash/webp` — WebP encode/decode — Phase 5
-- `@jsquash/avif` — AVIF encode/decode — Phase 5+ (lazy-load only, ~2 MB gzipped)
-- `@jsquash/oxipng` — OxiPNG lossless optimization — Phase 5
+- None — no user accounts, no login.
 
 ## Monitoring & Observability
 
 **Error Tracking:**
-- None — no Sentry, no Datadog, no remote error reporting (privacy non-negotiable)
-
-**Analytics:**
-- None — zero telemetry, by design
+- None (zero-telemetry by design). Errors log to `console.error` only (e.g., `[startOptimize]`, `[enqueuePreview]` prefixed messages in `src/hooks/useBatchOrchestrate.ts`).
 
 **Logs:**
-- `console.error` only, in adapter error paths and `enqueuePreview` catch blocks
-- Dev-only: `crossOriginIsolated` check in `src/main.tsx` logs a warning if COOP/COEP missing
+- `console.error` / `console.warn` in dev; silent in production paths.
 
 ## CI/CD & Deployment
 
 **Hosting:**
-- Cloudflare Pages — free tier, edge CDN, custom domain `oimg.app`
-- Requires COOP/COEP headers (`same-origin` / `require-corp`) for SharedArrayBuffer
-- CI configuration: not found in repository root (Cloudflare Pages auto-deploys from git)
+- Cloudflare Pages — static CDN with WASM-friendly headers. COOP/COEP response headers must be configured at the Pages project level.
 
 **CI Pipeline:**
-- No `.github/workflows/` CI config in the main source tree
-- Playwright tests run locally; `npm test` launches the dev server then runs specs
-
-## Environment Configuration
-
-**Required env vars:**
-- None — zero-server app has no backend secrets
-
-**Secrets location:**
-- None — no secrets, no credentials, no API keys
+- Not detected (no `.github/workflows/` in the application repo; `inspired/squoosh/` submodule has its own workflows but is reference material only).
 
 ## Webhooks & Callbacks
 
@@ -84,17 +47,41 @@ These run entirely inside Web Workers — no network calls, no remote endpoints.
 **Outgoing:**
 - None
 
-## Browser APIs Used (key platform integrations)
+## WASM Codec Loading
 
-- `Worker` / `URL.createObjectURL(new URL(..., import.meta.url))` — Web Workers
-- `Comlink` — postMessage proxy (`src/workers/pool.ts`)
-- `navigator.hardwareConcurrency` — pool size (capped at 4)
-- `navigator.deviceMemory` — memory budget (`src/lib/memory-budget.ts`)
-- `crypto.randomUUID()` — stable file IDs
-- `URL.createObjectURL` / `URL.revokeObjectURL` — thumbnail/preview URLs
-- `crossOriginIsolated` — guards codec worker startup check in `src/main.tsx`
-- `AbortController` / `AbortSignal` — batch cancel signaling in `WorkerPool`
+**Pattern:** Lazy dynamic import inside the worker, not at module init.
+
+- `avif-adapter.ts` — `import('@jsquash/avif')` on first use (lazy, ~2 MB gzipped; only when user picks AVIF)
+- `oxipng` inside `png-adapter.ts` — `import('@jsquash/oxipng')` on first use via `getOxipng()` helper
+- All other codecs (`jpeg`, `webp`, `png`, `resize`) — imported at top of their adapter modules; still isolated inside the worker bundle
+
+**Worker spawn pattern** (`src/workers/pool.ts`):
+```typescript
+new Worker(new URL('./worker.ts', import.meta.url), { type: 'module' })
+```
+Static literal path so Vite can statically analyze and code-split.
+
+## Environment Configuration
+
+**Required browser capabilities:**
+- `crossOriginIsolated === true` (COOP + COEP headers)
+- WebAssembly support
+- Web Workers (module type)
+- `URL.createObjectURL` / `URL.revokeObjectURL`
+- `crypto.randomUUID`
+
+**Feature detection** (inline, no external lib):
+```typescript
+if (!crossOriginIsolated) { console.error(...) } // src/main.tsx
+```
+
+## Font Loading
+
+- `@fontsource-variable/inter` — Inter Variable, imported in `src/main.tsx`
+- `@fontsource-variable/jetbrains-mono` — JetBrains Mono Variable, imported in `src/main.tsx`
+- `@fontsource-variable/geist` — Geist Variable (available, not imported in main.tsx yet)
+- All fonts are bundled as npm packages — no external CDN calls
 
 ---
 
-*Integration audit: 2026-05-07*
+*Integration audit: 2026-05-12*

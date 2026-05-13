@@ -1,15 +1,10 @@
 // Phase 2 — Settings store (codec configs + global settings + preset stub).
 // Source: 02-CONTEXT.md D-07; 02-PATTERNS.md lines 206-242.
 // Persistent in spirit (Phase 7 wires IndexedDB).
-//
-// Phase 3 plan 03-B — added snippetTogglesByFileId (D-13: per-file
-// per-snippet enable/disable). The Plan A `setSvg` action already accepts
-// partial CodecSettingsSvg so it covers `unsafeExport` + `pluginSavings`
-// updates without further changes here.
+// Migrated from zustand to nanostores.
 
-import { create } from 'zustand'
+import { map } from 'nanostores'
 import { toast } from 'sonner'
-import { subscribeWithSelector } from 'zustand/middleware'
 import type {
   CodecSettingsSvg,
   CodecSettingsPng,
@@ -32,112 +27,114 @@ import {
 
 export type View = 'Batch' | 'Compare' | 'Report'
 
-// Phase 10 plan 10-01 — store-local codec slice. Phase 5 raster encoders
-// read useSettingsStore.getState().codec to avoid prop-drilling.
+// Phase 10 plan 10-01 — store-local codec slice.
 interface CodecSlice {
-  label: CodecLabel   // default: 'WebP'
-  quality: number     // default: 82
-  method: number      // default: 4
-  lossless: boolean   // default: false
+  label: CodecLabel
+  quality: number
+  method: number
+  lossless: boolean
 }
 
-interface SettingsState {
-    commandPaletteOpen: boolean
-    views: View[]
-    view: View
+export interface SettingsData {
+  commandPaletteOpen: boolean
+  views: View[]
+  view: View
   svg: CodecSettingsSvg
   png: CodecSettingsPng
   jpeg: CodecSettingsJpeg
   webp: CodecSettingsWebp
   avif: CodecSettingsAvif
   global: GlobalSettings
-  // Phase 3 (D-13) — per-file per-snippet enable/disable. Plan C reads this
-  // in SnippetPanel; Plan B introduces the slot so the store contract is
-  // stable when snippet rendering lands.
   snippetTogglesByFileId: Record<string, Record<string, boolean>>
-  // Phase 4 D-05 + D-06 — global resize algorithm (TweaksPanel "Resize /
-  // Variants" section). Per-file override lives on FileEntry.resizeOverride
-  // (Plan 04-01 added field; UI deferred to Phase 5 detail view per D-07).
   resize: { alg: ResizeAlg }
-  // Phase 10 plan 10-01 — active codec + quality/method/lossless. Phase 5
-  // raster encoders read this to know which codec to target.
   codec: CodecSlice
-  // Phase 5 D-02 — per-file codec overrides keyed by FileEntry.id.
-  // CRITICAL: codec panel components MUST call setPerFileCodec(fileId, patch),
-  // NOT the global setSvg/setPng/setJpeg/setWebp/setAvif. Writing to global
-  // slices triggers full-batch re-optimize for all files (Pitfall 4 — RESEARCH.md).
-  // Resolution order: perFile[fileId] ?? globalFormatSlice.
   perFile: Record<string, Partial<CodecSettingsPng | CodecSettingsJpeg | CodecSettingsWebp | CodecSettingsAvif>>
-  setPerFileCodec: (fileId: string, patch: Partial<CodecSettingsPng | CodecSettingsJpeg | CodecSettingsWebp | CodecSettingsAvif>) => void
-  clearPerFile: (fileId: string) => void
-
-  setSvg: (next: Partial<CodecSettingsSvg>) => void
-  setPng: (next: Partial<CodecSettingsPng>) => void
-  setJpeg: (next: Partial<CodecSettingsJpeg>) => void
-  setWebp: (next: Partial<CodecSettingsWebp>) => void
-  setAvif: (next: Partial<CodecSettingsAvif>) => void
-  setGlobal: (next: Partial<GlobalSettings>) => void
-  setSnippetToggle: (fileId: string, snippetId: string, value: boolean) => void
-  setResize: (next: Partial<{ alg: ResizeAlg }>) => void
-  setCodec: (patch: Partial<CodecSlice>) => void
-    setView: (next: View) => void
-    setCommandPaletteOpen: (open: boolean) => void
 }
 
-export const useSettingsStore = create<SettingsState>()(
-  subscribeWithSelector((set) => ({
-    svg: DEFAULT_CODEC_SVG,
-    png: DEFAULT_CODEC_PNG,
-    jpeg: DEFAULT_CODEC_JPEG,
-    webp: DEFAULT_CODEC_WEBP,
-    avif: DEFAULT_CODEC_AVIF,
-    global: DEFAULT_GLOBAL_SETTINGS,
-    snippetTogglesByFileId: {},
-    resize: DEFAULT_RESIZE_SETTINGS,
-    codec: { label: 'WebP', quality: 82, method: 4, lossless: false },
-    perFile: {},
-      commandPaletteOpen: false,
-      views: ['Batch', 'Compare', 'Report'] as View[],
-      view: 'Batch',
+export const settingsStore = map<SettingsData>({
+  commandPaletteOpen: false,
+  views: ['Batch', 'Compare', 'Report'] as View[],
+  view: 'Batch',
+  svg: DEFAULT_CODEC_SVG,
+  png: DEFAULT_CODEC_PNG,
+  jpeg: DEFAULT_CODEC_JPEG,
+  webp: DEFAULT_CODEC_WEBP,
+  avif: DEFAULT_CODEC_AVIF,
+  global: DEFAULT_GLOBAL_SETTINGS,
+  snippetTogglesByFileId: {},
+  resize: DEFAULT_RESIZE_SETTINGS,
+  codec: { label: 'WebP', quality: 82, method: 4, lossless: false },
+  perFile: {},
+})
 
-      setView: (view: View) => set({ view }),
+// ─── Actions ─────────────────────────────────────────────────────────────────
 
-      setCommandPaletteOpen: (open: boolean) => set({ commandPaletteOpen: open }),
+export function setView(view: View) {
+  settingsStore.setKey('view', view)
+}
 
-    setSvg: (next) => set((s) => ({ svg: { ...s.svg, ...next } })),
-    setPng: (next) => set((s) => ({ png: { ...s.png, ...next } })),
-    setJpeg: (next) => set((s) => ({ jpeg: { ...s.jpeg, ...next } })),
-    setWebp: (next) => set((s) => ({ webp: { ...s.webp, ...next } })),
-    setAvif: (next) => set((s) => ({ avif: { ...s.avif, ...next } })),
-    setGlobal: (next) => set((s) => ({ global: { ...s.global, ...next } })),
-    setSnippetToggle: (fileId, snippetId, value) =>
-      set((s) => ({
-        snippetTogglesByFileId: {
-          ...s.snippetTogglesByFileId,
-          [fileId]: {
-            ...s.snippetTogglesByFileId[fileId],
-            [snippetId]: value,
-          },
-        },
-      })),
-    setResize: (next) => set((s) => ({ resize: { ...s.resize, ...next } })),
-    setCodec: (patch) => {
-        toast.info(`Output set to ${patch.label}`)
-        set((s) => ({ codec: { ...s.codec, ...patch } }))
+export function setCommandPaletteOpen(open: boolean) {
+  settingsStore.setKey('commandPaletteOpen', open)
+}
 
+export function setSvg(next: Partial<CodecSettingsSvg>) {
+  settingsStore.setKey('svg', { ...settingsStore.get().svg, ...next })
+}
+
+export function setPng(next: Partial<CodecSettingsPng>) {
+  settingsStore.setKey('png', { ...settingsStore.get().png, ...next })
+}
+
+export function setJpeg(next: Partial<CodecSettingsJpeg>) {
+  settingsStore.setKey('jpeg', { ...settingsStore.get().jpeg, ...next })
+}
+
+export function setWebp(next: Partial<CodecSettingsWebp>) {
+  settingsStore.setKey('webp', { ...settingsStore.get().webp, ...next })
+}
+
+export function setAvif(next: Partial<CodecSettingsAvif>) {
+  settingsStore.setKey('avif', { ...settingsStore.get().avif, ...next })
+}
+
+export function setGlobal(next: Partial<GlobalSettings>) {
+  settingsStore.setKey('global', { ...settingsStore.get().global, ...next })
+}
+
+export function setSnippetToggle(fileId: string, snippetId: string, value: boolean) {
+  const s = settingsStore.get()
+  settingsStore.setKey('snippetTogglesByFileId', {
+    ...s.snippetTogglesByFileId,
+    [fileId]: {
+      ...s.snippetTogglesByFileId[fileId],
+      [snippetId]: value,
     },
-    setPerFileCodec: (fileId, patch) =>
-      set((s) => ({
-        perFile: {
-          ...s.perFile,
-          [fileId]: { ...s.perFile[fileId], ...patch },
-        },
-      })),
-    clearPerFile: (fileId) =>
-      set((s) => {
-        const next = { ...s.perFile }
-        delete next[fileId]
-        return { perFile: next }
-      }),
-  })),
-)
+  })
+}
+
+export function setResize(next: Partial<{ alg: ResizeAlg }>) {
+  settingsStore.setKey('resize', { ...settingsStore.get().resize, ...next })
+}
+
+export function setCodec(patch: Partial<CodecSlice>) {
+  toast.info(`Output set to ${patch.label}`)
+  settingsStore.setKey('codec', { ...settingsStore.get().codec, ...patch })
+}
+
+export function setPerFileCodec(
+  fileId: string,
+  patch: Partial<CodecSettingsPng | CodecSettingsJpeg | CodecSettingsWebp | CodecSettingsAvif>,
+) {
+  const s = settingsStore.get()
+  settingsStore.setKey('perFile', {
+    ...s.perFile,
+    [fileId]: { ...s.perFile[fileId], ...patch },
+  })
+}
+
+export function clearPerFile(fileId: string) {
+  const s = settingsStore.get()
+  const next = { ...s.perFile }
+  delete next[fileId]
+  settingsStore.setKey('perFile', next)
+}

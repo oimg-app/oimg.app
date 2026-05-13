@@ -1,9 +1,9 @@
 import { useMemo } from 'react'
-import { useFilesStore } from '@/stores'
+import { useStore } from '@nanostores/react'
+import { filesStore } from '@/stores'
 
 export function useTotals() {
-  const filesById = useFilesStore((s) => s.byId)
-  const filesOrder = useFilesStore((s) => s.order)
+  const { byId: filesById, order: filesOrder } = useStore(filesStore)
 
   const totals = useMemo(() => {
     const entries = filesOrder.map((id) => filesById[id]).filter(Boolean)

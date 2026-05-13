@@ -9,11 +9,12 @@
 //         WR-04 clipboard pattern (await writeText → copied 1100ms → reset)
 
 import { useEffect, useRef, useState } from 'react'
+import { useStore } from '@nanostores/react'
 import { toast } from 'sonner'
 import { Section } from '@/components/ui/Section'
 import { Icons } from '@/components/icons'
 import { SNIPPET_REGISTRY } from '@/lib/snippet-registry'
-import { useSettingsStore } from '@/stores/settings'
+import { settingsStore, setSnippetToggle } from '@/stores/settings'
 import type { FileEntryWithBlob } from '@/stores/files'
 
 interface SnippetPanelProps {
@@ -23,15 +24,13 @@ interface SnippetPanelProps {
 type CopyKey = string | null
 
 // Stable empty map used as the fallback when the selected file has no
-// per-snippet toggle overrides yet — see the Rule 1 fix below.
+// per-snippet toggle overrides yet.
 const EMPTY_TOGGLES: Record<string, boolean> = {}
 
 export function SnippetPanel({ file }: SnippetPanelProps) {
   const [copied, setCopied] = useState<CopyKey>(null)
   const [svgText, setSvgText] = useState<string | null>(null)
-  // WR-04: track the copy-feedback reset timer so a quick file switch
-  // (which unmounts/remounts SnippetPanel under a different file?.id)
-  // does not leave a dangling setTimeout that fires after unmount.
+  // WR-04: track the copy-feedback reset timer.
   const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   useEffect(
     () => () => {
@@ -43,22 +42,12 @@ export function SnippetPanel({ file }: SnippetPanelProps) {
     [],
   )
 
-  // Plan 03-D fix (Rule 1) — selector previously returned a fresh `{}` literal
-  // on each render whenever the file had no toggles persisted yet, which
-  // tripped React 19's getSnapshot caching guard ("The result of getSnapshot
-  // should be cached to avoid an infinite loop") and crashed the panel with
-  // "Maximum update depth exceeded" the moment the SVG pipeline E2E specs
-  // selected the SnippetPanel tab. Hoist the selector to the parent record
-  // (a stable reference between renders) and derive the file-specific entry
-  // outside zustand so the selector cache is valid.
-  const togglesByFile = useSettingsStore((s) => s.snippetTogglesByFileId)
-  const snippetToggles = file ? (togglesByFile[file.id] ?? EMPTY_TOGGLES) : EMPTY_TOGGLES
-  const setSnippetToggle = useSettingsStore((s) => s.setSnippetToggle)
+  // Hoist selector to parent record (stable reference) — avoids infinite loop
+  // from getSnapshot returning fresh {} literals (Rule 1 fix from Plan 03-D).
+  const { snippetTogglesByFileId } = useStore(settingsStore)
+  const snippetToggles = file ? (snippetTogglesByFileId[file.id] ?? EMPTY_TOGGLES) : EMPTY_TOGGLES
 
   // Read the optimizedBlob as text when the selected file or its blob changes.
-  // Per Plan A (D-04), optimizedBlob is the sanitized blob — single source of
-  // truth for snippet generation. Threat T-V5-07 mitigation: SnippetPanel does
-  // NOT re-sanitize; it consumes the already-clean blob.
   useEffect(() => {
     if (!file || !file.optimizedBlob || file.status !== 'done') {
       setSvgText(null)
@@ -69,12 +58,6 @@ export function SnippetPanel({ file }: SnippetPanelProps) {
       (text) => {
         if (!cancelled) setSvgText(text)
       },
-      // WR-03: Blob.text() can reject (e.g. detached source from a
-      // transferred ArrayBuffer in some browser builds, or AbortError on
-      // platforms that support cancellation). Surface to the console for
-      // dev visibility and clear svgText so the panel falls back to its
-      // "Run Optimize to generate snippet" empty state instead of staying
-      // permanently null with no diagnostic trail.
       (err) => {
         if (cancelled) return
         console.error('[SnippetPanel] blob.text failed:', err)
@@ -86,9 +69,7 @@ export function SnippetPanel({ file }: SnippetPanelProps) {
     }
   }, [file?.id, file?.optimizedBlob, file?.status])
 
-  // WR-04 clipboard copy pattern — verbatim from former OutputPanel.tsx.
-  // Do NOT flip to "copied" until the clipboard write actually resolves.
-  // On failure, surface a sonner toast so the user knows to retry.
+  // WR-04 clipboard copy pattern.
   const copy = async (key: string, text: string) => {
     if (!navigator.clipboard?.writeText) {
       toast.error('Clipboard unavailable')
@@ -97,9 +78,6 @@ export function SnippetPanel({ file }: SnippetPanelProps) {
     try {
       await navigator.clipboard.writeText(text)
       setCopied(key)
-      // WR-04: clear any pending reset before scheduling a new one — a
-      // rapid double-copy or file switch would otherwise leak the prior
-      // timer into the new mount lifecycle.
       if (copyTimerRef.current !== null) clearTimeout(copyTimerRef.current)
       copyTimerRef.current = setTimeout(() => {
         copyTimerRef.current = null
@@ -112,7 +90,6 @@ export function SnippetPanel({ file }: SnippetPanelProps) {
 
   if (!file) return null
 
-  // Filter by format using the registry — NEVER switch(file.format).
   const visibleSnippets = Object.values(SNIPPET_REGISTRY).filter((def) =>
     def.applicableFormats.includes(file.format),
   )
@@ -125,11 +102,10 @@ export function SnippetPanel({ file }: SnippetPanelProps) {
         const isEnabled = snippetToggles[def.id] ?? true
         const snippetText = def.generate(svgText)
 
-        // Determine the snippet body content based on file status (UI-SPEC §SnippetPanel).
         let codeContent: string
         let copyDisabled = false
         if (!isEnabled) {
-          codeContent = '' // collapsed section — body replaced by "Disabled" message below
+          codeContent = ''
         } else if (file.status === 'queued' || file.status === 'processing') {
           codeContent = '// Run Optimize to generate snippet'
           copyDisabled = true

@@ -4,7 +4,7 @@
 // through useBatchOrchestrate. App.tsx will call this hook directly.
 
 import { useEffect } from 'react'
-import { useRuntimeStore } from '@/stores'
+import { runtimeStore } from '@/stores'
 
 interface UseKeyboardShortcutsParams {
   startOptimize: () => void
@@ -35,7 +35,7 @@ export function useKeyboardShortcuts({
       } else if ((e.metaKey || e.ctrlKey) && e.key === 'Enter' && !isInput) {
         e.preventDefault()
         startOptimize()
-      } else if ((e.metaKey || e.ctrlKey) && e.key === '.' && useRuntimeStore.getState().running) {
+      } else if ((e.metaKey || e.ctrlKey) && e.key === '.' && runtimeStore.get().running) {
         e.preventDefault()
         cancelBatch()
       } else if (e.key === '/' && !cmdkOpen) {

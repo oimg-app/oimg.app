@@ -17,10 +17,13 @@ import clsx from 'clsx'
 import { Icons } from '@/components/icons'
 import { Popover } from '@/components/ui/Popover'
 import { Tooltip } from '@/components/ui/Tooltip'
-import {useRuntimeStore, useFilesStore, useSettingsStore} from '@/stores'
+import { useStore } from '@nanostores/react'
+import { runtimeStore, optimizeAll, exportFiles } from '@/stores/runtime'
+import { filesStore } from '@/stores/files'
+import { settingsStore, setView } from '@/stores/settings'
 import s from './toolbar.module.css'
 import {useState} from "react";
-import {ExportType} from "@/stores/runtime.ts";
+import type { ExportType } from "@/stores/runtime.ts";
 import {useTheme} from "@/hooks/useTheme.ts";
 
 export type ToolbarChange = 'from-device' | 'from-url' | 'from-clipboard' | 'file-watcher'
@@ -91,13 +94,12 @@ const AddFilesButton = (props: AddFilesButtonProps) => {
 }
 
 const ExportButton = () => {
-    const runtime = useRuntimeStore()
     const [openKey, setOpen] = useState<string | null>(null)
     const isPopOpen = (key: string) => openKey === key
     const togglePop = (key: string) => setOpen(openKey === key ? null : key)
 
     const onExport = (type: ExportType) => {
-        runtime.export(type)
+        exportFiles(type)
     }
 
     return (
@@ -141,13 +143,12 @@ const ExportButton = () => {
 }
 
 const ViewSegmentedControl = () => {
-    const views = useSettingsStore((s) => s.views)
-    const settings = useSettingsStore()
+    const { views, view } = useStore(settingsStore)
 
     return (
         <div className={s.seg}>
-            {(views).map((v) => (
-                <button key={v} className={settings.view === v ? 'on' : ''} onClick={() => settings.setView(v)}>
+            {views.map((v) => (
+                <button key={v} className={view === v ? 'on' : ''} onClick={() => setView(v)}>
                     {v}
                 </button>
             ))}
@@ -156,10 +157,8 @@ const ViewSegmentedControl = () => {
 }
 
 const WorkersStatus = () => {
-    const running = useRuntimeStore((s) => s.running)
-    const busy = useRuntimeStore((s) => s.inFlight.size)
-    const poolSize = useRuntimeStore((s) => s.poolSize)
-    const errorCount = useRuntimeStore((s) => s.errorCount)
+    const { running, inFlight, poolSize, errorCount } = useStore(runtimeStore)
+    const busy = inFlight.size
 
     // Workers pill copy + ARIA label, per UI-SPEC §1 (lines 109-114).
     const pillCopy = !running && busy === 0 && poolSize > 0
@@ -182,33 +181,29 @@ const WorkersStatus = () => {
 }
 
 const OptimizeButton = () => {
-    // Phase 2 plan 02-04: narrow selectors from runtime store (D-09 convention).
-    const running = useRuntimeStore((s) => s.running)
-    // Optimize button is enabled when there is at least one file in the FILES
-    // store (the source of truth for "is there work to do") — NOT the runtime
-    // queue, which only has entries WHILE a batch is dispatching.
-    const fileCount = useFilesStore((s) => s.order.length)
-    const hasNoFiles = fileCount === 0
-
-    const runtime = useRuntimeStore()
+    const { running } = useStore(runtimeStore)
+    const { order } = useStore(filesStore)
+    const hasNoFiles = order.length === 0
 
     return (
-        <button className={s.tbtn} onClick={runtime.optimizeAll} disabled={running || hasNoFiles}>
+        <button className={s.tbtn} onClick={optimizeAll} disabled={running || hasNoFiles}>
             {running ? <><Icons.Pause size={13}/> Optimizing…</> : <><Icons.Play size={13}/> Optimize all</>}
         </button>
     )
 }
 
 const SearchField = () => {
-    const filesState = useFilesStore()
+    const { filterQuery } = useStore(filesStore)
 
     return (
         <div className={s.search}>
             <Icons.Search size={12}/>
             <input
                 placeholder="Filter files…"
-                value={filesState.filterQuery}
-                onChange={(e) => filesState.filterBy(e.target.value)}
+                value={filterQuery}
+                onChange={(e) => {
+                    filesStore.setKey('filterQuery', e.target.value)
+                }}
             />
             <span className="kbd" style={{marginLeft: 4}}>/</span>
         </div>
@@ -219,7 +214,7 @@ const SettingsButton = () => {
     const [openKey, setOpen] = useState<string | null>(null)
     const isPopOpen = (key: string) => openKey === key
     const togglePop = (key: string) => setOpen(openKey === key ? null : key)
-    const poolSize = useRuntimeStore((s) => s.poolSize)
+    const { poolSize } = useStore(runtimeStore)
 
     return (
         <button

@@ -25,7 +25,8 @@ import { cn } from '@/lib/utils'
 import type { CodecLabel } from '@/types'
 import {APP_VERSION, CODECS} from '@/data/defaults'
 import s from './titleBar.module.css'
-import {useSettingsStore} from "@/stores";
+import { useStore } from '@nanostores/react'
+import { settingsStore, setCodec, setView, setCommandPaletteOpen } from '@/stores/settings'
 import {useTheme} from "@/hooks/useTheme.ts";
 
 const MENU_KEYS = {
@@ -52,11 +53,11 @@ const FileMenu = () => {
     onOpenChange: (open: boolean) => onOpenKey(open ? key : null),
   })
 
-  const codec = useSettingsStore((s) => s.codec.label)
-  const settings = useSettingsStore()
+  const { codec: codecSlice, views, view } = useStore(settingsStore)
+  const codec = codecSlice.label
 
   const onSelectCodec = (c: CodecLabel) => {
-    useSettingsStore.getState().setCodec({ label: c });
+    setCodec({ label: c })
   }
 
   return (
@@ -90,11 +91,11 @@ const FileMenu = () => {
         <MenubarMenu {...bindMenu(MENU_KEYS.view)}>
           <MenubarTrigger className={cn(isOpen(MENU_KEYS.view) && 'on')}>View</MenubarTrigger>
           <MenubarContent className="popover">
-            {settings.views.map((v, i) => (
+            {views.map((v, i) => (
                 <MenubarItem
                     key={v}
-                    className={cn('pi check', settings.view === v && 'on')}
-                    onClick={() => settings.setView(v)}
+                    className={cn('pi check', view === v && 'on')}
+                    onClick={() => setView(v)}
                 >
                   {v === 'Batch' && <Icons.Grid size={13} />}
                   {v === 'Compare' && <Icons.Layers size={13} />}
@@ -126,13 +127,11 @@ const FileMenu = () => {
 }
 
 const CommandPaletteButton = () => {
-  const settings = useSettingsStore()
-
   return (
       <button
           className="tbtn ghost"
           style={{height: 22, padding: '0 8px', fontSize: 11}}
-          onClick={() => settings.setCommandPaletteOpen(true)}
+          onClick={() => setCommandPaletteOpen(true)}
           aria-label="Open command palette"
       >
         <Icons.Search size={11}/> <span style={{color: 'var(--fg-2)'}}>Search</span>

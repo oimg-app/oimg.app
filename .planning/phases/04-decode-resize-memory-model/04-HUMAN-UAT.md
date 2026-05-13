@@ -1,14 +1,18 @@
 ---
-status: diagnosed
+status: testing
 phase: 04-decode-resize-memory-model
 source: [04-VERIFICATION.md]
 started: 2026-05-12T00:42:16Z
-updated: 2026-05-12T00:50:00Z
+updated: 2026-05-12T09:00:00Z
 ---
 
 ## Current Test
 
-SC-1 tested and failed — wrong behavior implemented.
+number: 2
+name: SC-2 Memory Budget — 50-file batch under 800 MB peak
+expected: |
+  Drop 50 PNG files simultaneously. Peak JS heap (Chrome DevTools → Memory → Performance) stays below 800 MB. Pool admission gate throttles if it would exceed budget.
+awaiting: user response
 
 ## Tests
 
