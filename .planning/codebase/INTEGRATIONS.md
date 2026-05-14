@@ -1,43 +1,62 @@
 # External Integrations
 
-**Analysis Date:** 2026-05-12
+**Analysis Date:** 2026-05-14
 
 ## APIs & External Services
 
-**None** — oimg.app is 100% client-side. No external API calls, no analytics, no remote feature flags, no error tracking SaaS. Non-negotiable privacy constraint.
+**None.** This application is 100% client-side with zero external API calls at runtime. All processing happens in the browser using WebAssembly. No analytics, no error tracking SaaS, no remote feature flags — non-negotiable by design.
 
 ## Data Storage
 
 **Databases:**
-- None (in-memory only). Phase 7 plans IndexedDB persistence via `idb-keyval` (not yet implemented). Zustand stores are in-memory and reset on page reload.
+- None — no remote database
+- Browser `localStorage` — used by `inspired/version-0/hooks/useTheme.ts` for theme persistence (dark/light preference)
+- IndexedDB — planned for settings persistence (referenced in store comments as "Phase 7 wires IndexedDB"); not yet implemented
 
 **File Storage:**
-- Browser Object URLs (`URL.createObjectURL`) — managed via `useRuntimeStore.urlCache` (`src/stores/runtime.ts`). Revoked on file removal via `revokeObjectURL`.
-- ZIP output — generated in-browser via jszip (not yet fully wired; planned for batch download).
+- Local filesystem only — files are read via browser File API, processed in-memory, and downloaded via browser's native save dialog
+- No cloud storage; no file uploads to any server
 
 **Caching:**
-- None (no service worker, no HTTP cache layer beyond Cloudflare CDN for static assets).
+- None — no service worker, no HTTP cache layer beyond browser defaults
 
 ## Authentication & Identity
 
 **Auth Provider:**
-- None — no user accounts, no login.
+- None — the application requires no login, account, or session
 
 ## Monitoring & Observability
 
 **Error Tracking:**
-- None (zero-telemetry by design). Errors log to `console.error` only (e.g., `[startOptimize]`, `[enqueuePreview]` prefixed messages in `src/hooks/useBatchOrchestrate.ts`).
+- None — intentional; zero telemetry is a core constraint
 
 **Logs:**
-- `console.error` / `console.warn` in dev; silent in production paths.
+- Browser `console` only (development); no log aggregation service
+
+**Analytics:**
+- None — zero-telemetry by design
 
 ## CI/CD & Deployment
 
 **Hosting:**
-- Cloudflare Pages — static CDN with WASM-friendly headers. COOP/COEP response headers must be configured at the Pages project level.
+- Cloudflare Pages — static deployment; custom domain `oimg.app`
+- Required production headers in `public/_headers`:
+  ```
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Embedder-Policy: require-corp
+  ```
+  These headers enable `SharedArrayBuffer` for WASM threading (OxiPNG MT, AVIF MT)
 
 **CI Pipeline:**
-- Not detected (no `.github/workflows/` in the application repo; `inspired/squoosh/` submodule has its own workflows but is reference material only).
+- Not detected — no `.github/workflows/`, `.circleci/`, or similar config in the project root
+
+## Environment Configuration
+
+**Required env vars:**
+- None — the application has no environment variables; confirmed by absence of any `.env*` files and purely client-side architecture
+
+**Secrets location:**
+- Not applicable — no secrets exist in this architecture
 
 ## Webhooks & Callbacks
 
@@ -47,41 +66,21 @@
 **Outgoing:**
 - None
 
-## WASM Codec Loading
+## Browser APIs Used (Internal — Not External Services)
 
-**Pattern:** Lazy dynamic import inside the worker, not at module init.
+These are browser-native capabilities, not third-party services, but are worth noting as integration points:
 
-- `avif-adapter.ts` — `import('@jsquash/avif')` on first use (lazy, ~2 MB gzipped; only when user picks AVIF)
-- `oxipng` inside `png-adapter.ts` — `import('@jsquash/oxipng')` on first use via `getOxipng()` helper
-- All other codecs (`jpeg`, `webp`, `png`, `resize`) — imported at top of their adapter modules; still isolated inside the worker bundle
+- **File System Access API** — `showSaveFilePicker` (with `file-saver` fallback for Safari/Firefox)
+- **Web Workers** — codec processing via `inspired/version-0/workers/worker.ts` and pool in `inspired/version-0/workers/pool.ts`
+- **WebAssembly** — all jSquash codecs (`@jsquash/*`) run as WASM modules inside Web Workers
+- **OffscreenCanvas** — image rendering in worker threads
+- **SharedArrayBuffer** — required for OxiPNG MT and AVIF MT builds; gated behind COOP/COEP headers
+- **Comlink** (`comlink` ^4.4.2) — `postMessage` proxy between main thread and worker pool
 
-**Worker spawn pattern** (`src/workers/pool.ts`):
-```typescript
-new Worker(new URL('./worker.ts', import.meta.url), { type: 'module' })
-```
-Static literal path so Vite can statically analyze and code-split.
+## npm Registry
 
-## Environment Configuration
-
-**Required browser capabilities:**
-- `crossOriginIsolated === true` (COOP + COEP headers)
-- WebAssembly support
-- Web Workers (module type)
-- `URL.createObjectURL` / `URL.revokeObjectURL`
-- `crypto.randomUUID`
-
-**Feature detection** (inline, no external lib):
-```typescript
-if (!crossOriginIsolated) { console.error(...) } // src/main.tsx
-```
-
-## Font Loading
-
-- `@fontsource-variable/inter` — Inter Variable, imported in `src/main.tsx`
-- `@fontsource-variable/jetbrains-mono` — JetBrains Mono Variable, imported in `src/main.tsx`
-- `@fontsource-variable/geist` — Geist Variable (available, not imported in main.tsx yet)
-- All fonts are bundled as npm packages — no external CDN calls
+All packages are sourced from the public npm registry. No private registries, GitHub Packages, or internal package feeds detected.
 
 ---
 
-*Integration audit: 2026-05-12*
+*Integration audit: 2026-05-14*

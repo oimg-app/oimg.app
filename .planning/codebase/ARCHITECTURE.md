@@ -1,44 +1,44 @@
-<!-- refreshed: 2026-05-12 -->
+<!-- refreshed: 2026-05-14 -->
 # Architecture
 
-**Analysis Date:** 2026-05-12
+**Analysis Date:** 2026-05-14
 
 ## System Overview
 
 ```text
 ┌─────────────────────────────────────────────────────────────────────┐
-│                         React UI Layer                              │
-│  AppShell · TitleBar · Toolbar · FilesPane · CenterPane · Inspector │
-│  src/components/shell/  |  src/components/panels/                   │
-└──────────┬──────────────────────────────────────────────────────────┘
-           │ reads/writes
-           ▼
+│                     React UI Layer (main thread)                     │
+│   App.tsx · AppShell · FilesPane · CenterPane · InspectorPane       │
+│   src/App.tsx · src/components/shell/* · src/components/panels/*    │
+└──────┬───────────────┬────────────────────────────┬─────────────────┘
+       │ useStore()    │ dispatch actions            │ useXxx hooks
+       ▼               ▼                             ▼
 ┌─────────────────────────────────────────────────────────────────────┐
-│                       Zustand Stores (3 slices)                     │
-│  useFilesStore (files.ts) · useSettingsStore (settings.ts)          │
-│  useRuntimeStore (runtime.ts)                                        │
-│  src/stores/                                                         │
-└──────────┬──────────────────────────────────────────────────────────┘
-           │ enqueue / callbacks
-           ▼
+│                    Nanostores State Layer                            │
+│   filesStore · settingsStore · runtimeStore                         │
+│   src/stores/files.ts · src/stores/settings.ts · src/stores/runtime.ts │
+└──────┬──────────────────────────────────────────────────────────────┘
+       │ getWorkerPool().enqueue(job)
+       ▼
 ┌─────────────────────────────────────────────────────────────────────┐
-│                  WorkerPool singleton                                │
-│  src/workers/pool.ts                                                 │
-│  Max 4 slots · admission gate (memory budget) · cancel/respawn      │
-└──────────┬──────────────────────────────────────────────────────────┘
-           │ Comlink RPC (ArrayBuffer transfer)
-           ▼
+│               WorkerPool (main thread singleton)                    │
+│   src/workers/pool.ts · WorkerPool class                            │
+│   Comlink.transfer() ──► postMessage to workers                     │
+└──────┬──────────────────────────────────────────────────────────────┘
+       │ Worker.postMessage (Comlink RPC)
+       ▼
 ┌─────────────────────────────────────────────────────────────────────┐
-│               Worker thread(s) — src/workers/worker.ts              │
-│  ADAPTERS map → lazy-import per format                              │
-│  svg-adapter · png-adapter · jpeg-adapter · webp-adapter            │
-│  avif-adapter (lazy ~2 MB) · stub-adapter                           │
-└──────────┬──────────────────────────────────────────────────────────┘
-           │ WASM
-           ▼
+│               Web Workers (≤4 concurrent, ES module)                │
+│   src/workers/worker.ts  (Comlink.expose({ runJob }))               │
+│   Lazy-imported adapters: svg / png / jpeg / webp / avif            │
+│   src/workers/*-adapter.ts  +  jSquash WASM codecs                  │
+└──────┬──────────────────────────────────────────────────────────────┘
+       │ ArrayBuffer (Comlink.transfer zero-copy)
+       ▼
 ┌─────────────────────────────────────────────────────────────────────┐
-│  jSquash WASM codecs: @jsquash/{png,jpeg,webp,avif,resize,oxipng}  │
-│  svgo/browser (main-thread pre-bundled)                             │
+│            WASM Codec / SVG Engine (inside worker)                  │
+│   @jsquash/{png,jpeg,webp,avif,oxipng,resize}                       │
+│   svgo/browser  (loaded via src/workers/svg-adapter.ts)             │
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -46,203 +46,209 @@
 
 | Component | Responsibility | File |
 |-----------|----------------|------|
-| AppShell | 4-row CSS grid layout, `role="application"` | `src/components/shell/AppShell/AppShell.tsx` |
-| TitleBar | App title, menu bar | `src/components/shell/TitleBar/TitleBar.tsx` |
-| Toolbar | Codec selector, view switcher | `src/components/shell/Toolbar/Toolbar.tsx` |
-| StatusBar | Running indicator, totals, Pacing pill | `src/components/shell/StatusBar/StatusBar.tsx` |
-| CommandPalette | Keyboard-driven command list (cmdk) | `src/components/shell/CommandPalette/CommandPalette.tsx` |
-| FilesPane | File queue list, drag-drop drop zone, per-row actions | `src/components/panels/FilesPane.tsx` |
-| CenterPane | Preview area / compare view | `src/components/panels/CenterPane.tsx` |
-| InspectorPane | Codec settings panels, snippet panel, report panel | `src/components/panels/InspectorPane.tsx` |
-| CodecPanel | Per-format settings UI (delegates to format-specific panels) | `src/components/panels/CodecPanel.tsx` |
-| SvgoPanel | SVGO plugin toggles, savings column | `src/components/panels/SvgoPanel.tsx` |
-| PngPanel | OxiPNG level slider | `src/components/panels/PngPanel.tsx` |
-| JpegPanel | Quality, progressive | `src/components/panels/JpegPanel.tsx` |
-| WebpPanel | Quality, lossless, method | `src/components/panels/WebpPanel.tsx` |
-| AvifPanel | Quality, lossless | `src/components/panels/AvifPanel.tsx` |
-| SnippetPanel | HTML/CSS snippet generator | `src/components/panels/SnippetPanel.tsx` |
-| ReportPanel | Per-file optimization report | `src/components/panels/ReportPanel.tsx` |
-| TweaksPanel | Global resize algorithm, ICC settings | `src/components/panels/TweaksPanel.tsx` |
+| `App` | Root: wires stores → shell slots; owns dev test exposure | `src/App.tsx` |
+| `AppShell` | 4-slot CSS grid layout (titleBar/toolbar/workArea/statusBar) | `src/components/shell/AppShell/AppShell.tsx` |
+| `FilesPane` | Left pane: file queue list, drop zone, sort, context menu | `src/components/panels/FilesPane.tsx` |
+| `CenterPane` | Center: before/after split view, preview | `src/components/panels/CenterPane.tsx` |
+| `InspectorPane` | Right pane: codec settings, snippet output, report | `src/components/panels/InspectorPane.tsx` |
+| `TitleBar` | App title, theme toggle | `src/components/shell/TitleBar/TitleBar.tsx` |
+| `Toolbar` | Add-file button, optimize trigger, codec selector | `src/components/shell/Toolbar/Toolbar.tsx` |
+| `StatusBar` | Progress summary: file count, bytes saved, % | `src/components/shell/StatusBar/StatusBar.tsx` |
+| `CommandPalette` | Keyboard-driven cmdk overlay | `src/components/shell/CommandPalette/CommandPalette.tsx` |
+| `filesStore` | Canonical file entries: `byId`, `order`, `selectedId` | `src/stores/files.ts` |
+| `settingsStore` | Codec configs, SVGO plugin toggles, per-file overrides, view | `src/stores/settings.ts` |
+| `runtimeStore` | Ephemeral batch state: queue, inFlight, urlCache, progress | `src/stores/runtime.ts` |
+| `WorkerPool` | Manages up to 4 ES-module workers; memory-budget admission gate | `src/workers/pool.ts` |
+| `worker.ts` | Worker entry: static ADAPTERS map + `Comlink.expose({ runJob })` | `src/workers/worker.ts` |
+| `svg-adapter` | SVGO optimize → ArrayBuffer (no DOMPurify — main-thread only) | `src/workers/svg-adapter.ts` |
+| `png-adapter` | @jsquash/png decode + @jsquash/resize + @jsquash/oxipng encode | `src/workers/png-adapter.ts` |
+| `jpeg-adapter` | @jsquash/jpeg encode via MozJPEG | `src/workers/jpeg-adapter.ts` |
+| `webp-adapter` | @jsquash/webp encode | `src/workers/webp-adapter.ts` |
+| `avif-adapter` | @jsquash/avif encode (lazy-load only — ~2 MB WASM) | `src/workers/avif-adapter.ts` |
+| `sanitize-svg` | DOMPurify post-processing on main thread after SVG worker result | `src/lib/sanitize-svg.ts` |
+| `snippet-registry` | Registry pattern for HTML/CSS snippet generators | `src/lib/snippet-registry.ts` |
+| `useBatchOrchestrate` | Hook: pool setup, `startOptimize`, `cancelBatch`, completion subscriber | `src/hooks/useBatchOrchestrate.ts` |
+| `useFilePicker` | Hook: drag-and-drop + file input → `addSourceWithVariants` | `src/hooks/useFilePicker.ts` |
 
 ## Pattern Overview
 
-**Overall:** Unidirectional data flow — UI reads zustand stores, user actions call store actions, store actions drive the WorkerPool, pool callbacks update stores, UI re-renders.
+**Overall:** Three-layer client-side pipeline — React UI reads nanostores state, store actions drive a WorkerPool singleton, workers lazy-import WASM codec adapters and return zero-copy ArrayBuffers via Comlink.
 
 **Key Characteristics:**
-- No React Context for state (zustand replaces it entirely)
-- Worker communication is typed via Comlink proxy (`WorkerProxyApi` in `src/workers/types.ts`)
-- All codec WASM runs in worker threads — main thread stays responsive
-- DOMPurify (SVG sanitization) is the only main-thread post-processing step — required because DOMPurify needs `document`
-- Object URL lifecycle is strictly managed: revoke before write, revoke on remove (`src/stores/runtime.ts` urlCache)
+- Zero-server: all computation happens in-browser via WebAssembly + Web Workers
+- Nanostores `map<T>` atoms (not zustand): store state is read via `useStore()` in components; mutations go through exported action functions
+- WorkerPool is a module-level singleton (`src/workers/pool.ts :: getWorkerPool()`); created lazily on first enqueue
+- WASM codecs are dynamically imported inside workers via a static ADAPTERS map — Vite resolves literal import paths at build time for code splitting
+- DOMPurify runs only on the main thread (workers lack `document`); SVG sanitization is post-SVGO in `src/lib/sanitize-svg.ts`
+- Memory-budget admission gate in WorkerPool prevents OOM on large batches; `byteEstimate` on each `PoolJob` drives the gate
 
 ## Layers
 
 **UI Layer:**
-- Purpose: Render file queue, settings panels, snippets; forward user actions to stores
-- Location: `src/components/`
-- Contains: Shell layout, panel components, primitive UI wrappers
-- Depends on: zustand stores (via `@/stores`), hooks (`@/hooks`), lib utilities (`@/lib`)
-- Used by: nothing (top of the tree)
+- Purpose: Render state, dispatch user actions to stores, compose layout
+- Location: `src/components/`, `src/App.tsx`
+- Contains: React functional components, CSS Modules, Tailwind utility classes
+- Depends on: stores (read-only via `useStore`), hooks, `src/lib/*`
+- Used by: nothing (top of tree)
 
 **Hook Layer:**
-- Purpose: Business logic that spans multiple stores or requires effects/subscriptions
+- Purpose: Encapsulate multi-store workflows (orchestration, file ingestion, keyboard shortcuts)
 - Location: `src/hooks/`
-- Contains: `useBatchOrchestrate.ts` (pool wiring + batch lifecycle), `useFilePicker.ts` (drag/drop), `useKeyboardShortcuts.ts`, `useCommandPalette.tsx`, `useTotals.ts`, `useTheme.ts`
-- Depends on: zustand stores, `src/workers/pool.ts`
+- Contains: Custom React hooks (`useBatchOrchestrate`, `useFilePicker`, `useCommandPalette`, `useKeyboardShortcuts`, `useTotals`, `useTheme`)
+- Depends on: stores, `src/workers/pool.ts`, `src/lib/*`
 - Used by: `src/App.tsx` and panel components
 
 **Store Layer:**
-- Purpose: Canonical in-memory application state; all mutation goes through stores
+- Purpose: Single source of truth for all app state; expose pure action functions
 - Location: `src/stores/`
-- Contains: `files.ts` (FileEntryWithBlob registry), `settings.ts` (codec + global configs), `runtime.ts` (batch progress + URL cache + pool coordination)
-- Depends on: `src/workers/pool.ts` (runtime.ts), `src/lib/` utilities
-- Used by: hooks, components (read-only selectors)
+- Contains: `filesStore` (file entries), `settingsStore` (codec config), `runtimeStore` (batch progress + urlCache)
+- Depends on: `src/workers/pool.ts` (runtime), `src/lib/*`
+- Used by: UI layer (read), hook layer (write via actions)
+- Note: Three-way circular ESM dependency (`files ↔ runtime ↔ settings`) resolved via live-binding; unit tests must not cross-call at init time
 
 **Worker Layer:**
-- Purpose: Run WASM codecs off the main thread
+- Purpose: Off-main-thread WASM codec execution
 - Location: `src/workers/`
-- Contains: `worker.ts` (entry, ADAPTERS map), `pool.ts` (WorkerPool class + singleton), per-format adapters, per-format config builders, `types.ts`
-- Depends on: jSquash packages, svgo/browser
-- Used by: `src/stores/runtime.ts` (via `getWorkerPool()`), `src/hooks/useBatchOrchestrate.ts`
+- Contains: `pool.ts` (pool singleton), `worker.ts` (Comlink entry), `*-adapter.ts` (codec wrappers), `*-config.ts` (settings builders), `types.ts`
+- Depends on: jSquash packages, `svgo/browser`
+- Used by: `runtimeStore` (via `getWorkerPool()`), `useBatchOrchestrate`
 
-**Library Layer:**
-- Purpose: Pure utilities with no React or store dependencies
+**Lib Layer:**
+- Purpose: Pure utility functions (no React, no stores)
 - Location: `src/lib/`
-- Contains: `sanitize-svg.ts`, `filename.ts`, `format.ts`, `icc.ts`, `live-region.ts`, `memory-budget.ts`, `object-url.ts`, `sniff.ts`, `snippet-registry.ts`, `svg-snippets.ts`, `tokenize.tsx`, `utils.ts`
-- Depends on: dompurify (sanitize-svg only)
-- Used by: stores, hooks, adapters
+- Contains: `filename.ts`, `format.ts`, `sanitize-svg.ts`, `snippet-registry.ts`, `svg-snippets.ts`, `memory-budget.ts`, `object-url.ts`, `sniff.ts`, `live-region.ts`, `tokenize.tsx`, `icc.ts`, `utils.ts`
+- Depends on: `dompurify` (sanitize-svg), domain types
+- Used by: stores, hooks, components
 
 **Types Layer:**
-- Purpose: Shared TypeScript domain types
+- Purpose: Shared domain types (no runtime code)
 - Location: `src/types/index.ts`
-- Contains: `FileEntry`, `FileEntryWithBlob`, `CodecSettings*`, `FormatId`, `Density`, `SnippetId`, `GlobalSettings`, etc.
+- Contains: `FormatId`, `FileEntry`, `FileStatus`, `Density`, `CodecSettings*`, `SnippetId`, etc.
 - Depends on: nothing
 - Used by: all layers
 
 ## Data Flow
 
-### Batch Optimize Path
+### Optimize Batch (primary path)
 
-1. User clicks Optimize → `useBatchOrchestrate.startOptimize()` (`src/hooks/useBatchOrchestrate.ts`)
-2. Reads `useFilesStore.getState().order` — collects idle/queued/error fileIds
-3. Calls `useRuntimeStore.getState().startBatch(fileIds)` — sets `running=true`, initializes queue
-4. For each fileId: resolves codec settings (global + perFile override merge), calls `pool.enqueue(job)`
-5. `WorkerPool.enqueue()` (`src/workers/pool.ts`) — admission gate checks `inflightBytes` against `memoryBudgetBytes`; if OK, dispatches to an idle Comlink slot
-6. Worker (`src/workers/worker.ts`) receives `runJob(input, settings, format)` → lazy-imports the correct adapter → runs codec WASM → returns `AdapterRunResult` via `Comlink.transfer` (zero-copy)
-7. Pool `onDone` callback → `useRuntimeStore.markDone(jobId)` → `.then()` handler on main thread
-8. SVG path: `TextDecoder` → `sanitizeSvg(svgText, unsafe)` → `useFilesStore.markDone(fileId, sanitizedBlob, size, sanitizedCount)`
-9. Raster path: wrap `result.output` as `Blob` with correct MIME → `useFilesStore.markDone(fileId, blob, size)`
-10. `useFilesStore.markDone` revokes old Object URL, writes `optimizedBlob` + `status: 'done'` to store
-11. React re-renders file row with updated status/size delta
+1. User drops files → `useFilePicker` → `addSourceWithVariants()` in `src/stores/files.ts`
+2. User clicks Optimize → `useBatchOrchestrate.startOptimize()` in `src/hooks/useBatchOrchestrate.ts`
+3. Hook calls `startBatch(jobIds)` on `runtimeStore`, then `pool.enqueue(job)` per file
+4. `WorkerPool.tryDispatch()` admits jobs within memory budget → `Comlink.transfer(input, [input])` to worker
+5. Worker (`src/workers/worker.ts`) lazy-imports adapter via `ADAPTERS[format]()`, calls `adapter.run(input, settings)`
+6. Adapter invokes WASM codec → returns `{ output: ArrayBuffer, meta }` → `Comlink.transfer` zero-copy back
+7. Pool `onDone` callback fires → `runtimeStore.markDone()` + `filesStore.markDone(fileId, optimizedBlob)`
+8. React re-renders `FilesPane` (updated status) and `CenterPane` (new preview)
 
-### Live SVG Preview Path (plugin toggle)
+### SVG Preview (live settings change)
 
-1. User toggles SVGO plugin → `useSettingsStore` `plugins` slice changes
-2. `App.tsx` subscriber fires → `useRuntimeStore.getState().enqueuePreview(fileId)`
-3. `enqueuePreview` (debounced 200ms, last-toggle-wins): calls `pool.cancelByPrefix('preview-')` then enqueues a new `preview-${uuid}` job
-4. Pool runs svg-adapter on the source blob; on resolve: DOMPurify on main thread → `useFilesStore.markDone`
-5. `preview-` prefix prevents these auxiliary jobs from inflating `doneCount` batch counters
+1. `settingsStore.svg` key changes → `listenKeys(settingsStore, ['svg'], ...)` in `App.tsx`
+2. `enqueuePreview(fileId)` called (debounced 200ms) from `src/stores/runtime.ts`
+3. Pool enqueues `preview-*` job using `cancelByPrefix('preview-')` to discard stale previews
+4. SVG adapter runs SVGO → result sanitized by `src/lib/sanitize-svg.ts` on main thread
+5. `filesStore.markDone()` updates `optimizedBlob` → CenterPane re-renders
 
-### File Drop / Add Path
+### File Drop (ingestion)
 
-1. `useFilePicker` handles File API drop/pick → calls `useFilesStore.addSourceWithVariants()`
-2. `addSourceWithVariants` fans out one `FileEntryWithBlob` per target density, assigns `sourceFamilyId`, seeds `byteEstimate` via `estimateJobBytes` (`src/lib/memory-budget.ts`)
-3. Atomic `set()` push to `byId` + `order`; name collision dedup via `deduplicateName` (`src/lib/filename.ts`)
+1. `FilesPane` drag events → `useFilePicker` hook
+2. `ingestDroppedFiles()` detects format by MIME/extension
+3. `addSourceWithVariants()` → `filesStore.addFile()` per density variant
+4. `filesStore.selectedId` auto-set to first new file
 
 **State Management:**
-- Three zustand slices with `subscribeWithSelector`; stores cross-reference each other via `getState()` (never via hooks) to avoid circular re-render issues
-- Object URL lifecycle: `urlCache: Map<fileId, objectURL>` in runtime store — `getOrCreateObjectURL` / `revokeObjectURL` are the only valid mutation points
+- UI state: nanostores `map<T>` atoms in `src/stores/`; components subscribe via `@nanostores/react :: useStore()`
+- Object URLs: managed exclusively through `runtimeStore.urlCache` (Map); revoked via `revokeObjectURL()` before overwriting
+- Codec settings: `settingsStore` holds global defaults + `perFile` override map
+- Worker pool: module-level singleton in `src/workers/pool.ts`; test-injectable via `__setWorkerPoolForTesting()`
 
 ## Key Abstractions
 
-**WorkerPool:**
-- Purpose: Manages N worker slots (max 4), FIFO job queue, memory-budget admission gate, cancel/respawn lifecycle
-- Location: `src/workers/pool.ts`
-- Pattern: Singleton via `getWorkerPool(callbacks?)`; callbacks bound once in `useBatchOrchestrate`
+**`PoolJob`:**
+- Purpose: Unit of work dispatched to a worker
+- Location: `src/workers/types.ts`
+- Fields: `id` (string, `preview-*` prefix for narrow cancel), `fileId`, `format: AdapterFormat`, `settings`, `blob: Blob`, `byteEstimate?`
 
-**Adapter:**
-- Purpose: Per-codec `run(input: ArrayBuffer, settings): Promise<AdapterRunResult>` contract
-- Examples: `src/workers/svg-adapter.ts`, `src/workers/png-adapter.ts`, `src/workers/jpeg-adapter.ts`, `src/workers/webp-adapter.ts`, `src/workers/avif-adapter.ts`
-- Pattern: Static `ADAPTERS` map in `worker.ts` with literal-path imports (required for Vite code-splitting)
-
-**Config Builder:**
-- Purpose: Translate zustand settings slices + per-file overrides into typed adapter settings objects
-- Examples: `src/workers/svg-config.ts`, `src/workers/png-config.ts`, `src/workers/jpeg-config.ts`, `src/workers/webp-config.ts`, `src/workers/avif-config.ts`
-- Pattern: Pure functions `buildXxxSettings({ global, fileOverride }) → settings`; also importable from outside the worker for unit tests
-
-**FileEntryWithBlob:**
-- Purpose: Extends `FileEntry` (display shape) with `sourceBlob`, `sourceMeta`, `optimizedBlob`, `optimizedMeta`, `byteEstimate`, `settings`
+**`FileEntryWithBlob`:**
+- Purpose: In-memory file record extending `FileEntry` with live `sourceBlob` and `optimizedBlob`
 - Location: `src/stores/files.ts`
-- Pattern: Lives entirely in `useFilesStore.byId`; never passed as props (components use store selectors)
+- Note: `FileEntry` (in `src/types/index.ts`) is the serializable subset used by components
+
+**`AdapterRunResult`:**
+- Purpose: Worker → main thread return value (zero-copy via Comlink.transfer)
+- Location: `src/workers/types.ts`
+- Fields: `output: ArrayBuffer`, `meta: AdapterMeta`
+
+**`SnippetDef` / `SNIPPET_REGISTRY`:**
+- Purpose: Registry pattern for HTML/CSS snippet generators; SnippetPanel reads from registry, not switch statements
+- Location: `src/lib/snippet-registry.ts`
+- Pattern: Add entries to registry to support new formats; never add `switch(file.format)` to `SnippetPanel`
 
 ## Entry Points
 
 **App Bootstrap:**
 - Location: `src/main.tsx`
-- Triggers: HTML `<script type="module">` via `index.html`
-- Responsibilities: React DOM mount, COOP/COEP check, font import
-
-**App Root:**
-- Location: `src/App.tsx`
-- Triggers: Mounted by `main.tsx`
-- Responsibilities: Compose shell layout, wire store subscriptions, expose `__OIMG_STORES__` for Playwright in DEV
+- Triggers: Browser loads `index.html` → Vite serves `src/main.tsx`
+- Responsibilities: Check `crossOriginIsolated`, render `<App />` in `StrictMode`
 
 **Worker Entry:**
 - Location: `src/workers/worker.ts`
 - Triggers: `new Worker(new URL('./worker.ts', import.meta.url), { type: 'module' })` in `pool.ts`
-- Responsibilities: Comlink expose `{ runJob }`, dispatch to ADAPTERS map
+- Responsibilities: `Comlink.expose({ runJob })`; lazy-import adapter on first call per format
 
 ## Architectural Constraints
 
-- **Threading:** Main thread handles React render + DOMPurify + Object URL management. WASM runs in worker threads (up to 4). No OffscreenCanvas currently; canvas used only for thumbnail decode if at all.
-- **Global state:** Three zustand store singletons at module scope (`src/stores/files.ts`, `src/stores/settings.ts`, `src/stores/runtime.ts`). WorkerPool singleton at module scope (`src/workers/pool.ts` `_pool`). Cross-store reads use `getState()` not hooks.
-- **Circular imports:** `runtime.ts` ↔ `files.ts` static cycle is intentional and documented; resolved because both export named bindings accessed lazily via `getState()` at call time. Comment in `src/stores/runtime.ts` line 18-22.
-- **DOMPurify main-thread only:** DOMPurify requires `window.document.nodeType`; standard Workers lack `document`. SVG bytes MUST travel from worker → main thread for sanitization before storage.
-- **avif lazy-load:** `@jsquash/avif` (~2 MB gzipped) must only be dynamically imported when the user selects AVIF format. Never import at top of any non-avif module.
-- **OxiPNG encode-only:** OxiPNG receives PNG bytes (`ArrayBuffer`), not `ImageData`. Decode with `@jsquash/png` first.
+- **Threading:** Single-threaded UI + up to 4 ES-module Web Workers (pool size = `min(hardwareConcurrency, 4)`). Workers are spawned lazily on first `enqueue()`.
+- **COOP/COEP required:** `Cross-Origin-Opener-Policy: same-origin` + `Cross-Origin-Embedder-Policy: require-corp` headers mandatory for `crossOriginIsolated` (SharedArrayBuffer). Set in `vite.config.ts` dev server and must be set by Cloudflare Pages in production.
+- **Global state:** Three module-level singletons: `filesStore` (`src/stores/files.ts`), `settingsStore` (`src/stores/settings.ts`), `runtimeStore` (`src/stores/runtime.ts`), `_pool` (`src/workers/pool.ts`).
+- **Circular imports:** `files.ts ↔ runtime.ts ↔ settings.ts` — three-way circular ESM. Browser ESM live-binding resolves this at runtime. Node (`--experimental-strip-types`) does not support circular ESM; unit tests must not call cross-store functions at module init. `runtime.ts` uses `require()` for lazy cross-store reads inside `enqueuePreview`.
+- **WASM exclusion from dep bundling:** All `@jsquash/*` packages excluded from Vite `optimizeDeps` — they embed WASM via `new URL(...)` which breaks when esbuild flattens them.
+- **Static adapter paths:** `ADAPTERS` map in `worker.ts` uses literal `import()` paths only. Template literals (`./\${format}-adapter.ts`) are forbidden — Vite cannot statically analyze them for code splitting.
+- **DOMPurify main-thread only:** Standard Web Workers lack `document`. SVG sanitization runs in `src/lib/sanitize-svg.ts` after the worker returns, called from pool `onDone`.
 
 ## Anti-Patterns
 
-### Writing global codec slices from per-file codec panels
+### Dynamic import paths in worker ADAPTERS map
 
-**What happens:** A codec panel writes to `useSettingsStore.setPng()` / `setJpeg()` etc. when the user adjusts settings for a single file.
-**Why it's wrong:** Writing global slices triggers re-optimize for ALL files in the batch (Pitfall 4 per `src/stores/settings.ts` comment lines 67-69).
-**Do this instead:** Call `useSettingsStore.getState().setPerFileCodec(fileId, patch)`. Global slices are for batch-wide defaults only. Resolution order: `perFile[fileId] ?? globalFormatSlice`.
+**What happens:** Using `import(\`./\${format}-adapter.ts\`)` in `src/workers/worker.ts`
+**Why it's wrong:** Vite cannot statically analyze the import for code splitting; production build will 404 on the adapter chunk
+**Do this instead:** Add an explicit literal-string entry to the `ADAPTERS` record in `src/workers/worker.ts`
 
-### Dynamic module path in ADAPTERS map
+### Reading store state directly in components (bypassing useStore)
 
-**What happens:** Using `import(`./${format}-adapter.ts`)` template literals in `src/workers/worker.ts`.
-**Why it's wrong:** Vite cannot statically resolve dynamic template literals; adapters 404 in production builds (Pitfall 1).
-**Do this instead:** Use the static literal-path map already in `src/workers/worker.ts` — add a new adapter as an explicit `format: () => import('./format-adapter')` entry.
+**What happens:** `filesStore.get()` called inside a component render without `useStore(filesStore)`
+**Why it's wrong:** Component will not re-render when store changes
+**Do this instead:** `const state = useStore(filesStore)` then read from `state`
 
-### Reading `input` ArrayBuffer after Comlink.transfer
+### Calling cross-store actions at module init time in unit tests
 
-**What happens:** Accessing `job.blob.arrayBuffer()` result after passing it via `Comlink.transfer(input, [input])`.
-**Why it's wrong:** The buffer is detached on the main thread after transfer (Pitfall 2 per `src/workers/pool.ts` comments).
-**Do this instead:** Derive `input` immediately before the `Comlink.transfer` call and never read it afterward.
+**What happens:** Importing `files.ts` and immediately calling a function that internally calls into `runtime.ts`
+**Why it's wrong:** Node's `--experimental-strip-types` runner does not resolve circular ESM live bindings at init time
+**Do this instead:** Only call cross-store functions after all modules are fully initialized (inside test bodies, not at top level)
 
-### Calling addFile() for user-dropped files
+### Adding switch(file.format) to SnippetPanel
 
-**What happens:** Using `useFilesStore.addFile(entry)` directly for a file the user drops.
-**Why it's wrong:** `addFile` does not set `byteEstimate`, fan out density variants, or apply name deduplication. The memory-budget admission gate and PNG adapter branch gate on `byteEstimate` presence — files added without it fall through to the stub adapter.
-**Do this instead:** Call `useFilesStore.addSourceWithVariants(args)` for all user-dropped files. `addFile` is for synthetic test entries only.
+**What happens:** New format snippet logic added directly to `src/components/panels/SnippetPanel.tsx`
+**Why it's wrong:** Violates the registry pattern; makes format support non-composable
+**Do this instead:** Add a new entry to `SNIPPET_REGISTRY` in `src/lib/snippet-registry.ts`
 
 ## Error Handling
 
-**Strategy:** Errors are surfaced via console and file-row status. No global error boundary in place for codec errors. AbortError (cancel path) is silently swallowed.
+**Strategy:** Adapters throw `AdapterError(format, phase, message)` from `src/workers/types.ts`; pool catches and calls `onError` callback; `runtimeStore.markError()` distinguishes abort vs. real errors.
 
 **Patterns:**
-- Adapter errors: `AdapterError(format, phase, message)` thrown inside adapters; caught by pool and routed to `onError` callback → `useRuntimeStore.markError` → `useFilesStore.setStatus('error')`
-- Cancel race: `DOMException('AbortError')` discriminated in `.catch()` handlers — not counted as real errors, file status not set to 'error'
-- Preview jobs: errors logged to `console.error` but do not set file `status='error'` (auxiliary path)
-- SVG sanitize errors: `sanitizeSvg` returns `{ clean, sanitizedCount }` — never throws; malformed SVGs produce cleaned output with count > 0
+- `AdapterError` subclass carries `format` and `phase: 'decode' | 'process' | 'encode'`
+- Cancel is `DOMException('Batch cancelled', 'AbortError')` — `markError` treats abort as non-error (does not increment `errorCount`)
+- Preview jobs use `cancelByPrefix('preview-')` for narrow cancel without terminating batch workers
+- Full batch cancel: `pool.cancel()` terminates all workers + respawns fresh pool; WASM state discarded
 
 ## Cross-Cutting Concerns
 
-**Logging:** `console.error` / `console.warn` with `[oimg]` or `[componentName]` prefix; no structured logging library.
-**Validation:** File type detection via `src/lib/sniff.ts` (PNG header sniff). No runtime schema validation for settings.
-**Accessibility:** ARIA live region via `src/lib/live-region.ts`; `setLiveRegion(el)` called from `App.tsx`; `announce()` called from batch orchestration for progress and completion.
+**Logging:** `console.error` only (no logging SaaS — zero-telemetry policy). Worker errors surfaced via sonner toasts.
+**Validation:** Format detection by MIME type then file extension in `useFilePicker`. Unsupported files skipped with toast notification.
+**Authentication:** None — fully client-side, zero-server.
+**Accessibility:** WCAG AA required. ARIA live region (`role="status"`) in `App.tsx` for screen reader progress. Keyboard navigation via `useKeyboardShortcuts`. All interactive elements have ARIA labels.
+**Object URL lifecycle:** All `URL.createObjectURL()` calls go through `runtimeStore.getOrCreateObjectURL()`; revocation via `revokeObjectURL()` before any overwrite. Never store object URLs outside `runtimeStore.urlCache`.
 
 ---
 
-*Architecture analysis: 2026-05-12*
+*Architecture analysis: 2026-05-14*

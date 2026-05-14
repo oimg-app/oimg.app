@@ -1,271 +1,254 @@
 # Codebase Structure
 
-**Analysis Date:** 2026-05-12
+**Analysis Date:** 2026-05-14
 
 ## Directory Layout
 
 ```
 oimg.app/
-├── src/                         # All application source
-│   ├── main.tsx                 # App bootstrap, React DOM mount
-│   ├── App.tsx                  # Root component, store wiring, layout composition
-│   ├── index.css                # Global CSS (design tokens, reset, primitives)
-│   ├── vite-env.d.ts            # Vite env type declarations
-│   ├── components/
-│   │   ├── shell/               # App chrome (layout, navigation)
-│   │   │   ├── AppShell/        # 4-row CSS grid layout container
-│   │   │   ├── TitleBar/        # App title + menu bar
-│   │   │   ├── Toolbar/         # Codec selector, view switcher, actions
-│   │   │   ├── StatusBar/       # Running state, totals, Pacing pill
-│   │   │   └── CommandPalette/  # Keyboard-driven cmdk overlay
-│   │   ├── panels/              # Content panes
-│   │   │   ├── FilesPane.tsx    # File queue list + drop zone
-│   │   │   ├── CenterPane.tsx   # Preview / compare area
-│   │   │   ├── InspectorPane.tsx # Codec settings + snippets + report
-│   │   │   ├── CodecPanel.tsx   # Format-switching codec settings wrapper
-│   │   │   ├── SvgoPanel.tsx    # SVGO plugin toggles
-│   │   │   ├── PngPanel.tsx     # OxiPNG level
-│   │   │   ├── JpegPanel.tsx    # MozJPEG quality + progressive
-│   │   │   ├── WebpPanel.tsx    # libwebp quality + lossless + method
-│   │   │   ├── AvifPanel.tsx    # libavif quality + lossless
-│   │   │   ├── SnippetPanel.tsx # HTML/CSS snippet generators
-│   │   │   ├── ReportPanel.tsx  # Per-file optimization report
-│   │   │   └── TweaksPanel.tsx  # Global resize + ICC settings
-│   │   ├── file-row/            # File queue row sub-components
-│   │   │   ├── ContextMenu.tsx  # Right-click context menu on file rows
-│   │   │   └── TargetDensityCheckboxes.tsx # Density variant export selectors
-│   │   ├── icons/               # Custom SVG icon components
-│   │   │   └── index.tsx
-│   │   └── ui/                  # Primitive UI wrappers (base-ui + shadcn)
-│   │       ├── Popover.tsx      # @base-ui/react popover wrapper
-│   │       ├── Slider.tsx       # @base-ui/react slider wrapper
-│   │       ├── Toggle.tsx       # @base-ui/react toggle wrapper
-│   │       ├── Tooltip.tsx      # @base-ui/react tooltip wrapper
-│   │       ├── Seg.tsx          # Segmented control wrapper
-│   │       ├── Section.tsx      # Inspector section layout
-│   │       ├── button.tsx       # shadcn button
-│   │       ├── button-group.tsx # Grouped button row
-│   │       ├── dropdown-menu.tsx # shadcn dropdown menu
-│   │       ├── menubar.tsx      # shadcn menubar
-│   │       ├── separator.tsx    # shadcn separator
-│   │       ├── sonner.tsx       # Toaster wrapper component
-│   │       └── switch.tsx       # shadcn switch
-│   ├── hooks/                   # Business logic hooks
-│   │   ├── useBatchOrchestrate.ts # Pool wiring, batch lifecycle, SVG savings
-│   │   ├── useFilePicker.ts     # File drag-drop + File API
-│   │   ├── useKeyboardShortcuts.ts # Global keyboard bindings
-│   │   ├── useCommandPalette.tsx # Command palette data + open state
-│   │   ├── useTotals.ts         # Aggregate file size totals
-│   │   └── useTheme.ts          # Theme toggle
-│   ├── stores/                  # Zustand state slices
-│   │   ├── index.ts             # Barrel re-export
-│   │   ├── files.ts             # FileEntryWithBlob registry (byId, order, selectedId)
-│   │   ├── settings.ts          # Codec configs, global settings, perFile overrides
-│   │   └── runtime.ts           # Batch progress, urlCache, pool coordination
-│   ├── workers/                 # Web Worker layer
-│   │   ├── worker.ts            # Worker entry; ADAPTERS map; Comlink.expose
-│   │   ├── pool.ts              # WorkerPool class + getWorkerPool() singleton
-│   │   ├── types.ts             # AdapterFormat, AdapterRunResult, PoolJob, WorkerProxyApi
-│   │   ├── svg-adapter.ts       # SVGO pipeline (ArrayBuffer → SVGO → ArrayBuffer)
-│   │   ├── svg-config.ts        # buildSvgoConfig() pure function
-│   │   ├── png-adapter.ts       # decode → resize → encode → oxipng pipeline
-│   │   ├── png-config.ts        # buildPngResizeSettings() pure function
-│   │   ├── jpeg-adapter.ts      # MozJPEG encode pipeline
-│   │   ├── jpeg-config.ts       # buildJpegSettings() pure function
-│   │   ├── webp-adapter.ts      # libwebp encode pipeline
-│   │   ├── webp-config.ts       # buildWebpSettings() pure function
-│   │   ├── avif-adapter.ts      # libavif encode pipeline (lazy ~2 MB)
-│   │   ├── avif-config.ts       # buildAvifSettings() pure function
-│   │   └── stub-adapter.ts      # No-op pass-through (test/Phase 2 fallback)
-│   ├── lib/                     # Pure utilities (no React, no stores)
-│   │   ├── sanitize-svg.ts      # DOMPurify wrapper; main-thread only
-│   │   ├── filename.ts          # applyDensitySuffix, deduplicateName
-│   │   ├── format.ts            # File format helpers
-│   │   ├── icc.ts               # extractPngIcc / embedPngIcc
-│   │   ├── live-region.ts       # ARIA live region announce()
-│   │   ├── memory-budget.ts     # computeMemoryBudget, estimateJobBytes
-│   │   ├── object-url.ts        # Object URL helpers
-│   │   ├── sanitize-svg.ts      # DOMPurify XSS sanitization
-│   │   ├── sniff.ts             # sniffPngDimensions (PNG header read)
-│   │   ├── snippet-registry.ts  # SnippetDef registry
-│   │   ├── svg-snippets.ts      # inline-svg, url-encoded-uri generators
-│   │   ├── tokenize.tsx         # Token-based text rendering
-│   │   └── utils.ts             # General utilities (cn() etc.)
-│   ├── data/
-│   │   └── defaults.ts          # DEFAULT_CODEC_* and DEFAULT_GLOBAL_SETTINGS constants
-│   ├── types/
-│   │   └── index.ts             # Domain types: FileEntry, CodecSettings*, FormatId, Density, etc.
-│   ├── styles/
-│   │   ├── legacy.css           # CSS to be migrated to CSS Modules
-│   │   └── primitives.module.css # Shared primitive CSS module
-│   └── tests/                   # All Playwright tests + unit-style tests
-│       ├── *.spec.ts            # Playwright browser tests
-│       ├── *.test.ts            # Node test runner tests (--experimental-strip-types)
-│       ├── *.unit.ts            # Importable unit tests (no runner framework)
-│       └── fixtures/            # Test fixtures (PNGs, SVGs with XSS payloads)
-├── public/                      # Static assets served as-is
-├── example-ui/                  # Reference HTML/CSS design files (not compiled)
-├── inspired/squoosh/            # Squoosh reference submodule (not imported)
-├── scripts/
-│   └── ensure-rollup-binding.mjs # postinstall: verify native Rollup binding
-├── .planning/                   # GSD planning artifacts (phases, codebase maps)
-├── index.html                   # Vite entry HTML
-├── vite.config.ts               # Vite configuration
-├── package.json                 # Dependencies + scripts
-├── tsconfig.json                # TypeScript project references root
-├── tsconfig.app.json            # App TypeScript config (bundler moduleResolution)
-├── tsconfig.node.json           # Node TypeScript config (for vite.config.ts)
-├── playwright.config.ts         # Playwright test runner config
-└── components.json              # shadcn CLI config
+├── src/                        # Application source (all TypeScript/TSX)
+│   ├── main.tsx                # Entry point — React root mount + COOP check
+│   ├── App.tsx                 # Root component — store wiring + layout composition
+│   ├── index.css               # Global CSS reset + design tokens
+│   ├── vite-env.d.ts           # Vite type shims
+│   ├── components/             # React UI components
+│   │   ├── shell/              # Layout chrome (AppShell, TitleBar, Toolbar, StatusBar, CommandPalette)
+│   │   ├── panels/             # Pane-level components (FilesPane, CenterPane, InspectorPane, codec panels)
+│   │   ├── file-row/           # File queue row sub-components (ContextMenu, TargetDensityCheckboxes)
+│   │   ├── icons/              # Icon re-exports (index.tsx)
+│   │   └── ui/                 # shadcn/Radix primitives (Button, Popover, Slider, Toggle, etc.)
+│   ├── stores/                 # Nanostores state atoms + action functions
+│   │   ├── index.ts            # Barrel re-export of all three stores
+│   │   ├── files.ts            # filesStore — file entries, order, selection
+│   │   ├── settings.ts         # settingsStore — codec configs, SVGO plugins, per-file overrides
+│   │   └── runtime.ts          # runtimeStore — batch queue, progress, urlCache, preview debounce
+│   ├── workers/                # Web Worker layer — pool + adapters + types
+│   │   ├── pool.ts             # WorkerPool class + getWorkerPool() singleton
+│   │   ├── worker.ts           # Worker entry point (Comlink.expose)
+│   │   ├── types.ts            # Shared types: AdapterFormat, PoolJob, AdapterRunResult, AdapterError
+│   │   ├── svg-adapter.ts      # SVGO optimize adapter
+│   │   ├── svg-config.ts       # buildSvgoConfig() — separated for unit-testability
+│   │   ├── png-adapter.ts      # @jsquash/png decode + resize + oxipng encode
+│   │   ├── png-config.ts       # buildPngResizeSettings()
+│   │   ├── jpeg-adapter.ts     # @jsquash/jpeg (MozJPEG) encode
+│   │   ├── jpeg-config.ts      # buildJpegSettings()
+│   │   ├── webp-adapter.ts     # @jsquash/webp encode
+│   │   ├── webp-config.ts      # buildWebpSettings()
+│   │   ├── avif-adapter.ts     # @jsquash/avif encode (lazy chunk, ~2 MB)
+│   │   ├── avif-config.ts      # buildAvifSettings()
+│   │   └── stub-adapter.ts     # No-op passthrough for testing
+│   ├── hooks/                  # Custom React hooks (orchestration + UI logic)
+│   │   ├── useBatchOrchestrate.ts   # Pool setup, startOptimize, cancelBatch
+│   │   ├── useFilePicker.ts         # Drag-and-drop + file input ingestion
+│   │   ├── useCommandPalette.tsx    # cmdk groups + open state
+│   │   ├── useKeyboardShortcuts.ts  # Global keyboard bindings
+│   │   ├── useTotals.ts             # Derived totals from filesStore (count, bytes, %)
+│   │   └── useTheme.ts              # next-themes wrapper
+│   ├── lib/                    # Pure utilities (no React, no stores)
+│   │   ├── filename.ts         # applyDensitySuffix, deduplicateName
+│   │   ├── format.ts           # fmtBytes, fmtPct
+│   │   ├── icc.ts              # ICC profile extraction
+│   │   ├── live-region.ts      # ARIA live region helper + announce()
+│   │   ├── memory-budget.ts    # computeMemoryBudget, estimateJobBytes
+│   │   ├── object-url.ts       # Object URL helpers
+│   │   ├── sanitize-svg.ts     # DOMPurify post-SVGO sanitizer (main thread only)
+│   │   ├── sniff.ts            # sniffPngDimensions()
+│   │   ├── snippet-registry.ts # SNIPPET_REGISTRY — format → snippet generator map
+│   │   ├── svg-snippets.ts     # generateInlineSvg, generateDataUri
+│   │   ├── tokenize.tsx        # SVG tokenizer for snippet display
+│   │   └── utils.ts            # cn() (tailwind-merge + clsx)
+│   ├── data/                   # Static defaults
+│   │   └── defaults.ts         # DEFAULT_CODEC_SVG/PNG/JPEG/WEBP/AVIF, DEFAULT_GLOBAL_SETTINGS
+│   ├── types/                  # Domain type definitions
+│   │   └── index.ts            # FormatId, FileEntry, FileStatus, Density, CodecSettings*, SnippetId
+│   ├── styles/                 # Global style files
+│   │   ├── primitives.module.css   # Shared CSS Modules primitives
+│   │   └── legacy.css              # CSS carried from early phases (migration in progress)
+│   └── tests/                  # Playwright + unit tests
+│       ├── fixtures/           # Test fixtures (SVGs, PNGs, JS instrumentation helpers)
+│       ├── *.spec.ts           # Playwright E2E specs
+│       ├── *.test.ts           # Node unit tests (--experimental-strip-types)
+│       └── *.unit.ts           # Pure unit tests (no Playwright, no browser)
+├── public/                     # Static assets served verbatim
+│   └── r/                      # (static sub-path)
+├── scripts/                    # Build helper scripts
+│   └── ensure-rollup-binding.mjs   # postinstall: ensures correct Rollup native binding
+├── example-ui/                 # Reference HTML — locked design tokens (oklch palette, fonts)
+├── inspired/                   # Read-only reference repos (Squoosh, SVGOMG, url-encoder, version-0)
+├── .planning/                  # GSD planning artifacts
+│   └── codebase/               # Codebase map documents (this directory)
+├── .agents/skills/             # Agent skill definitions
+├── .claude/skills/             # Claude skill definitions
+├── index.html                  # Vite HTML entry
+├── vite.config.ts              # Vite config (COOP/COEP headers, worker ES format, WASM assets)
+├── tsconfig.json               # TypeScript root config
+├── tsconfig.app.json           # App-specific TS config
+├── tsconfig.node.json          # Node scripts TS config
+├── playwright.config.ts        # Playwright test config
+├── components.json             # shadcn component registry config
+└── package.json                # Dependencies + scripts
 ```
 
 ## Directory Purposes
 
 **`src/components/shell/`:**
-- Purpose: App chrome — layout container, navigation, global overlays
-- Contains: CSS-grid layout (AppShell), TitleBar, Toolbar, StatusBar, CommandPalette; each in its own subdirectory with a co-located `.module.css`
-- Key files: `AppShell/AppShell.tsx`, `Toolbar/Toolbar.tsx`, `StatusBar/StatusBar.tsx`
+- Purpose: Application chrome — layout frame and global UI chrome
+- Contains: `AppShell` (4-slot CSS grid), `TitleBar`, `Toolbar`, `StatusBar`, `CommandPalette`, `BackpressureIndicator`
+- Key files: `AppShell/AppShell.tsx`, `AppShell/appShell.module.css`
 
 **`src/components/panels/`:**
-- Purpose: The three main work-area panes and per-codec settings panels
-- Contains: FilesPane, CenterPane, InspectorPane, and all format-specific codec setting panels
-- Key files: `FilesPane.tsx`, `InspectorPane.tsx`, `SvgoPanel.tsx`, `PngPanel.tsx`, `JpegPanel.tsx`, `WebpPanel.tsx`, `AvifPanel.tsx`
+- Purpose: Pane-level UI for the three-column work area
+- Contains: `FilesPane`, `CenterPane`, `InspectorPane`, plus format-specific codec settings panels (`SvgoPanel`, `PngPanel`, `JpegPanel`, `WebpPanel`, `AvifPanel`), `SnippetPanel`, `ReportPanel`, `TweaksPanel`
+- Key files: `FilesPane.tsx`, `CenterPane.tsx`, `InspectorPane.tsx`
 
 **`src/components/ui/`:**
-- Purpose: Thin wrappers around `@base-ui/react` primitives and shadcn-generated components
-- Contains: Popover, Slider, Toggle, Tooltip, Seg, Section, button, dropdown-menu, menubar, separator, sonner, switch
-- Key note: These are the only components that may import `@base-ui/react` directly
-
-**`src/hooks/`:**
-- Purpose: All business logic requiring React hooks (effects, memos, subscriptions)
-- Contains: Batch orchestration, file picking, keyboard shortcuts, command palette, totals aggregation
-- Key constraint: File/optimize logic belongs here (not inline in components); see memory note `architecture_file_business_logic.md`
+- Purpose: Design system primitives (shadcn / Radix-based)
+- Contains: `Button`, `Popover`, `Slider`, `Toggle`, `Tooltip`, `Checkbox`, `Input`, `Tabs`, `ContextMenu`, `DropdownMenu`, `Dialog`, `Separator`, `Seg`, `Spinner`, `Sonner`, etc.
+- Note: Add new shadcn components here. Run `npx shadcn add <component>` to install.
 
 **`src/stores/`:**
-- Purpose: Single source of truth for all application state via zustand
-- Contains: Three slices (`files`, `settings`, `runtime`) + barrel `index.ts`
-- Key constraint: Cross-store reads use `getState()` never hooks; never pass store state as deeply nested props
+- Purpose: All application state
+- Contains: Three nanostores `map<T>` atoms with exported action functions
+- Note: `stores/index.ts` barrel-exports all three stores; import from `@/stores` rather than individual files in components
 
 **`src/workers/`:**
-- Purpose: Web Worker entry + WorkerPool + per-format codec adapters + config builders
-- Contains: `worker.ts` (entry), `pool.ts` (orchestrator), per-format `*-adapter.ts` and `*-config.ts` pairs, `types.ts`
-- Key constraint: New adapters require explicit literal-path entry in `worker.ts` ADAPTERS map; no template literals
+- Purpose: Off-main-thread codec execution
+- Contains: Pool singleton, worker entry, one adapter + one config file per format
+- Note: `*-config.ts` files are separated from adapters so unit tests can import settings builders without importing `svgo/browser` or jSquash (which only resolve inside Vite browser bundles)
+
+**`src/hooks/`:**
+- Purpose: Encapsulate React-lifecycle + store interaction patterns
+- Contains: All custom hooks; file/optimize business logic belongs here, NOT inline in components (per project memory constraint)
 
 **`src/lib/`:**
-- Purpose: Pure utility functions with no React or store dependencies
-- Contains: File format helpers, ICC profile handling, ARIA live region, memory budget, filename utilities, snippet generators, DOMPurify wrapper
-- Key constraint: `sanitize-svg.ts` may only run on the main thread (requires `document`)
+- Purpose: Pure functions — no React, no stores, no side effects
+- Contains: Utility modules imported by stores, hooks, and components
 
 **`src/types/`:**
-- Purpose: Shared TypeScript domain types and interfaces
-- Contains: Single `index.ts` — `FileEntry`, `FileEntryWithBlob`, `CodecSettings*`, `FormatId`, `Density`, `SnippetId`, `GlobalSettings`
+- Purpose: Single source of domain types
+- Contains: `index.ts` only — all exported types, no runtime code
+
+**`src/data/`:**
+- Purpose: Static default values for codec settings
+- Contains: `defaults.ts` — default codec config objects imported by `settingsStore`
 
 **`src/tests/`:**
-- Purpose: All automated tests (Playwright e2e, Playwright component integration, Node unit)
-- Contains: `*.spec.ts` (Playwright), `*.test.ts` (Node `--experimental-strip-types`), `*.unit.ts` (importable logic tests), `fixtures/` (PNG/SVG test assets)
+- Purpose: All tests — Playwright E2E specs and Node unit tests live together
+- Contains: `*.spec.ts` (Playwright), `*.test.ts` (Node `--experimental-strip-types`), `*.unit.ts` (pure unit), `fixtures/`
+
+**`inspired/`:**
+- Purpose: Read-only reference codebases (Squoosh, SVGOMG, url-encoder, version-0 prototype)
+- Note: Do NOT import from `inspired/` in application code. Reference only.
+
+**`example-ui/`:**
+- Purpose: Locked design token reference (`OIMG.html` — oklch palette, Inter + JetBrains Mono, accent green ~145°)
+- Note: Port design tokens from here verbatim; do not redesign.
 
 ## Key File Locations
 
 **Entry Points:**
-- `src/main.tsx`: React DOM mount + COOP check + font import
-- `src/App.tsx`: Root component, store subscriptions, layout composition
-- `src/workers/worker.ts`: Worker entry point, Comlink.expose
+- `src/main.tsx`: React app bootstrap, COOP check
+- `index.html`: Vite HTML shell
+- `src/workers/worker.ts`: Web Worker entry point
 
 **Configuration:**
-- `vite.config.ts`: Build + dev server settings
-- `tsconfig.app.json`: App TypeScript (imports resolve with `moduleResolution: "bundler"`)
-- `playwright.config.ts`: Test runner (Playwright)
-- `components.json`: shadcn component scaffolding
+- `vite.config.ts`: Vite build config (worker format, WASM assets, COOP/COEP headers, path alias `@`)
+- `tsconfig.app.json`: TypeScript config for app source
+- `playwright.config.ts`: Playwright test config
+- `components.json`: shadcn component registry
 
 **Core Logic:**
-- `src/workers/pool.ts`: WorkerPool class + singleton
-- `src/hooks/useBatchOrchestrate.ts`: Batch optimize orchestration
-- `src/stores/files.ts`: File registry + `addSourceWithVariants`
-- `src/stores/runtime.ts`: Batch progress + Object URL cache
-- `src/lib/memory-budget.ts`: `computeMemoryBudget` + `estimateJobBytes`
-- `src/lib/sanitize-svg.ts`: Post-SVGO DOMPurify sanitization
+- `src/App.tsx`: Root wiring
+- `src/stores/files.ts`: File state + actions
+- `src/stores/runtime.ts`: Batch orchestration state + `enqueuePreview`
+- `src/workers/pool.ts`: WorkerPool class
 
-**Types:**
-- `src/types/index.ts`: All domain types
-- `src/workers/types.ts`: Worker-specific types
+**Testing:**
+- `src/tests/`: All tests
+- `src/tests/fixtures/`: XSS SVGs, PNG fixtures, instrumentation helpers
 
 ## Naming Conventions
 
 **Files:**
-- React components: PascalCase, `.tsx` extension (e.g., `FilesPane.tsx`, `AppShell.tsx`)
-- Hooks: camelCase prefixed with `use`, `.ts` or `.tsx` (e.g., `useBatchOrchestrate.ts`)
-- Stores: camelCase, `.ts` (e.g., `files.ts`, `settings.ts`)
-- Worker adapters: kebab-case `<format>-adapter.ts` (e.g., `png-adapter.ts`)
-- Worker config builders: kebab-case `<format>-config.ts` (e.g., `png-config.ts`)
-- CSS Modules: camelCase module name matches component (`appShell.module.css` for `AppShell.tsx`)
-- Utilities: camelCase (e.g., `filename.ts`, `memory-budget.ts`)
-- Tests: `<subject>.spec.ts` (Playwright) or `<subject>.test.ts` (Node) or `<subject>.unit.ts`
+- Components: PascalCase with `.tsx` extension (e.g., `FilesPane.tsx`, `AppShell.tsx`)
+- CSS Modules: camelCase matching component name with `.module.css` (e.g., `appShell.module.css`)
+- Hooks: camelCase prefixed with `use` (e.g., `useBatchOrchestrate.ts`)
+- Stores: camelCase with `Store` suffix (e.g., `files.ts` exports `filesStore`)
+- Worker adapters: `{format}-adapter.ts` (e.g., `svg-adapter.ts`, `png-adapter.ts`)
+- Worker configs: `{format}-config.ts` (e.g., `svg-config.ts`)
+- Tests: `{subject}.spec.ts` (Playwright E2E), `{subject}.test.ts` (Node unit), `{subject}.unit.ts` (pure)
 
 **Directories:**
-- Shell components: PascalCase subdirectory with index file (e.g., `AppShell/AppShell.tsx`)
-- Panels: flat files in `panels/` (no subdirectory)
+- kebab-case for multi-word directories (e.g., `file-row/`, `shell/`)
+- PascalCase for component-specific sub-directories that match the component (e.g., `AppShell/`, `CommandPalette/`)
 
 ## Where to Add New Code
 
-**New codec format (e.g., JPEG XL):**
-1. Adapter: `src/workers/jxl-adapter.ts` — implement `run(input, settings): Promise<AdapterRunResult>`
-2. Config builder: `src/workers/jxl-config.ts` — implement `buildJxlSettings({...})`
-3. Register in ADAPTERS map: `src/workers/worker.ts` — add `jxl: () => import('./jxl-adapter')` as a literal-path entry
-4. Extend `AdapterFormat` union: `src/workers/types.ts`
-5. Extend `FormatId` union: `src/types/index.ts`
-6. Add codec settings type `CodecSettingsJxl`: `src/types/index.ts`
-7. Add store slice + defaults: `src/stores/settings.ts`, `src/data/defaults.ts`
+**New codec format (e.g., JXL):**
+1. Add adapter: `src/workers/jxl-adapter.ts`
+2. Add config builder: `src/workers/jxl-config.ts`
+3. Add literal import entry to `ADAPTERS` map in `src/workers/worker.ts`
+4. Extend `AdapterFormat` union in `src/workers/types.ts`
+5. Extend `FormatId` in `src/types/index.ts`
+6. Add codec settings type to `src/types/index.ts`
+7. Add default config to `src/data/defaults.ts`
 8. Add settings panel: `src/components/panels/JxlPanel.tsx`
-9. Wire in `useBatchOrchestrate.ts` settings resolution + `startOptimize` dispatch
+9. Add snippet registry entry in `src/lib/snippet-registry.ts` if format produces snippets
 
-**New inspector panel:**
-- Add `src/components/panels/<Name>Panel.tsx`
-- Import and render from `src/components/panels/InspectorPane.tsx`
+**New snippet type:**
+- Add entry to `SNIPPET_REGISTRY` in `src/lib/snippet-registry.ts`
+- Add generator function in `src/lib/svg-snippets.ts` (or new `{format}-snippets.ts`)
+- Do NOT add `switch(file.format)` to `SnippetPanel`
 
-**New shell component:**
-- Create `src/components/shell/<Name>/<Name>.tsx` + `<name>.module.css`
-- Import and compose in `src/App.tsx` or `src/components/shell/AppShell/AppShell.tsx`
+**New UI component (primitive):**
+- Location: `src/components/ui/{ComponentName}.tsx`
+- Use `npx shadcn add <component>` if a shadcn component exists
 
-**New utility:**
-- Add to `src/lib/<name>.ts` if it has no React/store dependencies
-- Add to appropriate hook in `src/hooks/` if it needs React lifecycle
+**New panel or pane component:**
+- Location: `src/components/panels/{Name}.tsx`
 
-**New Playwright test:**
-- Add `src/tests/<subject>.spec.ts`
-- Use `src/tests/fixtures/` for test assets
+**New shell chrome component:**
+- Location: `src/components/shell/{Name}/{Name}.tsx` with co-located `{name}.module.css`
+
+**New hook:**
+- Location: `src/hooks/use{Name}.ts`
+- Business logic (file handling, optimization) belongs in hooks, not components
 
 **New store action:**
-- Add method signature to the store interface in the relevant `src/stores/<slice>.ts`
-- Add implementation in the `create()` call
-- Cross-store reads must use `getState()`, not hooks
+- Add exported function to the relevant store file (`src/stores/files.ts`, `src/stores/settings.ts`, or `src/stores/runtime.ts`)
+- Re-export from `src/stores/index.ts` barrel
+
+**New utility (pure function):**
+- Location: `src/lib/{name}.ts`
+
+**New test:**
+- Playwright E2E: `src/tests/{subject}.spec.ts`
+- Node unit test: `src/tests/{subject}.test.ts`
+- Pure unit (no browser, no Playwright): `src/tests/{subject}.unit.ts`
 
 ## Special Directories
 
-**`example-ui/`:**
-- Purpose: Reference HTML/CSS design files with locked design tokens (oklch palette, typography)
-- Generated: No
-- Committed: Yes (source of truth for design token values)
-
-**`inspired/squoosh/`:**
-- Purpose: Squoosh source reference for architecture and codec patterns (do not import)
-- Generated: No
-- Committed: Yes (git submodule)
-
 **`.planning/`:**
-- Purpose: GSD planning artifacts — phase plans, codebase maps, research docs
-- Generated: By GSD commands
+- Purpose: GSD workflow planning artifacts (PROJECT.md, ROADMAP.md, phase plans, codebase map)
+- Generated: Partially (by GSD commands)
 - Committed: Yes
 
-**`dist/`:**
-- Purpose: Vite production build output
-- Generated: Yes (`vite build`)
-- Committed: No (in `.gitignore`)
+**`.agents/skills/`:**
+- Purpose: Agent skill definitions (SKILL.md indexes + rules)
+- Generated: No
+- Committed: Yes
 
-**`src/tests/fixtures/`:**
-- Purpose: Binary test assets (PNGs with ICC profiles, SVGs with XSS payloads)
+**`inspired/`:**
+- Purpose: Reference-only submodule repos (Squoosh, SVGOMG, url-encoder, version-0)
+- Generated: No
+- Committed: Yes (as subdirectories with their own `.git`)
+- Warning: Do NOT import from `inspired/` in application code
+
+**`example-ui/`:**
+- Purpose: Locked design reference HTML (`OIMG.html`)
 - Generated: No
 - Committed: Yes
 
 ---
 
-*Structure analysis: 2026-05-12*
+*Structure analysis: 2026-05-14*
