@@ -2,6 +2,16 @@
 // Source: 02-CONTEXT.md D-07; 02-PATTERNS.md lines 165-202.
 // Persistent in spirit (Phase 7 wires IndexedDB).
 // Migrated from zustand to nanostores.
+//
+// Circular-dep note: files.ts ↔ runtime.ts ↔ settings.ts form a three-way
+// circular ESM graph. Browser ESM handles this via live-binding resolution
+// (bindings are set when modules initialize; cross-calls only fire after all
+// modules are fully initialized). Node --experimental-strip-types does NOT
+// support circular ESM — unit tests that import files.ts must guard against
+// calling functions that reach runtime.ts or settings.ts.
+// Phase 6 plan 05-06: replaced all require() with top-level imports so the
+// browser context (Playwright + real app) no longer hits
+// "require is not defined" in ESM workers.
 
 import { map } from 'nanostores'
 import { toast } from 'sonner'
@@ -9,6 +19,8 @@ import { FileEntry, FormatId, Density } from '@/types'
 import { applyDensitySuffix, deduplicateName } from '@/lib/filename'
 import { sniffPngDimensions } from '@/lib/sniff'
 import { estimateJobBytes } from '@/lib/memory-budget'
+import { revokeObjectURL, markRename } from './runtime'
+import { settingsStore, clearPerFile } from './settings'
 
 export interface FileEntryWithBlob extends FileEntry {
   sourceBlob: Blob
@@ -68,14 +80,9 @@ export function addFile(entry: FileEntryWithBlob) {
 }
 
 export function removeFile(fileId: string) {
-  // Lazy imports to break circular dependency — same pattern as old getState() calls.
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { runtimeStore, revokeObjectURL } = require('./runtime') as typeof import('./runtime')
   revokeObjectURL(fileId)
 
   // WR-02: drop the per-file snippet toggle entry from the settings store.
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { settingsStore, clearPerFile } = require('./settings') as typeof import('./settings')
   const sSettings = settingsStore.get()
   if (fileId in sSettings.snippetTogglesByFileId) {
     const { [fileId]: _drop, ...rest } = sSettings.snippetTogglesByFileId
@@ -91,8 +98,6 @@ export function removeFile(fileId: string) {
     order: s.order.filter((id) => id !== fileId),
     selectedId: s.selectedId === fileId ? null : s.selectedId,
   })
-
-  void runtimeStore // silence unused import warning
 }
 
 export function markDone(
@@ -102,8 +107,6 @@ export function markDone(
   sanitizedCount?: number,
 ) {
   // PATTERNS.md Pitfall 3 — revoke the OLD url BEFORE writing the new optimized Blob.
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { revokeObjectURL } = require('./runtime') as typeof import('./runtime')
   revokeObjectURL(fileId)
 
   const s = filesStore.get()
@@ -166,11 +169,6 @@ export function setPreserveIcc(fileId: string, preserveIcc: boolean) {
 }
 
 export function clear() {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { revokeObjectURL } = require('./runtime') as typeof import('./runtime')
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { settingsStore } = require('./settings') as typeof import('./settings')
-
   for (const fileId of Object.keys(filesStore.get().byId)) {
     revokeObjectURL(fileId)
   }
@@ -260,8 +258,6 @@ export async function addSourceWithVariants(args: {
   })
 
   if (renameCount > 0) {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { markRename } = require('./runtime') as typeof import('./runtime')
     markRename(renameCount)
   }
 }

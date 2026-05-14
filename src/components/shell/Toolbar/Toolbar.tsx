@@ -180,13 +180,13 @@ const WorkersStatus = () => {
     )
 }
 
-const OptimizeButton = () => {
+const OptimizeButton = ({ onOptimize }: { onOptimize?: () => void }) => {
     const { running } = useStore(runtimeStore)
     const { order } = useStore(filesStore)
     const hasNoFiles = order.length === 0
 
     return (
-        <button className={s.tbtn} onClick={optimizeAll} disabled={running || hasNoFiles}>
+        <button className={s.tbtn} onClick={onOptimize ?? optimizeAll} disabled={running || hasNoFiles}>
             {running ? <><Icons.Pause size={13}/> Optimizing…</> : <><Icons.Play size={13}/> Optimize all</>}
         </button>
     )
@@ -256,18 +256,20 @@ const ToolbarDivider = () => {
 
 interface ToolbarProps {
     onChange: (v: ToolbarChange) => void
+    onOptimize?: () => void
 }
 
 export function Toolbar(props: ToolbarProps) {
     const {
         onChange,
+        onOptimize,
     } = props
 
   return (
     <div role="toolbar" aria-label="Actions" className={s.toolbar}>
       <AddFilesButton onChange={onChange} />
 
-      <OptimizeButton />
+      <OptimizeButton onOptimize={onOptimize} />
 
       <ExportButton />
 

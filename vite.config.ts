@@ -26,8 +26,23 @@ export default defineConfig({
   // for tens of seconds (svgo ships ~200 plugin source files). Pre-bundling
   // them collapses the import graph to a single chunk for both the main
   // thread and worker thread.
+  // Serve .wasm files as binary assets — Vite must not try to bundle them.
+  // Without this, @jsquash/* codec packages resolve their .wasm via
+  // new URL("squoosh_png_bg.wasm", import.meta.url) inside the Vite dep
+  // bundle, but the resulting URL (/node_modules/.vite/deps/squoosh_png_bg.wasm)
+  // has no file on disk. Vite then serves the SPA HTML fallback, causing
+  // "expected magic word 00 61 73 6d, found 3c 21 64 6f" errors in the worker.
+  assetsInclude: ['**/*.wasm'],
   optimizeDeps: {
     include: ['svgo/browser', 'dompurify'],
+    // Exclude jSquash codecs from dep bundling — they embed WASM via URL
+    // resolution that breaks when esbuild flattens them into the dep bundle.
+    // Serving them as raw ESM lets the browser fetch the WASM from its
+    // original node_modules path where Vite can proxy it correctly.
+    exclude: [
+      '@jsquash/png', '@jsquash/jpeg', '@jsquash/webp',
+      '@jsquash/avif', '@jsquash/oxipng', '@jsquash/resize',
+    ],
   },
   server: {
     headers: {
