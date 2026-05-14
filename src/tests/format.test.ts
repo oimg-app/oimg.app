@@ -17,6 +17,7 @@ try {
   assert('fmtPct(100, 50) returns "−50.0%"', fmtPct(100, 50) === '−50.0%')
   assert('fmtPct(100, 150) returns "+50.0%"', fmtPct(100, 150) === '+50.0%')
   assert('fmtPct(0, 0) returns "—"', fmtPct(0, 0) === '—')
+  assert('fmtPct(100, 0) returns "−100.0%"', fmtPct(100, 0) === '−100.0%')
   assert('fmtPct(100, 100) returns ""', fmtPct(100, 100) === '')
 } catch (err) {
   // Wave 0 stub state: module not yet written — treat as expected
