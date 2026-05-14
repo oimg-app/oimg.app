@@ -24,11 +24,11 @@ export function AppShell({ children: _children }: AppShellProps) {
         <ResizablePanel defaultSize={20} minSize={15} maxSize={35}>
           <FilesPane />
         </ResizablePanel>
-        <ResizableHandle />
+        <ResizableHandle withHandle />
         <ResizablePanel defaultSize={55}>
           <CenterPane />
         </ResizablePanel>
-        <ResizableHandle />
+        <ResizableHandle withHandle />
         <ResizablePanel defaultSize={25} minSize={18} maxSize={40}>
           <InspectorPane />
         </ResizablePanel>
