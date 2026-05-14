@@ -9,7 +9,7 @@
 
 - [x] **SETUP-01**: Tailwind CSS installed and extended with oimg design tokens — oklch palette, Inter (UI) + JetBrains Mono (code), accent green ~145°, custom spacing/radius matching OIMG.html
 - [x] **SETUP-02**: CSS variables from `example-ui/OIMG.html` ported to Tailwind theme config — dark theme default, light theme variant, all `--var` names mapped to Tailwind tokens
-- [ ] **SETUP-03**: Shadcn base components generated via CLI — `button`, `separator`, `tooltip`, `popover`, `slider`, `dialog`, `tabs`, `input`, `checkbox`, `switch`, `dropdown-menu`, `context-menu`, `menubar`, `kbd`, `resizable`, `sonner`, `spinner`
+- [x] **SETUP-03**: Shadcn base components generated via CLI — `button`, `separator`, `tooltip`, `popover`, `slider`, `dialog`, `tabs`, `input`, `checkbox`, `switch`, `dropdown-menu`, `context-menu`, `menubar`, `kbd`, `resizable`, `sonner`, `spinner`
 
 ### Stores
 
@@ -98,7 +98,7 @@
 |-------------|-------|--------|
 | SETUP-01 | 1 | Complete |
 | SETUP-02 | 1 | Complete |
-| SETUP-03 | 1 | Pending |
+| SETUP-03 | 1 | Complete |
 | STORE-05 | 1 | Pending |
 | STORE-06 | 1 | Pending |
 | ICON-01 | 1 | Pending |
