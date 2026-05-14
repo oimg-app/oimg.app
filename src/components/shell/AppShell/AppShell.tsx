@@ -21,15 +21,15 @@ export function AppShell({ children: _children }: AppShellProps) {
       className="dark h-screen w-screen flex flex-col overflow-hidden bg-[var(--color-bg-0)] text-[var(--color-fg-0)]"
     >
       <ResizablePanelGroup orientation="horizontal" className="flex-1 min-h-0">
-        <ResizablePanel defaultSize={20} minSize={15} maxSize={35}>
+        <ResizablePanel defaultSize="20%" minSize="10%">
           <FilesPane />
         </ResizablePanel>
         <ResizableHandle withHandle />
-        <ResizablePanel defaultSize={55}>
+        <ResizablePanel defaultSize="55%">
           <CenterPane />
         </ResizablePanel>
         <ResizableHandle withHandle />
-        <ResizablePanel defaultSize={25} minSize={18} maxSize={40}>
+        <ResizablePanel defaultSize="25%">
           <InspectorPane />
         </ResizablePanel>
       </ResizablePanelGroup>

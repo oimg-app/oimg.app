@@ -1,4 +1,0 @@
-/* ─── AppShell — outermost 4-row CSS grid (titlebar/toolbar/work/statusbar).
-   Quick task 260505-0hr — Task 3. Ported verbatim from legacy.css `.app`. */
-
-.app { display: grid; grid-template-rows: 36px 44px 1fr 22px; height: 100vh; width: 100vw; }

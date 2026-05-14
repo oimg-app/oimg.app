@@ -1,17 +1,9 @@
+"use client"
+
 import * as React from "react"
 import { Slider as SliderPrimitive } from "radix-ui"
 
 import { cn } from "@/lib/utils"
-
-type SliderProps = Omit<
-  React.ComponentProps<typeof SliderPrimitive.Root>,
-  "value" | "defaultValue" | "onValueChange"
-> & {
-  value?: number | number[]
-  defaultValue?: number | number[]
-  onChange?: (value: number) => void
-  label?: string
-}
 
 function Slider({
   className,
@@ -19,30 +11,25 @@ function Slider({
   value,
   min = 0,
   max = 100,
-  onChange,
-  label: _label,
   ...props
-}: SliderProps) {
-  const toArray = (v: number | number[] | undefined): number[] | undefined =>
-    v === undefined ? undefined : Array.isArray(v) ? v : [v]
-
-  const valueArr = toArray(value)
-  const defaultValueArr = toArray(defaultValue)
-
+}: React.ComponentProps<typeof SliderPrimitive.Root>) {
   const _values = React.useMemo(
-    () => valueArr ?? defaultValueArr ?? [min],
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [JSON.stringify(valueArr), JSON.stringify(defaultValueArr), min]
+    () =>
+      Array.isArray(value)
+        ? value
+        : Array.isArray(defaultValue)
+          ? defaultValue
+          : [min, max],
+    [value, defaultValue, min, max]
   )
 
   return (
     <SliderPrimitive.Root
       data-slot="slider"
-      defaultValue={defaultValueArr}
-      value={valueArr}
+      defaultValue={defaultValue}
+      value={value}
       min={min}
       max={max}
-      onValueChange={onChange ? (vals) => onChange(vals[0]) : undefined}
       className={cn(
         "relative flex w-full touch-none items-center select-none data-disabled:opacity-50 data-vertical:h-full data-vertical:min-h-40 data-vertical:w-auto data-vertical:flex-col",
         className

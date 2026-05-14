@@ -1,58 +1,87 @@
-import { useEffect, type CSSProperties, type ReactNode } from 'react';
+import * as React from "react"
+import { Popover as PopoverPrimitive } from "radix-ui"
 
-type Anchor = 'bl' | 'br' | 'tr';
+import { cn } from "@/lib/utils"
 
-interface PopoverProps {
-  open: boolean;
-  onClose: () => void;
-  children: ReactNode;
-  anchor?: Anchor;
-  style?: CSSProperties;
+function Popover({
+  ...props
+}: React.ComponentProps<typeof PopoverPrimitive.Root>) {
+  return <PopoverPrimitive.Root data-slot="popover" {...props} />
 }
 
-const POSITIONS: Record<Anchor, CSSProperties> = {
-  bl: { top: '100%', left: 0, marginTop: 4 },
-  br: { top: '100%', right: 0, marginTop: 4 },
-  tr: { bottom: '100%', right: 0, marginBottom: 4 },
-};
+function PopoverTrigger({
+  ...props
+}: React.ComponentProps<typeof PopoverPrimitive.Trigger>) {
+  return <PopoverPrimitive.Trigger data-slot="popover-trigger" {...props} />
+}
 
-// Hand-rolled popover — Phase 1 deviation D-06 (see deferred-items.md).
-// When closed we return null, so invisible items are removed from the tab
-// order. While open, the backdrop swallows outside clicks and a window-
-// level keydown listener closes on Escape.
-export function Popover({ open, onClose, children, anchor = 'bl', style = {} }: PopoverProps) {
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        e.stopPropagation();
-        onClose();
-      }
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [open, onClose]);
-
-  if (!open) return null;
-  const pos = POSITIONS[anchor];
+function PopoverContent({
+  className,
+  align = "center",
+  sideOffset = 4,
+  ...props
+}: React.ComponentProps<typeof PopoverPrimitive.Content>) {
   return (
-    <>
-      <div
-        className="pop-backdrop"
-        onMouseDown={onClose}
-        onContextMenu={(e) => {
-          e.preventDefault();
-          onClose();
-        }}
+    <PopoverPrimitive.Portal>
+      <PopoverPrimitive.Content
+        data-slot="popover-content"
+        align={align}
+        sideOffset={sideOffset}
+        className={cn(
+          "z-50 flex w-72 origin-(--radix-popover-content-transform-origin) flex-col gap-2.5 rounded-none bg-popover p-2.5 text-xs text-popover-foreground shadow-md ring-1 ring-foreground/10 outline-hidden duration-100 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+          className
+        )}
+        {...props}
       />
-      <div
-        className="popover"
-        role="menu"
-        style={{ ...pos, ...style }}
-        onMouseDown={(e) => e.stopPropagation()}
-      >
-        {children}
-      </div>
-    </>
-  );
+    </PopoverPrimitive.Portal>
+  )
+}
+
+function PopoverAnchor({
+  ...props
+}: React.ComponentProps<typeof PopoverPrimitive.Anchor>) {
+  return <PopoverPrimitive.Anchor data-slot="popover-anchor" {...props} />
+}
+
+function PopoverHeader({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="popover-header"
+      className={cn("flex flex-col gap-1 text-xs", className)}
+      {...props}
+    />
+  )
+}
+
+function PopoverTitle({ className, ...props }: React.ComponentProps<"h2">) {
+  return (
+    <div
+      data-slot="popover-title"
+      className={cn("text-sm font-medium", className)}
+      {...props}
+    />
+  )
+}
+
+function PopoverDescription({
+  className,
+  ...props
+}: React.ComponentProps<"p">) {
+  return (
+    <p
+      data-slot="popover-description"
+      className={cn("text-xs/relaxed text-muted-foreground", className)}
+      {...props}
+    />
+  )
+}
+
+export {
+  Popover,
+  PopoverAnchor,
+  PopoverContent,
+  PopoverDescription,
+  PopoverHeader,
+  PopoverTitle,
+  PopoverTrigger,
 }
