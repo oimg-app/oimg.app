@@ -1,29 +1,38 @@
-// AppShell — outermost layout component.
-// Owns the role="application" landmark and renders the 4-row CSS grid.
-// Plan 01-04: titleBar/toolbar/statusBar slots already render their own
-// <header>/<div role="toolbar">/<footer>, so AppShell does not double-wrap.
-// Quick task 260505-0hr — Task 3: grid rule moved from legacy.css into
-// co-located appShell.module.css; consumed via `s.app`.
-
+// Phase 01-foundation / Plan 05 — SHELL-01 three-pane resizable layout
+import {
+  ResizablePanelGroup,
+  ResizablePanel,
+  ResizableHandle,
+} from '@/components/ui/resizable'
+import { FilesPane } from '@/components/panels/FilesPane'
+import { CenterPane } from '@/components/panels/CenterPane'
+import { InspectorPane } from '@/components/panels/InspectorPane'
 import type { ReactNode } from 'react'
-import s from './appShell.module.css'
 
 interface AppShellProps {
-  titleBar: ReactNode
-  toolbar: ReactNode
-  workArea: ReactNode // the entire <main className="work">…</main>
-  statusBar: ReactNode
-  overlays?: ReactNode // toasts + command palette mount here, outside the grid
+  children?: ReactNode
 }
 
-export function AppShell({ titleBar, toolbar, workArea, statusBar, overlays }: AppShellProps) {
+export function AppShell({ children: _children }: AppShellProps) {
   return (
-    <div role="application" aria-label="OIMG Image Optimizer" className={s.app}>
-      {titleBar}
-      {toolbar}
-      {workArea}
-      {statusBar}
-      {overlays}
+    <div
+      role="application"
+      aria-label="OIMG Image Optimizer"
+      className="dark h-screen w-screen flex flex-col overflow-hidden bg-[var(--color-bg-0)] text-[var(--color-fg-0)]"
+    >
+      <ResizablePanelGroup direction="horizontal" className="flex-1 min-h-0">
+        <ResizablePanel defaultSize={20} minSize={15} maxSize={35}>
+          <FilesPane />
+        </ResizablePanel>
+        <ResizableHandle />
+        <ResizablePanel defaultSize={55}>
+          <CenterPane />
+        </ResizablePanel>
+        <ResizableHandle />
+        <ResizablePanel defaultSize={25} minSize={18} maxSize={40}>
+          <InspectorPane />
+        </ResizablePanel>
+      </ResizablePanelGroup>
     </div>
   )
 }
