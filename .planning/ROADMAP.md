@@ -42,9 +42,9 @@
   3. oklch CSS variables are active — accent green, dark theme default, Inter + JetBrains Mono fonts visible
   4. `stub-data.ts` exports 12 `FileEntry` items and 22 `SvgoPlugin` items; `format.ts` exports `fmtBytes` and `fmtPct`; `@phosphor-icons/react` resolves correctly
   5. All 17 Shadcn base components are generated and importable
-**Plans:** 5 plans
+**Plans:** 1/5 plans executed
 Plans:
-- [ ] 01-01-PLAN.md — Wave 0: npm install + 3 test stubs (foundation.spec.ts, stub-data.test.ts, format.test.ts)
+- [x] 01-01-PLAN.md — Wave 0: npm install + 3 test stubs (foundation.spec.ts, stub-data.test.ts, format.test.ts)
 - [ ] 01-02-PLAN.md — CSS tokens (SETUP-01, SETUP-02): src/index.css with Tailwind v4 @theme + :root + .dark, plus src/lib/utils.ts (cn helper)
 - [ ] 01-03-PLAN.md — Shadcn components (SETUP-03): generate 17 primitives via `npx shadcn@4.7.0 add`
 - [ ] 01-04-PLAN.md — Stub data + format utils (STORE-05, STORE-06, ICON-01): src/lib/stub-data.ts + src/lib/format.ts
@@ -142,7 +142,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 0/5 | Planned | - |
+| 1. Foundation | 1/5 | In Progress|  |
 | 2. Files Pane | 0/? | Not started | - |
 | 3. Navigation Shell | 0/? | Not started | - |
 | 4. Inspector — Codec + SVGO | 0/? | Not started | - |
