@@ -142,7 +142,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 5/5 | Complete   | 2026-05-14 |
+| 1. Foundation | 5/5 | Complete    | 2026-05-14 |
 | 2. Files Pane | 0/? | Not started | - |
 | 3. Navigation Shell | 0/? | Not started | - |
 | 4. Inspector — Codec + SVGO | 0/? | Not started | - |
