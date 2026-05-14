@@ -34,27 +34,6 @@
   --radius:                        var(--radius);
 }
 
-/* ── OIMG-specific token extensions ─────────────────────────────────── */
-@theme inline {
-  --color-bg-0:        var(--color-bg-0);
-  --color-bg-1:        var(--color-bg-1);
-  --color-bg-2:        var(--color-bg-2);
-  --color-bg-3:        var(--color-bg-3);
-  --color-line:        var(--color-line);
-  --color-line-strong: var(--color-line-strong);
-  --color-fg-0:        var(--color-fg-0);
-  --color-fg-1:        var(--color-fg-1);
-  --color-fg-2:        var(--color-fg-2);
-  --color-fg-3:        var(--color-fg-3);
-  --color-accent:      var(--color-accent);
-  --color-accent-dim:  var(--color-accent-dim);
-  --color-accent-fg:   var(--color-accent-fg);
-  --color-warn:        var(--color-warn);
-  --color-err:         var(--color-err);
-  --color-info:        var(--color-info);
-  --font-sans:         var(--font-sans);
-  --font-mono:         var(--font-mono);
-}
 
 /* ── Light theme (:root) ─────────────────────────────────────────────── */
 :root {
