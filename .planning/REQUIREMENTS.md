@@ -7,8 +7,8 @@
 
 ### Setup
 
-- [ ] **SETUP-01**: Tailwind CSS installed and extended with oimg design tokens — oklch palette, Inter (UI) + JetBrains Mono (code), accent green ~145°, custom spacing/radius matching OIMG.html
-- [ ] **SETUP-02**: CSS variables from `example-ui/OIMG.html` ported to Tailwind theme config — dark theme default, light theme variant, all `--var` names mapped to Tailwind tokens
+- [x] **SETUP-01**: Tailwind CSS installed and extended with oimg design tokens — oklch palette, Inter (UI) + JetBrains Mono (code), accent green ~145°, custom spacing/radius matching OIMG.html
+- [x] **SETUP-02**: CSS variables from `example-ui/OIMG.html` ported to Tailwind theme config — dark theme default, light theme variant, all `--var` names mapped to Tailwind tokens
 - [ ] **SETUP-03**: Shadcn base components generated via CLI — `button`, `separator`, `tooltip`, `popover`, `slider`, `dialog`, `tabs`, `input`, `checkbox`, `switch`, `dropdown-menu`, `context-menu`, `menubar`, `kbd`, `resizable`, `sonner`, `spinner`
 
 ### Stores
@@ -94,23 +94,50 @@
 
 ## Traceability
 
-*Populated by roadmapper.*
-
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SETUP-01..03 | TBD | Pending |
-| STORE-01..08, ICON-01 | TBD | Pending |
-| SHELL-01..03 | TBD | Pending |
-| NAV-01..04 | TBD | Pending |
-| FILES-01..05 | TBD | Pending |
-| CENTER-01..04 | TBD | Pending |
-| INSP-01..08 | TBD | Pending |
+| SETUP-01 | 1 | Complete |
+| SETUP-02 | 1 | Complete |
+| SETUP-03 | 1 | Pending |
+| STORE-05 | 1 | Pending |
+| STORE-06 | 1 | Pending |
+| ICON-01 | 1 | Pending |
+| SHELL-01 | 1 | Pending |
+| STORE-01 | 2 | Pending |
+| STORE-03 | 2+3 | Pending |
+| FILES-01 | 2 | Pending |
+| FILES-02 | 2 | Pending |
+| FILES-03 | 2 | Pending |
+| FILES-04 | 2 | Pending |
+| FILES-05 | 2 | Pending |
+| STORE-04 | 3 | Pending |
+| STORE-07 | 3 | Pending |
+| SHELL-03 | 3 | Pending |
+| NAV-01 | 3 | Pending |
+| NAV-02 | 3 | Pending |
+| NAV-03 | 3 | Pending |
+| NAV-04 | 3 | Pending |
+| STORE-02 | 4 | Pending |
+| INSP-01 | 4 | Pending |
+| INSP-02 | 4 | Pending |
+| INSP-03 | 4 | Pending |
+| INSP-04 | 4 | Pending |
+| INSP-05 | 4 | Pending |
+| INSP-06 | 4 | Pending |
+| CENTER-01 | 5 | Pending |
+| CENTER-02 | 5 | Pending |
+| CENTER-03 | 5 | Pending |
+| CENTER-04 | 5 | Pending |
+| INSP-07 | 6 | Pending |
+| INSP-08 | 6 | Pending |
+| SHELL-02 | 7 | Pending |
+| STORE-08 | 7 (audit) | Pending |
 
 **Coverage:**
 - v1 requirements: 36 total
-- Mapped to phases: 0 (pending roadmap)
-- Unmapped: 36 ⚠️
+- Mapped to phases: 36
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-05-14*
-*Last updated: 2026-05-14 after initial definition*
+*Last updated: 2026-05-14 after roadmap creation*
