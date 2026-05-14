@@ -5,7 +5,8 @@ import '@fontsource-variable/jetbrains-mono'
 import './index.css'
 import App from './App.tsx'
 
-if (!crossOriginIsolated) {
+export const isCrossOriginIsolated: boolean = crossOriginIsolated
+if (!isCrossOriginIsolated) {
   console.error(
     '[oimg] crossOriginIsolated is false. ' +
     'COOP/COEP headers are missing or a cross-origin resource is blocking COEP. ' +
@@ -13,7 +14,11 @@ if (!crossOriginIsolated) {
   )
 }
 
-createRoot(document.getElementById('root')!).render(
+const rootEl = document.getElementById('root')
+if (!rootEl) {
+  throw new Error('[oimg] #root element not found — check index.html')
+}
+createRoot(rootEl).render(
   <StrictMode>
     <App />
   </StrictMode>,
