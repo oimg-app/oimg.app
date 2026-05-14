@@ -17,14 +17,14 @@
 - [ ] **STORE-02**: `src/stores/settings.ts` — `settingsAtom` with `codec:Codec='WebP'`, `q=82`, `method=4`, `lossless=false`, `resizeOn=false`, `w='1600'`, `h='auto'`, `alg='lanczos3'`, `fit='contain'`, `stripMeta=true`, `keepIcc=false`, `aggressive=false`, `plugins:SvgoPlugin[]`; types `Codec='SVG'|'PNG'|'WebP'|'JPEG'|'AVIF'`, `SvgoPlugin={id,on,saves}`; constants exported: `CODECS`, `RESIZE_ALGS`, `FIT_MODES`; initial plugins from `stub-data.ts`; actions: `setCodec`, `setQuality`, `setMethod`, `setLossless`, `setResizeOn`, `setResizeDimensions(w,h)`, `setFit`, `setAlg`, `setStripMeta`, `setKeepIcc`, `setAggressive`, `togglePlugin(id)`
 - [ ] **STORE-03**: `src/stores/ui.ts` — `uiAtom` with `open:string|null=null`, `view:View='Batch'`, `tab:Tab='codec'`, `split=50`, `zoom=100`, `cmdkOpen=false`, `cmdkQ=''`, `cmdkSel=0`, `rowMenu:string|null=null`, `theme:'dark'|'light'='dark'`; types `View='Batch'|'Compare'|'Report'`, `Tab='codec'|'svgo'|'output'|'report'`; computed `$cmdFlat` filtering `ALL_COMMANDS` by `cmdkQ`; actions: `setOpen`, `setView`, `setTab`, `setSplit`, `setZoom`, `openCmdk`, `closeCmdk`, `setCmdkQuery`, `setCmdkSel`, `setRowMenu`, `setTheme` — zero imports from other stores
 - [ ] **STORE-04**: `src/stores/runtime.ts` — `runtimeAtom` with `running=false`, `toasts:Toast[]`; `Toast={id:string,msg:string,meta?:string}`; actions: `startRun`, `stopRun`, `pushToast(msg,meta?)`, `dismissToast(id)`
-- [ ] **STORE-05**: `src/lib/stub-data.ts` — typed exports: `STUB_FILES:FileEntry[]` (12 entries from `data.jsx`), `SVGO_PLUGINS:SvgoPlugin[]` (22 plugins from `data.jsx`), `CODECS`, `RESIZE_ALGS`, `FIT_MODES` — single source of truth; no component imports this directly
-- [ ] **STORE-06**: `src/lib/format.ts` — pure utilities: `fmtBytes(b:number):string`, `fmtPct(orig:number,opt:number):string` — ported from `data.jsx`
+- [x] **STORE-05**: `src/lib/stub-data.ts` — typed exports: `STUB_FILES:FileEntry[]` (12 entries from `data.jsx`), `SVGO_PLUGINS:SvgoPlugin[]` (22 plugins from `data.jsx`), `CODECS`, `RESIZE_ALGS`, `FIT_MODES` — single source of truth; no component imports this directly
+- [x] **STORE-06**: `src/lib/format.ts` — pure utilities: `fmtBytes(b:number):string`, `fmtPct(orig:number,opt:number):string` — ported from `data.jsx`
 - [ ] **STORE-07**: `src/lib/commands.ts` — `ALL_COMMANDS:CommandGroup[]` (Actions / View / Codec groups from `app.jsx`); `CommandItem={ic,label,meta?,group,do:()=>void}`; handlers call store actions
 - [ ] **STORE-08**: All components read data exclusively via `useStore(atom)` or exported constants from stores — zero direct stub-data imports in components; zero app-level `useState`; only ephemeral hover/focus state allowed in components
 
 ### Icons
 
-- [ ] **ICON-01**: `icons.jsx` not ported — replaced by `@phosphor-icons/react` throughout; icon mapping established: `Play→PlayCircle`, `Pause→PauseCircle`, `Upload→UploadSimple`, `Download→DownloadSimple`, `Layers→Stack`, `Filter→Funnel`, `More→DotsThreeVertical`, `Zap→Lightning`, `BarChart→ChartBar`, `Grid→SquaresFour`, `Lock→LockSimple`, `Eye→Eye`, `File→File`, `Image→Image`, `Code→Code`, `Check→Check`, `X→X`, `ChevronRight→CaretRight`, `ChevronDown→CaretDown`, `Trash→Trash`, `Search→MagnifyingGlass`, `Settings→GearSix`, `Copy→Copy`, `Sun→Sun`, `Moon→Moon`, `Plus→Plus`
+- [x] **ICON-01**: `icons.jsx` not ported — replaced by `@phosphor-icons/react` throughout; icon mapping established: `Play→PlayCircle`, `Pause→PauseCircle`, `Upload→UploadSimple`, `Download→DownloadSimple`, `Layers→Stack`, `Filter→Funnel`, `More→DotsThreeVertical`, `Zap→Lightning`, `BarChart→ChartBar`, `Grid→SquaresFour`, `Lock→LockSimple`, `Eye→Eye`, `File→File`, `Image→Image`, `Code→Code`, `Check→Check`, `X→X`, `ChevronRight→CaretRight`, `ChevronDown→CaretDown`, `Trash→Trash`, `Search→MagnifyingGlass`, `Settings→GearSix`, `Copy→Copy`, `Sun→Sun`, `Moon→Moon`, `Plus→Plus`
 
 ### Shell
 
@@ -99,9 +99,9 @@
 | SETUP-01 | 1 | Complete |
 | SETUP-02 | 1 | Complete |
 | SETUP-03 | 1 | Complete |
-| STORE-05 | 1 | Pending |
-| STORE-06 | 1 | Pending |
-| ICON-01 | 1 | Pending |
+| STORE-05 | 1 | Complete |
+| STORE-06 | 1 | Complete |
+| ICON-01 | 1 | Complete |
 | SHELL-01 | 1 | Pending |
 | STORE-01 | 2 | Pending |
 | STORE-03 | 2+3 | Pending |
