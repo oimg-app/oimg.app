@@ -28,7 +28,7 @@
 
 ### Shell
 
-- [ ] **SHELL-01**: `AppShell` renders 3-pane resizable layout — FilesPane (left, fixed width ~240px) | CenterPane (center, flex-grow) | InspectorPane (right, fixed width ~260px) — using Radix resizable panels; layout fills viewport height
+- [x] **SHELL-01**: `AppShell` renders 3-pane resizable layout — FilesPane (left, fixed width ~240px) | CenterPane (center, flex-grow) | InspectorPane (right, fixed width ~260px) — using Radix resizable panels; layout fills viewport height
 - [ ] **SHELL-02**: `BackpressureIndicator` renders in shell — visible when `runtimeAtom.running` is true
 - [ ] **SHELL-03**: `<html>` `data-theme` attribute set from `uiAtom.theme`; theme toggle calls `setTheme` action
 
@@ -102,7 +102,7 @@
 | STORE-05 | 1 | Complete |
 | STORE-06 | 1 | Complete |
 | ICON-01 | 1 | Complete |
-| SHELL-01 | 1 | Pending |
+| SHELL-01 | 1 | Complete |
 | STORE-01 | 2 | Pending |
 | STORE-03 | 2+3 | Pending |
 | FILES-01 | 2 | Pending |

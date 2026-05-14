@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-last_updated: "2026-05-14T21:00:52.482Z"
+last_updated: "2026-05-14T21:05:08.356Z"
 progress:
   total_phases: 7
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 5
-  completed_plans: 4
-  percent: 80
+  completed_plans: 5
+  percent: 100
 ---
 
 # STATE: oimg.app — UI Port Milestone
@@ -21,14 +21,14 @@ progress:
 
 ## Current Position
 
-Phase: 1 (Foundation) — EXECUTING
-Plan: 5 of 5
+Phase: 1 (Foundation) — COMPLETE (awaiting Task 5 visual checkpoint)
+Plan: 5 of 5 — COMPLETE (automated tasks)
 | Field | Value |
 |-------|-------|
 | **Current Phase** | 1 — Foundation |
-| **Current Plan** | None (not yet planned) |
-| **Status** | Pending |
-| **Progress** | `[ ][ ][ ][ ][ ][ ][ ]` 0/7 phases complete |
+| **Current Plan** | 5 of 5 — awaiting visual checkpoint |
+| **Status** | Checkpoint: human-verify |
+| **Progress** | `[x][ ][ ][ ][ ][ ][ ]` 1/7 phases pending verification |
 
 ---
 
@@ -45,6 +45,7 @@ Plan: 5 of 5
 ---
 | Phase 01-foundation P01 | 5min | 3 tasks | 3 files |
 | Phase 01-foundation P04 | 5min | 2 tasks | 2 files |
+| Phase 01-foundation P05 | 3min | 4 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -56,6 +57,8 @@ Plan: 5 of 5
 - ICON-01 folded into Phase 1 (phosphor icon mapping established at foundation)
 - STORE-03 (uiAtom) split: selectedId/rowMenu used in Phase 2, full atom completed in Phase 3
 - [Phase ?]: Robustness across Node versions
+- ResizablePanelGroup uses orientation='horizontal' not direction (actual react-resizable-panels API)
+- AppShell wires panes internally; children prop preserved for Phase 7 overlay compat
 
 ### Conventions (active from Phase 1)
 
@@ -76,7 +79,8 @@ Plan: 5 of 5
 
 ## Session Continuity
 
-**To resume:** Read `.planning/ROADMAP.md` Phase 1 details, then run `/gsd-plan-phase 1`.
+**Last session:** 2026-05-14 — Completed 01-05-PLAN.md (Walking Skeleton). All 3 Playwright tests green. Awaiting Task 5 visual checkpoint.
+**To resume:** Visit http://localhost:5173 (`npm run dev`) and confirm dark 3-pane layout, then approve checkpoint.
 
 ---
 
@@ -90,7 +94,7 @@ Plan: 5 of 5
 | STORE-05 | 1 | Pending |
 | STORE-06 | 1 | Pending |
 | ICON-01 | 1 | Pending |
-| SHELL-01 | 1 | Pending |
+| SHELL-01 | 1 | Complete |
 | STORE-01 | 2 | Pending |
 | STORE-03 (partial) | 2 | Pending |
 | FILES-01 | 2 | Pending |
