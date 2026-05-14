@@ -7,13 +7,7 @@ import {
 import { FilesPane } from '@/components/panels/FilesPane'
 import { CenterPane } from '@/components/panels/CenterPane'
 import { InspectorPane } from '@/components/panels/InspectorPane'
-import type { ReactNode } from 'react'
-
-interface AppShellProps {
-  children?: ReactNode
-}
-
-export function AppShell({ children: _children }: AppShellProps) {
+export function AppShell() {
   return (
     <div
       role="application"
