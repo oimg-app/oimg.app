@@ -20,7 +20,7 @@ export function AppShell({ children: _children }: AppShellProps) {
       aria-label="OIMG Image Optimizer"
       className="dark h-screen w-screen flex flex-col overflow-hidden bg-[var(--color-bg-0)] text-[var(--color-fg-0)]"
     >
-      <ResizablePanelGroup direction="horizontal" className="flex-1 min-h-0">
+      <ResizablePanelGroup orientation="horizontal" className="flex-1 min-h-0">
         <ResizablePanel defaultSize={20} minSize={15} maxSize={35}>
           <FilesPane />
         </ResizablePanel>
