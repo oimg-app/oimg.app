@@ -1,7 +1,8 @@
 ---
 phase: 2
 slug: files-pane
-status: draft
+status: approved
+reviewed_at: 2026-05-16
 shadcn_initialized: true
 preset: radix-lyra
 created: 2026-05-16
@@ -22,8 +23,8 @@ created: 2026-05-16
 | Preset | radix-lyra | components.json `.style` |
 | Component library | Radix UI (via shadcn) | components.json |
 | Icon library | @phosphor-icons/react v2.1.10 | components.json `.iconLibrary: "phosphor"` |
-| Font — UI | Inter 400/500/600 | OIMG.html `--sans` var |
-| Font — Code/Mono | JetBrains Mono 400/500/600 | OIMG.html `--mono` var |
+| Font — UI | Inter 400/600 | OIMG.html `--sans` var |
+| Font — Code/Mono | JetBrains Mono 400/600 | OIMG.html `--mono` var |
 | Styling | Tailwind utility classes only — no CSS modules, no inline styles | CLAUDE.md |
 
 **Registry safety:** shadcn official only. No third-party registries declared. Gate: not required.
@@ -44,31 +45,49 @@ Multiples of 4 only. Values derived from OIMG.html reference measurements.
 | 2xl | 32px | — |
 | 3xl | 64px | — |
 
-Exceptions:
-- File row vertical padding: 7px (from OIMG.html `.file-row`). Use `py-[7px]` Tailwind arbitrary value.
-- Pane header height: 32px. Use `h-8`.
-- Format badge (thumb): 28×28px. Use `w-7 h-7`.
-- Status dot: 8×8px. Use `w-2 h-2`.
-- Context button (iconbtn): 22×22px. Use `w-[22px] h-[22px]`.
-- Totals padding: 10px 12px. Use `py-[10px] px-3`.
+**Exceptions — all values locked from OIMG.html reference. Do not alter; deviating breaks visual parity with the locked design tokens.**
+
+| Exception name | Value | Tailwind class | Element | Justification |
+|----------------|-------|---------------|---------|---------------|
+| file-row-py | 7px | `py-[7px]` | FileRow vertical padding | locked from OIMG.html `.file-row` — do not alter |
+| iconbtn-size | 22px | `w-[22px] h-[22px]` | Context button (ctxbtn) + header icon buttons | locked from OIMG.html `.iconbtn` — do not alter |
+| totals-py | 10px | `py-[10px]` | Totals bar vertical padding | locked from OIMG.html `.totals` — do not alter |
+| dropzone-label-mb | 3px | `mb-[3px]` | Dropzone primary label bottom margin | locked from OIMG.html `.dropzone` — do not alter |
+| stat-row-gap | 6px | `gap-[6px]` | File stat row gap between items | locked from OIMG.html `.stat-row` — do not alter |
+| stat-row-mt | 6px | `mt-[6px]` | Format pills top margin in dropzone | locked from OIMG.html `.dropzone` — do not alter |
+| stat-mt | 2px | `mt-[2px]` | Stat row top margin below file name | locked from OIMG.html `.file-meta` — do not alter |
+| dropzone-p | 14px | `p-[14px]` | Dropzone internal padding | locked from OIMG.html `.dropzone` — do not alter |
+| totals-gap-x | 14px | `gap-x-[14px]` | Totals grid column gap | locked from OIMG.html `.totals` — do not alter |
+| file-row-grid-gap | 10px | `gap-[10px]` | FileRow grid column gap | locked from OIMG.html `.file-row` — do not alter |
+| pane-header-h | 32px | `h-8` | FilesPane header height | 32px = 8 × 4 — within scale; use `h-8` |
+| format-badge | 28×28px | `w-7 h-7` | Format badge thumbnail | 28px = 7 × 4 — within scale; use `w-7 h-7` |
+| status-dot | 8×8px | `w-2 h-2` | Status indicator dot | 8px = 2 × 4 — within scale |
 
 ---
 
 ## Typography
 
-All sizes from OIMG.html `html, body` and component-specific rules. Two fonts: Inter (UI) and JetBrains Mono (data/code).
+All sizes from OIMG.html component-specific rules. Two fonts: Inter (UI) and JetBrains Mono (data/code).
+Maximum 4 font sizes. Maximum 2 font weights: 400 (regular) and 600 (semibold).
 
 | Role | Size | Weight | Line Height | Font | Usage |
 |------|------|--------|-------------|------|-------|
-| Body | 13px | 400 | 1.45 | Inter (`font-sans`) | General text, file names label |
-| Label / UI small | 12px | 500 | 1.45 | Inter (`font-sans`) | File name, toolbar buttons, dropzone big text |
-| Stat / mono | 11px | 400 | 1.45 | JetBrains Mono (`font-mono`) | File sizes, savings %, format label in badge |
-| Pane header | 10.5px | 600 | 1.2 | JetBrains Mono (`font-mono`) | "Queue · N files" — uppercase, letter-spacing 0.08em |
-| Totals value | 13px | 600 | 1.2 | JetBrains Mono (`font-mono`) | Stat cell primary value — tabular-nums |
-| Totals label | 10px | 400 | 1.2 | JetBrains Mono (`font-mono`) | Stat cell label — uppercase, letter-spacing 0.06em |
-| Format badge text | 8.5px | 600 | 1 | JetBrains Mono (`font-mono`) | Type abbreviation inside badge |
+| Body / Totals value | 13px | 400 (body) / 600 (totals) | 1.45 (body) / 1.2 (totals) | Inter for body; JetBrains Mono (`font-mono`) for totals | General text; totals stat cell primary value (tabular-nums) |
+| Label / File name / Stat mono | 12px | 400 (stat) / 600 (file name) | 1.45 | Inter (`font-sans`) for file name; JetBrains Mono (`font-mono`) for stat values | File name (truncate); file sizes, savings %; dropzone secondary text |
+| Pane header / Totals label | 10px | 600 (pane header) / 400 (totals label) | 1.2 | JetBrains Mono (`font-mono`) | "QUEUE · N FILES" uppercase tracking-[0.08em]; totals cell label uppercase tracking-[0.06em] |
+| Format badge | 8.5px | 600 | 1 | JetBrains Mono (`font-mono`) | Type abbreviation inside badge — single exception, no other usage |
 
-Tailwind implementation note: use `text-[13px]`, `text-[10.5px]`, `text-[8.5px]` for sizes not in the default scale. Use `tracking-[0.08em]` for pane header, `tracking-[0.06em]` for totals labels, `uppercase` class for both.
+Note: The prior 10.5px (pane header) is rounded to 10px. The prior 11px (stat mono) is rounded up to 12px. Weight 500 (`font-medium`) is removed — all prior weight-500 usages (dropzone format pills, file name label) are reassigned to 400 (regular) or 600 (semibold) per role importance.
+
+Tailwind implementation: `text-[13px]`, `text-[12px]`, `text-[10px]`, `text-[8.5px]`. Use `tracking-[0.08em]` for pane header, `tracking-[0.06em]` for totals labels, `uppercase` for both.
+
+---
+
+## Visuals — Focal Point
+
+- **0 files state:** The Dropzone is the primary visual focal point. Dashed border + centered copy draw the eye to the drop target.
+- **Files present:** The first FileRow anchors the eye at the top of the scroll list. The Totals bar at the bottom provides a secondary anchor — accent-colored "SAVED" and "SAVED %" values reinforce the value proposition.
+- There is no competing focal point between these two anchors; the pane header is intentionally subdued (fg-2 text, bg-1 surface).
 
 ---
 
@@ -101,7 +120,7 @@ Tokens from `src/index.css` (ported from OIMG.html). All values use CSS variable
 ### Accent (10%) — reserved for these specific elements only
 
 - Selected file row left border stripe (2px, `bg-[var(--accent)]`)
-- Savings percentage badge text when savings ≥ 30% (`text-[var(--accent)]`)
+- Savings percentage badge text when savings >= 30% (`text-[var(--accent)]`)
 - Status dot — done state (`bg-[var(--accent)]`)
 - Totals bar — "Saved" and "Compression %" values (`text-[var(--accent)]`)
 - SVG format badge text color (`text-[var(--accent)]`)
@@ -142,7 +161,7 @@ New components to build this phase:
 - Background: `bg-[var(--bg-1)]`
 - Border bottom: `border-b border-[var(--line)]`
 - Padding: `px-3` (12px)
-- Label: "QUEUE · N FILES" — `font-mono text-[10.5px] font-semibold tracking-[0.08em] uppercase text-[var(--fg-2)]`
+- Label: "QUEUE · N FILES" — `font-mono text-[10px] font-semibold tracking-[0.08em] uppercase text-[var(--fg-2)]`
 - N = `$filteredFiles.length` from nanostores computed atom
 - Icon buttons (sort + add): `w-[22px] h-[22px]` — `text-[var(--fg-2)] hover:bg-[var(--bg-3)] hover:text-[var(--fg-0)]` — `rounded`
 - Sort icon: `Funnel` from @phosphor-icons/react (size 13)
@@ -158,7 +177,7 @@ New components to build this phase:
 - Background: transparent (default); drag-over: `bg-[var(--accent-dim)] border-[var(--accent)] text-[var(--fg-0)]`
 - Primary label: "Drop images to optimize" — `text-[13px] font-semibold text-[var(--fg-0)] block mb-[3px]`
 - Secondary label: "or click to browse · max 200 files" — `text-[12px] text-[var(--fg-2)]`
-- Format pills row: "SVG · PNG · JPEG · WEBP · AVIF · JXL" — `font-mono text-[10px] font-medium tracking-[0.05em] text-[var(--fg-3)] mt-[6px]`
+- Format pills row: "SVG · PNG · JPEG · WEBP · AVIF · JXL" — `font-mono text-[10px] tracking-[0.05em] text-[var(--fg-3)] mt-[6px]`
 - Always visible above file list (not a conditional state)
 
 ### 3. FileRow (FILES-03)
@@ -186,12 +205,12 @@ Badge text: uppercase abbreviation (`file.type.toUpperCase()` — 3-4 chars max)
 
 #### 3b. File Meta
 
-- File name: `text-[12px] font-medium text-[var(--fg-0)] truncate` (overflow ellipsis, no wrap)
-- Stat row: `font-mono text-[11px] text-[var(--fg-2)] flex gap-[6px] items-center mt-[2px]`
+- File name: `text-[12px] font-semibold text-[var(--fg-0)] truncate` (overflow ellipsis, no wrap)
+- Stat row: `font-mono text-[12px] text-[var(--fg-2)] flex gap-[6px] items-center mt-[2px]`
   - Orig size: `fmtBytes(file.orig)`
   - Arrow: `→` — `text-[var(--fg-3)]`
   - Opt size: `fmtBytes(file.opt)`
-  - Savings badge: `font-semibold` — accent when savings ≥ 30%: `text-[var(--accent)]`; warn when savings < 30%: `text-[var(--warn)]`; value from `fmtPct(file.orig, file.opt)`
+  - Savings badge: `font-semibold` — accent when savings >= 30%: `text-[var(--accent)]`; warn when savings < 30%: `text-[var(--warn)]`; value from `fmtPct(file.orig, file.opt)`
 
 #### 3c. Row Right Column
 
