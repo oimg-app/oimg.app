@@ -71,3 +71,72 @@ test('StatusBar shows versions and totals (NAV-03)', async ({ page }) => {
   const fileCount = page.getByTestId('status-filecount')
   await expect(fileCount).toHaveText(/^\d+ files$/)
 })
+
+// SHELL-03: html data-theme attribute
+test('html data-theme attribute set (SHELL-03)', async ({ page }) => {
+  await page.goto('/')
+  const theme = await page.evaluate(() => document.documentElement.dataset.theme)
+  expect(theme).toBe('dark')
+})
+
+test('Toolbar theme toggle swaps html data-theme (SHELL-03)', async ({ page }) => {
+  await page.goto('/')
+  await page.getByRole('button', { name: 'Toggle theme' }).click()
+  const themeLight = await page.evaluate(() => document.documentElement.dataset.theme)
+  expect(themeLight).toBe('light')
+  await page.getByRole('button', { name: 'Toggle theme' }).click()
+  const themeDark = await page.evaluate(() => document.documentElement.dataset.theme)
+  expect(themeDark).toBe('dark')
+})
+
+// NAV-04: CommandPalette
+test('Meta+K opens CommandPalette (NAV-04)', async ({ page }) => {
+  await page.goto('/')
+  await page.keyboard.press('Meta+k')
+  await expect(page.getByTestId('command-palette')).toBeVisible()
+})
+
+test('Escape closes CommandPalette (NAV-04)', async ({ page }) => {
+  await page.goto('/')
+  await page.keyboard.press('Meta+k')
+  await expect(page.getByTestId('command-palette')).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(page.getByTestId('command-palette')).not.toBeVisible()
+})
+
+test('Typing filters command list (NAV-04)', async ({ page }) => {
+  await page.goto('/')
+  await page.keyboard.press('Meta+k')
+  await expect(page.getByTestId('command-palette')).toBeVisible()
+  await page.getByRole('searchbox', { name: 'Search commands' }).fill('opt')
+  // Optimize all should be visible
+  await expect(page.getByRole('option', { name: /optimize/i })).toBeVisible()
+  // Batch view should NOT be visible
+  await expect(page.getByRole('option', { name: 'Batch view' })).not.toBeVisible()
+})
+
+test('Arrow keys move selection (NAV-04)', async ({ page }) => {
+  await page.goto('/')
+  await page.keyboard.press('Meta+k')
+  await expect(page.getByTestId('command-palette')).toBeVisible()
+  // First item should be selected
+  const firstOption = page.locator('[role="option"][aria-selected="true"]')
+  await expect(firstOption).toBeVisible()
+  // Press ArrowDown — selection moves to next item
+  await page.keyboard.press('ArrowDown')
+  const selected = page.locator('[role="option"][aria-selected="true"]')
+  const selectedId = await selected.getAttribute('id')
+  expect(selectedId).toBe('cmd-item-1')
+})
+
+test('Enter on Optimize all sets running (NAV-04 + STORE-04)', async ({ page }) => {
+  await page.goto('/')
+  await page.keyboard.press('Meta+k')
+  await page.getByRole('searchbox', { name: 'Search commands' }).fill('Optimize')
+  // Press Enter to execute first (and only) result
+  await page.keyboard.press('Enter')
+  // Palette should be closed
+  await expect(page.getByTestId('command-palette')).not.toBeVisible()
+  // Worker pip should show Running
+  await expect(page.getByTestId('worker-pip')).toHaveAttribute('aria-label', 'Worker status: Running')
+})
