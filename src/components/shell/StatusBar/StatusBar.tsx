@@ -1,10 +1,15 @@
-// Phase 03 — NAV-03 (minimal slice: worker pip + Idle/Running label). Source: 03-01-PLAN.md
+// Phase 03 — NAV-03 (full NAV-03: pip + versions + WASM + file count + size summary). Source: 03-02-PLAN.md
 import { useStore } from '@nanostores/react'
 import { runtimeAtom } from '@/stores/runtime'
+import { filesAtom, $totals } from '@/stores/files'
+import { fmtBytes } from '@/lib/format'
 import { cn } from '@/lib/utils'
 
 export function StatusBar() {
   const { running } = useStore(runtimeAtom)
+  const totals = useStore($totals)
+  const { entries } = useStore(filesAtom)
+
   return (
     <div
       data-testid="statusbar"
@@ -21,6 +26,21 @@ export function StatusBar() {
         )}
       />
       <span>{running ? 'Running' : 'Idle'}</span>
+
+      <span aria-hidden="true">·</span>
+      <span className="font-mono text-[11px] font-semibold">SVGO 4.0.1</span>
+
+      <span aria-hidden="true">·</span>
+      <span className="font-mono text-[11px] font-semibold">@squoosh-kit/core 0.6.0</span>
+
+      <span aria-hidden="true">·</span>
+      <span>WASM ready · 312 KB</span>
+
+      <span aria-hidden="true">·</span>
+      <span data-testid="status-filecount">{entries.length} files</span>
+
+      <span aria-hidden="true">·</span>
+      <span data-testid="status-totals">{fmtBytes(totals.orig)} → {fmtBytes(totals.opt)}</span>
     </div>
   )
 }

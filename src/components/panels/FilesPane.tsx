@@ -6,7 +6,7 @@ import type { SortKey } from '@/lib/stub-data'
 import { fmtBytes } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { FileRow } from '@/components/file-row/FileRow'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/Popover'
 
 const SORT_OPTIONS: { label: string; key: SortKey }[] = [
   { label: 'Queue order', key: 'queue order' },

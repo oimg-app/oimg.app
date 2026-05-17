@@ -10,6 +10,7 @@ import { CenterPane } from '@/components/panels/CenterPane'
 import { InspectorPane } from '@/components/panels/InspectorPane'
 import { Toolbar } from '@/components/shell/Toolbar/Toolbar'
 import { StatusBar } from '@/components/shell/StatusBar/StatusBar'
+import { TitleBar } from '@/components/shell/TitleBar/TitleBar'
 
 export function AppShell() {
   return (
@@ -18,6 +19,7 @@ export function AppShell() {
       aria-label="OIMG Image Optimizer"
       className="dark h-screen w-screen flex flex-col overflow-hidden bg-[var(--color-bg-0)] text-[var(--color-fg-0)]"
     >
+      <TitleBar />
       <Toolbar />
       <ResizablePanelGroup orientation="horizontal" className="flex-1 min-h-0">
         <ResizablePanel defaultSize="20%" minSize="10%">
