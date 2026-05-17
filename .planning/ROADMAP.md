@@ -67,7 +67,7 @@ Plans:
 **Plans:** 1/2 plans executed
 Plans:
 - [x] 02-01-PLAN.md — Stores foundation: filesAtom (STORE-01) + uiAtom full shape (STORE-03) + barrel re-export
-- [ ] 02-02-PLAN.md — FilesPane vertical slice: FileRow + FilesPane body (FILES-01..05) + human-verify checkpoint
+- [x] 02-02-PLAN.md — FilesPane vertical slice: FileRow + FilesPane body (FILES-01..05) + human-verify checkpoint
 **UI hint**: yes
 
 ### Phase 3: Navigation Shell
