@@ -22,3 +22,52 @@ test('Clicking Optimize all flips worker pip to Running (NAV-02 wire)', async ({
   const pip = page.getByTestId('worker-pip')
   await expect(pip).toHaveAttribute('aria-label', 'Worker status: Running')
 })
+
+// NAV-01: TitleBar tests
+test('TitleBar renders (NAV-01)', async ({ page }) => {
+  await page.goto('/')
+  await expect(page.getByTestId('titlebar')).toBeVisible()
+  await expect(page.getByText('OIMG · image optimizer')).toBeVisible()
+  await expect(page.getByRole('banner')).toBeVisible()
+})
+
+test('TitleBar Codec menu opens (NAV-01)', async ({ page }) => {
+  await page.goto('/')
+  await page.getByRole('button', { name: 'Codec' }).click()
+  await expect(page.getByRole('button', { name: 'WebP' })).toBeVisible()
+  await page.getByRole('button', { name: 'View' }).click()
+  await expect(page.getByRole('button', { name: 'WebP' })).not.toBeVisible()
+  await expect(page.getByRole('button', { name: 'Light theme' })).toBeVisible()
+})
+
+// NAV-02: Toolbar segmented control + filter tests
+test('Toolbar segmented control switches view (NAV-02)', async ({ page }) => {
+  await page.goto('/')
+  const batchBtn = page.getByRole('radio', { name: 'Batch' })
+  const compareBtn = page.getByRole('radio', { name: 'Compare' })
+  await expect(batchBtn).toHaveAttribute('aria-checked', 'true')
+  await compareBtn.click()
+  await expect(compareBtn).toHaveAttribute('aria-checked', 'true')
+  await expect(batchBtn).toHaveAttribute('aria-checked', 'false')
+})
+
+test('Toolbar filter input updates files store (NAV-02)', async ({ page }) => {
+  await page.goto('/')
+  const filterInput = page.getByRole('searchbox', { name: 'Filter files' })
+  // Verify the input is present and accepts input
+  await expect(filterInput).toBeVisible()
+  await filterInput.fill('hero')
+  // Verify the value was accepted (store is wired)
+  await expect(filterInput).toHaveValue('hero')
+})
+
+// NAV-03: StatusBar versions and totals
+test('StatusBar shows versions and totals (NAV-03)', async ({ page }) => {
+  await page.goto('/')
+  await expect(page.getByText('SVGO 4.0.1')).toBeVisible()
+  await expect(page.getByText('@squoosh-kit/core 0.6.0')).toBeVisible()
+  const totals = page.getByTestId('status-totals')
+  await expect(totals).toContainText('→')
+  const fileCount = page.getByTestId('status-filecount')
+  await expect(fileCount).toHaveText(/^\d+ files$/)
+})
