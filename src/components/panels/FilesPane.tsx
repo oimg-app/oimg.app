@@ -85,8 +85,8 @@ export function FilesPane() {
         {[
           { label: 'BEFORE',  value: fmtBytes(totals.orig),             valueClass: 'text-[var(--fg-0)]' },
           { label: 'AFTER',   value: fmtBytes(totals.opt),              valueClass: 'text-[var(--fg-0)]' },
-          { label: 'SAVED',   value: fmtBytes(totals.saved),            valueClass: 'text-[var(--accent)]' },
-          { label: 'SAVED %', value: `${totals.pct.toFixed(1)}%`,       valueClass: 'text-[var(--accent)]' },
+          { label: 'SAVED',   value: fmtBytes(totals.saved),            valueClass: 'text-[var(--primary)]' },
+          { label: 'SAVED %', value: `${totals.pct.toFixed(1)}%`,       valueClass: 'text-[var(--primary)]' },
         ].map(({ label, value, valueClass }) => (
           <div key={label} className="flex flex-col">
             <span className="font-mono text-[10px] tracking-[0.06em] uppercase text-[var(--fg-2)]">{label}</span>

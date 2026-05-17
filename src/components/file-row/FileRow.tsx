@@ -31,7 +31,7 @@ import type { FileEntry } from '@/lib/stub-data'
 
 // PITFALL-05: key on 'jpg' not 'jpeg' (type field in FileEntry uses 'jpg')
 const BADGE_CLASS: Record<string, string> = {
-  svg:  'bg-[repeating-linear-gradient(45deg,var(--bg-2)_0_4px,var(--bg-3)_4px_5px)] text-[var(--accent)]',
+  svg:  'bg-[repeating-linear-gradient(45deg,var(--bg-2)_0_4px,var(--bg-3)_4px_5px)] text-[var(--primary)]',
   png:  'bg-[linear-gradient(135deg,oklch(0.55_0.12_250)_0%,oklch(0.45_0.10_280)_100%)] text-[oklch(0.95_0_0)]',
   jpg:  'bg-[linear-gradient(135deg,oklch(0.65_0.13_60)_0%,oklch(0.55_0.15_30)_100%)] text-[oklch(0.95_0_0)]',
   webp: 'bg-[linear-gradient(135deg,oklch(0.60_0.14_195)_0%,oklch(0.50_0.12_220)_100%)] text-[oklch(0.95_0_0)]',
@@ -65,7 +65,7 @@ export function FileRow({ file }: { file: FileEntry }) {
   const STATUS_DOT: Record<string, string> = {
     queued:     'bg-[var(--fg-3)]',
     processing: 'bg-[var(--info)] animate-pulse',
-    done:       'bg-[var(--accent)]',
+    done:       'bg-[var(--primary)]',
     error:      'bg-[var(--err)]',
   }
 
@@ -77,7 +77,7 @@ export function FileRow({ file }: { file: FileEntry }) {
         className={cn(
           'grid grid-cols-[28px_1fr_auto] gap-[10px] items-center px-3 py-[7px] border-b border-[var(--line)] relative cursor-default group',
           'hover:bg-[var(--bg-1)]',
-          (isSelected || hasMenu) && 'bg-[var(--accent-dim)] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[2px] before:bg-[var(--accent)]'
+          (isSelected || hasMenu) && 'bg-[var(--accent-dim)] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[2px] before:bg-[var(--primary)]'
         )}
       >
         {/* Format badge */}
@@ -98,7 +98,7 @@ export function FileRow({ file }: { file: FileEntry }) {
             <span>{fmtBytes(file.orig)}</span>
             <span className="text-[var(--fg-3)]">→</span>
             <span>{fmtBytes(file.opt)}</span>
-            <span className={cn('font-semibold', savingsPct < 30 ? 'text-[var(--warn)]' : 'text-[var(--accent)]')}>
+            <span className={cn('font-semibold', savingsPct < 30 ? 'text-[var(--warn)]' : 'text-[var(--primary)]')}>
               {fmtPct(file.orig, file.opt)}
             </span>
           </div>

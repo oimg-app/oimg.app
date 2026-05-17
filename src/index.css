@@ -110,6 +110,36 @@
   --color-err:          oklch(0.72 0.19 25);
   --color-info:         oklch(0.78 0.13 235);
 
+  /* ─── OIMG layout dimensions ─────────────────────────── */
+  --height-titlebar:     36px;
+  --height-toolbar:      44px;
+  --height-pane-header:  32px;
+  --height-statusbar:    22px;
+  --height-btn:          28px;
+  --width-file-panel:    320px;
+  --width-tweaks-panel:  340px;
+  --font-feature-sans:   'cv11', 'ss01';
+  --font-feature-mono:   'zero', 'ss02';
+
+  --mono: var(--font-mono);
+  --sans: var(--font-sans);
+  --bg-0: var(--color-bg-0);
+  --bg-1: var(--color-bg-1);
+  --bg-2: var(--color-bg-2);
+  --bg-3: var(--color-bg-3);
+  --line: var(--color-line);
+  --line-strong: var(--color-line-strong);
+  --fg-0: var(--color-fg-0);
+  --fg-1: var(--color-fg-1);
+  --fg-2: var(--color-fg-2);
+  --fg-3: var(--color-fg-3);
+  --accent-dim: var(--color-accent-dim);
+  --accent-fg: var(--color-accent-fg);
+  --warn: var(--color-warn);
+  --err: var(--color-err);
+  --info: var(--color-info);
+
+
   /* shadcn semantic aliases — dark */
   --background:          var(--color-bg-0);
   --foreground:          var(--color-fg-0);
