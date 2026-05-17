@@ -64,7 +64,10 @@ Plans:
   4. Right-clicking a row (or clicking the context button) opens the context menu popover; "Remove from queue" calls `removeFile(id)` and the row disappears
   5. Totals bar shows 4 stat cells with computed values from `$totals`
   6. Dropzone "Drop images to optimize" zone is visible above the file list
-**Plans**: TBD
+**Plans:** 2 plans
+Plans:
+- [ ] 02-01-PLAN.md — Stores foundation: filesAtom (STORE-01) + uiAtom full shape (STORE-03) + barrel re-export
+- [ ] 02-02-PLAN.md — FilesPane vertical slice: FileRow + FilesPane body (FILES-01..05) + human-verify checkpoint
 **UI hint**: yes
 
 ### Phase 3: Navigation Shell
