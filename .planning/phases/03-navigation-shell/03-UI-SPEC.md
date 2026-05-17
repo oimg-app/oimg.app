@@ -52,7 +52,7 @@ Declared values (all multiples of 4):
 | Token | Value | Usage in this phase |
 |-------|-------|---------------------|
 | xs | 4px | Pane header action gaps; dot gaps in brand mark |
-| sm | 8px | TitleBar menu button padding (4px 8px); Toolbar gap |
+| sm | 8px | TitleBar menu button padding (4px 8px); Toolbar gap; Toolbar horizontal padding |
 | md | 12px | TitleBar horizontal padding; popover internal padding |
 | lg | 16px | Section spacing inside popovers |
 | xl | 24px | N/A — not used in chrome components |
@@ -61,14 +61,19 @@ Declared values (all multiples of 4):
 
 Exceptions:
 - TitleBar padding: `0 12px` (12px is 3×4, within the scale)
-- Toolbar padding: `0 10px` — use `px-2.5` (10px, acceptable exception for dense toolbar)
+- Toolbar padding: `0 8px` — use `px-2` (8px, on-scale)
 - Toolbar button height: 28px — use `h-7`
 - Toolbar gap: `gap-2` (8px)
 - TitleBar menu button: `px-2 py-1` (8px / 4px)
-- StatusBar height: 22px — fixed; use `h-[22px]`
 - Brand mark accent square: 12×12px — use `w-3 h-3`
 - Worker pip dot: 8×8px — use `w-2 h-2`
 - Icon button touch target (pane header): 22×22px — use `w-[22px] h-[22px]`
+
+**Spacing Exceptions (non-4-step multiples — explicit justification required):**
+
+| Value | Location | Justification |
+|-------|----------|---------------|
+| 22px | StatusBar height; icon button touch target (pane header) | Locked from reference `example-ui/OIMG.html` `grid-template-rows: 36px 44px 1fr 22px`. Not a standard 4-step multiple; overriding would break the CSS grid contract. |
 
 ---
 
@@ -76,16 +81,22 @@ Exceptions:
 
 Source: `example-ui/OIMG.html` `html { font: 13px/1.45 var(--sans) }`
 
+Exactly 4 sizes declared. No other sizes permitted in Phase 3 components.
+
 | Role | Size | Weight | Line Height | Font | Usage |
 |------|------|--------|-------------|------|-------|
-| Body / default | 13px (`text-[13px]`) | 400 (regular) | 1.45 | Inter | StatusBar text, popover body |
-| Label / UI | 12px (`text-xs`) | 500 (medium) | 1.4 | Inter | TitleBar menu items, Toolbar button labels, filter input |
-| Label / mono | 11–12px (`text-[11px]`) | 600 (semibold) | 1.2 | JetBrains Mono | Pane headers (uppercase, `letter-spacing: 0.08em`); brand mark; Kbd hints |
-| Small / meta | 11px (`text-[11px]`) | 400 (regular) | 1.4 | Inter | StatusBar version strings; CommandPalette group headers |
+| CommandPalette search | 14px (`text-sm`) | 400 (regular) | 1.45 | Inter | CommandPalette search input only |
+| Body / default | 13px (`text-[13px]`) | 400 (regular) | 1.45 | Inter | StatusBar text, popover body, command items |
+| Label / UI | 12px (`text-xs`) | 400 (regular) | 1.4 | Inter | TitleBar menu items, Toolbar button labels, filter input, brand mark wordmark, segmented control labels |
+| Small / mono | 11px (`text-[11px]`) | 400 or 600 | 1.2–1.4 | Inter or JetBrains Mono | Kbd hints (Mono 600), pane headers (Mono 600 uppercase), StatusBar meta (Inter 400), CommandPalette group headers (Mono 600 uppercase), CommandPalette footer (Inter 400), StatusBar version strings (Mono 600) |
 
-**Active weights: 400 (regular) + 500 (medium) + 600 (semibold)**
+**Active weights: 400 (regular) + 600 (semibold) — maximum 2 weights.**
 
-Note: the reference uses three weights. The executor may use 500 only where Inter's 400 and 500 are visually indistinct in this component (toolbar buttons). Do not add weight 700.
+Weight assignment:
+- 400: all body text, UI labels (toolbar buttons, menu items, filter input, StatusBar, wordmark, seg labels)
+- 600: brand mark accent context, JetBrains Mono elements (kbd hints, pane headers, StatusBar version strings), primary "Optimize all" button, CommandPalette group headers
+
+Weight 500 is not used. Do not add weight 700.
 
 ---
 
@@ -119,6 +130,8 @@ Source: `src/index.css` — OIMG oklch tokens, both themes. **All values are CSS
 4. CommandPalette selected-item highlight row background (`--color-accent-dim`)
 5. Focus ring on interactive elements (`ring: var(--color-accent)`)
 
+**Primary visual focal point:** The "Optimize all" button (accent background, leftmost primary action in Toolbar) is the single highest-contrast element in the chrome and draws the eye to the primary workflow action.
+
 **Theme switching:** All color tokens are CSS custom properties on `:root` (light) and `[data-theme="dark"]` (dark). The `<html>` `data-theme` attribute is set from `uiAtom.theme` via `useEffect` in `AppShell`. TitleBar and Toolbar theme toggle buttons only call `setTheme()` — they do not manipulate the DOM directly.
 
 ---
@@ -131,7 +144,7 @@ Height: 36px. Background: `--color-bg-1`. Bottom border: 1px `--color-line`.
 
 **Brand mark:**
 - Accent square: 12×12px, `clip-path: polygon(0 0, 100% 0, 100% 60%, 60% 100%, 0 100%)`, background `--color-accent`
-- Wordmark: "OIMG · image optimizer" — font JetBrains Mono, weight 600, 11.5px, `letter-spacing: 0.04em`, color `--color-fg-0`
+- Wordmark: "OIMG · image optimizer" — font JetBrains Mono, weight 600, **12px** (`text-xs`), `letter-spacing: 0.04em`, color `--color-fg-0`
 
 **Menu buttons (Codec / View / Help):**
 - Font: Inter 12px weight 400
@@ -148,16 +161,16 @@ Height: 36px. Background: `--color-bg-1`. Bottom border: 1px `--color-line`.
 - Border-radius: 6px
 - Box-shadow: `--shadow-elev`
 - Internal padding: 8px
-- Menu item: full-width, `px-3 py-1.5`, text 12px, color `--color-fg-0`; hover: background `--color-bg-3`
-- Kbd hints inside items: JetBrains Mono 10px, padding `px-1.5 py-0.5`, border 1px `--color-line`, border-radius 3px, color `--color-fg-1`, bg `--color-bg-0`
+- Menu item: full-width, `px-3 py-1.5`, text 12px weight 400, color `--color-fg-0`; hover: background `--color-bg-3`
+- Kbd hints inside items: JetBrains Mono **11px** weight 600, padding `px-1 py-1`, border 1px `--color-line`, border-radius 3px, color `--color-fg-1`, bg `--color-bg-0`
 
 **Right section (pills + search):**
-- "100% local" + "Offline-ready" pills: 11px Inter, color `--color-fg-2`, no background (text only with separator)
+- "100% local" + "Offline-ready" pills: 11px Inter weight 400, color `--color-fg-2`, no background (text only with separator)
 - Search/⌘K button: ghost style (no border, transparent bg), icon `MagnifyingGlass` 14px, shortcut hint `⌘K` in Kbd
 
 ### Toolbar (NAV-02)
 
-Height: 44px. Background: `--color-bg-1`. Bottom border: 1px `--color-line`. Padding: `px-2.5`. Gap: `gap-2`.
+Height: 44px. Background: `--color-bg-1`. Bottom border: 1px `--color-line`. Padding: `px-2` (8px). Gap: `gap-2`.
 
 **Toolbar button (`.tbtn` equivalent):**
 - Height: 28px (`h-7`)
@@ -165,7 +178,7 @@ Height: 44px. Background: `--color-bg-1`. Bottom border: 1px `--color-line`. Pad
 - Border: 1px `--color-line`
 - Background: `--color-bg-2`
 - Border-radius: 5px
-- Font: Inter 500 12px
+- Font: Inter weight 400 12px
 - Color: `--color-fg-0`
 - Icon size: 13px (w-[13px] h-[13px])
 - Hover: background `--color-bg-3`, border-color `--color-line-strong`
@@ -181,26 +194,29 @@ Height: 44px. Background: `--color-bg-1`. Bottom border: 1px `--color-line`. Pad
 - Main action + chevron-down icon in same visual group
 - Separator between action and dropdown: 1px vertical `--color-line`
 - Popover opens on chevron click (`setOpen("tb-add")` / `"tb-export"` / `"tb-auto"`)
+- Labels "Export" and "Auto" are intentionally short — matched from `app.jsx` reference for toolbar space constraints. These are copywriting exceptions: "Export" (not "Export files") and "Auto" (not "Auto-optimize") are correct.
 
 **Ghost button (theme toggle, settings):**
 - Background: transparent
 - Border: none
 - Hover: background `--color-bg-2`
+- Theme toggle `aria-label`: `"Toggle theme"`
+- Settings `aria-label`: `"Open settings"`
 
 **Segmented control (Batch / Compare / Report):**
 - Height: 28px
 - Border: 1px `--color-line`
 - Border-radius: 5px
 - Background: `--color-bg-2`
-- Segment padding: `px-2.5`
-- Font: Inter 500 11.5px
+- Segment padding: `px-2` (8px)
+- Font: Inter weight 400 **12px** (`text-xs`)
 - Default color: `--color-fg-1`
 - Active segment: background `--color-bg-3`, color `--color-fg-0`
 - Segments separated by 1px `--color-line` vertical borders
 
 **Toolbar divider:**
 - Width: 1px, height: 18px, background: `--color-line`
-- Margin: `mx-0.5`
+- Margin: `mx-1` (4px)
 
 **Filter search input:**
 - Height: 28px (`h-7`)
@@ -208,16 +224,16 @@ Height: 44px. Background: `--color-bg-1`. Bottom border: 1px `--color-line`. Pad
 - Background: `--color-bg-2`
 - Border: 1px `--color-line`
 - Border-radius: 5px
-- Padding: `px-2 gap-[7px]`
+- Padding: `px-2 gap-[8px]`
 - Icon: `MagnifyingGlass` 12px, color `--color-fg-2`
-- Input text: 12px, color `--color-fg-0`, placeholder color `--color-fg-2`
+- Input text: 12px weight 400, color `--color-fg-0`, placeholder color `--color-fg-2`
 - Focus: border-color `--color-accent`, ring `--color-accent` 1px
 
 ### StatusBar (NAV-03)
 
 Height: 22px. Background: `--color-bg-1`. Top border: 1px `--color-line`. Padding: `px-3`.
 
-Font: Inter 11px, color `--color-fg-2`. Mono values use JetBrains Mono.
+Font: Inter 11px weight 400, color `--color-fg-2`. Mono values use JetBrains Mono weight 600.
 
 Items (left-to-right, separated by `·` divider character or 1px vertical line):
 
@@ -225,8 +241,8 @@ Items (left-to-right, separated by `·` divider character or 1px vertical line):
    - Idle: background `--color-accent`
    - Running: background `--color-info`, `animate-pulse` (1.4s ease-in-out infinite)
    - Label: "Idle" or "Running"
-2. **SVGO version:** `"SVGO 4.0.1"` — static string, JetBrains Mono
-3. **Codec version:** `"@squoosh-kit/core 0.6.0"` — static string, JetBrains Mono
+2. **SVGO version:** `"SVGO 4.0.1"` — static string, JetBrains Mono weight 600
+3. **Codec version:** `"@squoosh-kit/core 0.6.0"` — static string, JetBrains Mono weight 600
 4. **WASM status:** `"WASM ready · 312 KB"` — static string
 5. **File count:** N files from `$totals` — format `"{n} files"`
 6. **Size summary:** orig → opt from `$totals` — format `"{fmtBytes(orig)} → {fmtBytes(opt)}"` using `fmtBytes` from `src/lib/format.ts`
@@ -250,16 +266,16 @@ Implemented as Shadcn `Dialog` with full-screen backdrop. Always mounted; visibi
 - Height: 48px (`h-12`)
 - Padding: `px-4`
 - Border-bottom: 1px `--color-line`
-- Font: Inter 14px
+- Font: Inter 14px weight 400
 - Color: `--color-fg-0`
 - Placeholder: "Search commands…"
 - Icon: `MagnifyingGlass` 16px, color `--color-fg-2`, left-padded
 
 **Command list:**
 - Max-height: 320px, overflow-y auto
-- Group header: 10px Inter 600, uppercase, `letter-spacing: 0.06em`, color `--color-fg-3`, padding `px-4 py-2`
-- Command item: `px-4 py-2`, 13px Inter, color `--color-fg-0`
-  - Meta shortcut: 11px JetBrains Mono, color `--color-fg-2`, right-aligned
+- Group header: **11px** JetBrains Mono weight 600, uppercase, `letter-spacing: 0.06em`, color `--color-fg-3`, padding `px-4 py-2`
+- Command item: `px-4 py-2`, 13px Inter weight 400, color `--color-fg-0`
+  - Meta shortcut: 11px JetBrains Mono weight 600, color `--color-fg-2`, right-aligned
   - Selected state: background `--color-accent-dim`, left border 2px `--color-accent`
   - Hover: background `--color-bg-2`
 
@@ -268,7 +284,7 @@ Implemented as Shadcn `Dialog` with full-screen backdrop. Always mounted; visibi
 - Background: `--color-bg-0`
 - Top border: 1px `--color-line`
 - Padding: `px-4`
-- Font: 11px Inter, color `--color-fg-3`
+- Font: 11px Inter weight 400, color `--color-fg-3`
 - Content: `↑↓ navigate · Enter select · Esc close` — use Kbd component for key hints
 
 **Keyboard interactions:**
@@ -318,8 +334,8 @@ Do NOT use `next-themes` ThemeProvider. Do NOT hardcode `className="dark"` on Ap
 |---------|------|--------|
 | Primary CTA | "Optimize all" | NAV-02 spec + `app.jsx` |
 | Add files split-button | "Add files" | NAV-02 spec |
-| Export split-button | "Export" | NAV-02 spec |
-| Auto split-button | "Auto" | NAV-02 spec |
+| Export split-button | "Export" | NAV-02 spec — intentionally short for toolbar space; matches `app.jsx` reference (copywriting exception) |
+| Auto split-button | "Auto" | NAV-02 spec — intentionally short for toolbar space; matches `app.jsx` reference (copywriting exception) |
 | Add submenu item 1 | "From device" | `app.jsx` |
 | Add submenu item 2 | "Watch folder" | `app.jsx` |
 | Add submenu item 3 | "From URL or paste" | `app.jsx` |
@@ -337,6 +353,8 @@ Do NOT use `next-themes` ThemeProvider. Do NOT hardcode `className="dark"` on Ap
 | Pill 1 | "100% local" | NAV-01 spec |
 | Pill 2 | "Offline-ready" | NAV-01 spec |
 | Search/⌘K button label (screen reader) | "Open command palette" | accessibility |
+| Theme toggle button aria-label | "Toggle theme" | accessibility |
+| Settings button aria-label | "Open settings" | accessibility |
 | CommandPalette placeholder | "Search commands…" | `app.jsx` |
 | CommandPalette footer | "↑↓ navigate · Enter select · Esc close" | `app.jsx` |
 | CommandPalette empty state | "No commands match" | default |
