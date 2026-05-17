@@ -2,7 +2,7 @@
 import { useStore } from '@nanostores/react'
 import { MagnifyingGlass } from '@phosphor-icons/react'
 import { uiAtom, setOpen, setTheme, openCmdk } from '@/stores/ui'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/Popover'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Kbd } from '@/components/ui/kbd'
 
 const menuItemClass =

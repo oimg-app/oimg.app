@@ -5,7 +5,7 @@ import { uiAtom, setOpen, setView, setTheme } from '@/stores/ui'
 import type { View } from '@/stores/ui'
 import { filesAtom, setFilter } from '@/stores/files'
 import { startRun } from '@/stores/runtime'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/Popover'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { cn } from '@/lib/utils'
 
 const tbtnClass =
