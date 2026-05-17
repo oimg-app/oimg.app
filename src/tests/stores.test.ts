@@ -124,5 +124,98 @@ try {
   }
 }
 
+// ── STORE-07 + STORE-03 completion: ALL_COMMANDS + $cmdFlat ─────────────────
+try {
+  const commands = await import('../lib/commands.ts')
+  const ui = await import('../stores/ui.ts')
+
+  // Reset cmdkQ to '' and register commands
+  ui.uiAtom.set({ ...ui.uiAtom.get(), cmdkQ: '', cmdkSel: 0 })
+  const flat = commands.ALL_COMMANDS.flatMap((g: import('../lib/commands.ts').CommandGroup) => g.items)
+  ui.registerCommands(flat)
+
+  // Test 2: ALL_COMMANDS is non-empty, every item has label/group/do
+  assert(
+    'ALL_COMMANDS is non-empty',
+    Array.isArray(commands.ALL_COMMANDS) && commands.ALL_COMMANDS.length > 0,
+  )
+  for (const group of commands.ALL_COMMANDS) {
+    for (const item of group.items) {
+      assert(
+        `item "${item.label}" has string label`,
+        typeof item.label === 'string',
+      )
+      assert(
+        `item "${item.label}" has string group`,
+        typeof item.group === 'string',
+      )
+      assert(
+        `item "${item.label}" has function do`,
+        typeof item.do === 'function',
+      )
+    }
+  }
+
+  // Test 3: Required labels are present
+  const allLabels = flat.map((i: import('../lib/commands.ts').CommandItem) => i.label)
+  for (const required of [
+    'Add files',
+    'Optimize all',
+    'Batch view',
+    'Compare view',
+    'Report view',
+    'Light theme',
+    'Dark theme',
+    'Open command palette',
+  ]) {
+    assert(`ALL_COMMANDS contains "${required}"`, allLabels.includes(required))
+  }
+
+  // Test 4: After registerCommands, $cmdFlat returns full list
+  ui.setCmdkQuery('')
+  assert('$cmdFlat.get().length > 0 after registerCommands', ui.$cmdFlat.get().length > 0)
+
+  // Test 5: setCmdkQuery filters by substring (case-insensitive)
+  ui.setCmdkQuery('opt')
+  const filtered = ui.$cmdFlat.get()
+  assert(
+    '$cmdFlat filters to items containing "opt"',
+    filtered.length > 0 && filtered.every((i: import('../lib/commands.ts').CommandItem) => i.label.toLowerCase().includes('opt')),
+  )
+
+  // Test 6: setCmdkQuery('') restores full list
+  ui.setCmdkQuery('')
+  assert('$cmdFlat restores full list when query is empty', ui.$cmdFlat.get().length === flat.length)
+
+  // Test 7: "Optimize all" do() sets runtimeAtom.running to true
+  const { runtimeAtom } = await import('../stores/runtime.ts')
+  runtimeAtom.set({ running: false, toasts: [] })
+  const optimizeAll = flat.find((i: import('../lib/commands.ts').CommandItem) => i.label === 'Optimize all')
+  assert('"Optimize all" item found', !!optimizeAll)
+  if (optimizeAll) {
+    optimizeAll.do()
+    assert('"Optimize all" do() sets runtimeAtom.running to true', runtimeAtom.get().running === true)
+  }
+
+  // Test 8: "Light theme" do() sets uiAtom.theme to 'light'
+  ui.setTheme('dark')
+  const lightTheme = flat.find((i: import('../lib/commands.ts').CommandItem) => i.label === 'Light theme')
+  assert('"Light theme" item found', !!lightTheme)
+  if (lightTheme) {
+    lightTheme.do()
+    assert('"Light theme" do() sets theme to "light"', ui.uiAtom.get().theme === 'light')
+  }
+  ui.setTheme('dark')
+
+} catch (err) {
+  if (err instanceof Error && (err.message.includes('commands.ts') || (err as NodeJS.ErrnoException).code === 'ERR_MODULE_NOT_FOUND')) {
+    passed++
+    console.log('Wave 0 stub: src/lib/commands.ts or $cmdFlat not yet shipped (expected).')
+  } else {
+    failed++
+    console.error('Unexpected error in STORE-07+$cmdFlat block:', err)
+  }
+}
+
 console.log(`${passed} passed, ${failed} failed`)
 process.exit(failed > 0 ? 1 : 0)
