@@ -64,9 +64,9 @@ Plans:
   4. Right-clicking a row (or clicking the context button) opens the context menu popover; "Remove from queue" calls `removeFile(id)` and the row disappears
   5. Totals bar shows 4 stat cells with computed values from `$totals`
   6. Dropzone "Drop images to optimize" zone is visible above the file list
-**Plans:** 2 plans
+**Plans:** 1/2 plans executed
 Plans:
-- [ ] 02-01-PLAN.md — Stores foundation: filesAtom (STORE-01) + uiAtom full shape (STORE-03) + barrel re-export
+- [x] 02-01-PLAN.md — Stores foundation: filesAtom (STORE-01) + uiAtom full shape (STORE-03) + barrel re-export
 - [ ] 02-02-PLAN.md — FilesPane vertical slice: FileRow + FilesPane body (FILES-01..05) + human-verify checkpoint
 **UI hint**: yes
 
@@ -146,7 +146,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation | 5/5 | Complete    | 2026-05-14 |
-| 2. Files Pane | 0/? | Not started | - |
+| 2. Files Pane | 1/2 | In Progress|  |
 | 3. Navigation Shell | 0/? | Not started | - |
 | 4. Inspector — Codec + SVGO | 0/? | Not started | - |
 | 5. Center Pane | 0/? | Not started | - |
