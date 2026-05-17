@@ -1,4 +1,4 @@
-// Phase 02 — STORE-03: uiAtom full shape with Phase 3 action stubs. Source: 02-01-PLAN.md
+// Phase 03 — STORE-03 (action bodies filled). Source: 03-01-PLAN.md
 // CIRCULAR ESM GUARD: ui.ts MUST NOT import files.ts, runtime.ts, or settings.ts
 import { map } from 'nanostores'
 
@@ -35,13 +35,44 @@ export function setRowMenu(id: string | null): void {
   uiAtom.setKey('rowMenu', id)
 }
 
-export function setOpen(_key: string | null): void { /* @TODO Phase 3 */ }
-export function setView(_v: View): void { /* @TODO Phase 3 */ }
-export function setTab(_t: Tab): void { /* @TODO Phase 3 */ }
-export function setSplit(_pct: number): void { /* @TODO Phase 3 */ }
-export function setZoom(_z: number): void { /* @TODO Phase 3 */ }
-export function openCmdk(): void { /* @TODO Phase 3 */ }
-export function closeCmdk(): void { /* @TODO Phase 3 */ }
-export function setCmdkQuery(_q: string): void { /* @TODO Phase 3 */ }
-export function setCmdkSel(_n: number): void { /* @TODO Phase 3 */ }
-export function setTheme(_t: 'dark' | 'light'): void { /* @TODO Phase 3 */ }
+export function setOpen(key: string | null): void {
+  uiAtom.setKey('open', key)
+}
+
+export function setView(v: View): void {
+  uiAtom.setKey('view', v)
+}
+
+export function setTab(t: Tab): void {
+  uiAtom.setKey('tab', t)
+}
+
+export function setSplit(pct: number): void {
+  uiAtom.setKey('split', pct)
+}
+
+export function setZoom(z: number): void {
+  uiAtom.setKey('zoom', z)
+}
+
+export function openCmdk(): void {
+  uiAtom.setKey('cmdkOpen', true)
+  uiAtom.setKey('cmdkQ', '')
+  uiAtom.setKey('cmdkSel', 0)
+}
+
+export function closeCmdk(): void {
+  uiAtom.setKey('cmdkOpen', false)
+}
+
+export function setCmdkQuery(q: string): void {
+  uiAtom.setKey('cmdkQ', q)
+}
+
+export function setCmdkSel(n: number): void {
+  uiAtom.setKey('cmdkSel', n)
+}
+
+export function setTheme(t: 'dark' | 'light'): void {
+  uiAtom.setKey('theme', t)
+}
