@@ -84,7 +84,7 @@ Plans:
 **Plans:** 3 plans
 Plans:
 - [x] 03-01-PLAN.md — Wave 1: ui.ts action bodies + runtime.ts + minimal Toolbar/StatusBar slice (STORE-03/04, NAV-02/03 minimal)
-- [ ] 03-02-PLAN.md — Wave 2: TitleBar + full Toolbar + full StatusBar (NAV-01/02/03)
+- [x] 03-02-PLAN.md — Wave 2: TitleBar + full Toolbar + full StatusBar (NAV-01/02/03)
 - [ ] 03-03-PLAN.md — Wave 3: $cmdFlat + commands.ts + CommandPalette + data-theme effect + checkpoint (STORE-03 complete, STORE-07, SHELL-03, NAV-04)
 **UI hint**: yes
 
