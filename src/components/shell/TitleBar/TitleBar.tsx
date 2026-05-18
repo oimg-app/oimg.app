@@ -36,11 +36,11 @@ export function TitleBar() {
     <header
       data-testid="titlebar"
       role="banner"
-      className="h-9 bg-[var(--color-bg-1)] border-b border-[var(--color-line)] px-3 flex items-center justify-between shrink-0"
+      className="h-9 bg-[var(--color-bg-1)] border-b border-[var(--color-line)] px-3 flex items-center shrink-0"
     >
-      {/* Left cluster: brand mark */}
-      <div className="flex items-center gap-2">
-        <span className="flex items-center gap-1.5">
+      {/* Left cluster: brand mark + menus left-aligned together */}
+      <div className="flex items-center gap-1">
+        <span className="flex items-center gap-1.5 mr-2">
           <span
             aria-hidden="true"
             className="w-3 h-3 inline-block bg-[var(--color-accent)]"
@@ -50,19 +50,11 @@ export function TitleBar() {
             OIMG · image optimizer
           </span>
         </span>
-      </div>
 
-      {/* Center cluster: three controlled Popover menus */}
-      <div className="flex items-center gap-1">
         {/* Codec menu */}
-        <Popover
-          open={open === 'menu-codec'}
-          onOpenChange={(o) => setOpen(o ? 'menu-codec' : null)}
-        >
+        <Popover open={open === 'menu-codec'} onOpenChange={(o) => setOpen(o ? 'menu-codec' : null)}>
           <PopoverTrigger asChild>
-            <button type="button" className={triggerClass}>
-              Codec
-            </button>
+            <button type="button" className={triggerClass}>Codec</button>
           </PopoverTrigger>
           <PopoverContent className={popoverContentClass} align="start">
             <div className="flex flex-col">
@@ -78,14 +70,9 @@ export function TitleBar() {
         </Popover>
 
         {/* View menu */}
-        <Popover
-          open={open === 'menu-view'}
-          onOpenChange={(o) => setOpen(o ? 'menu-view' : null)}
-        >
+        <Popover open={open === 'menu-view'} onOpenChange={(o) => setOpen(o ? 'menu-view' : null)}>
           <PopoverTrigger asChild>
-            <button type="button" className={triggerClass}>
-              View
-            </button>
+            <button type="button" className={triggerClass}>View</button>
           </PopoverTrigger>
           <PopoverContent className={popoverContentClass} align="start">
             <div className="flex flex-col">
@@ -93,33 +80,16 @@ export function TitleBar() {
               <MenuItem label="Compare view" onClick={() => setOpen(null)} />
               <MenuItem label="Report view" onClick={() => setOpen(null)} />
               <MenuDivider />
-              <MenuItem
-                label="Light theme"
-                onClick={() => {
-                  setTheme('light')
-                  setOpen(null)
-                }}
-              />
-              <MenuItem
-                label="Dark theme"
-                onClick={() => {
-                  setTheme('dark')
-                  setOpen(null)
-                }}
-              />
+              <MenuItem label="Light theme" onClick={() => { setTheme('light'); setOpen(null) }} />
+              <MenuItem label="Dark theme" onClick={() => { setTheme('dark'); setOpen(null) }} />
             </div>
           </PopoverContent>
         </Popover>
 
         {/* Help menu */}
-        <Popover
-          open={open === 'menu-help'}
-          onOpenChange={(o) => setOpen(o ? 'menu-help' : null)}
-        >
+        <Popover open={open === 'menu-help'} onOpenChange={(o) => setOpen(o ? 'menu-help' : null)}>
           <PopoverTrigger asChild>
-            <button type="button" className={triggerClass}>
-              Help
-            </button>
+            <button type="button" className={triggerClass}>Help</button>
           </PopoverTrigger>
           <PopoverContent className={popoverContentClass} align="start">
             <div className="flex flex-col">
@@ -133,8 +103,8 @@ export function TitleBar() {
         </Popover>
       </div>
 
-      {/* Right cluster: pills + ⌘K button */}
-      <div className="flex items-center gap-2">
+      {/* Right cluster: pills + ⌘K — ml-auto pushes to right edge */}
+      <div className="flex items-center gap-2 ml-auto">
         <span className="text-[11px] text-[var(--color-fg-2)]">100% local</span>
         <span aria-hidden="true" className="text-[var(--color-fg-2)]">·</span>
         <span className="text-[11px] text-[var(--color-fg-2)]">Offline-ready</span>

@@ -21,9 +21,9 @@ import { cn } from '@/lib/utils'
 export function AppShell() {
   const { theme } = useStore(uiAtom)
 
-  // SHELL-03: keep <html data-theme> in sync with uiAtom.theme
+  // SHELL-03: toggle html.dark class to match uiAtom.theme
   useEffect(() => {
-    document.documentElement.dataset.theme = theme
+    document.documentElement.classList.toggle('dark', theme === 'dark')
   }, [theme])
 
   // NAV-04: global ⌘K / Ctrl+K opens palette; Escape closes palette + any open popover
