@@ -91,7 +91,7 @@ try {
   const rmod = await import('../stores/runtime.ts')
 
   // Reset to known state
-  rmod.runtimeAtom.set({ running: false, toasts: [] })
+  rmod.runtimeAtom.set({ running: false, toasts: [], svgoVersion: '4.0.1', codecVersion: '0.6.0', wasmInfo: 'WASM ready · 312 KB' })
 
   rmod.startRun()
   assert('startRun() → running === true', rmod.runtimeAtom.get().running === true)
@@ -99,7 +99,7 @@ try {
   rmod.stopRun()
   assert('stopRun() → running === false', rmod.runtimeAtom.get().running === false)
 
-  rmod.runtimeAtom.set({ running: false, toasts: [] })
+  rmod.runtimeAtom.set({ running: false, toasts: [], svgoVersion: '4.0.1', codecVersion: '0.6.0', wasmInfo: 'WASM ready · 312 KB' })
   rmod.pushToast('hi', 'meta')
   const toasts1 = rmod.runtimeAtom.get().toasts
   assert('pushToast → toasts.length === 1', toasts1.length === 1)
@@ -189,7 +189,7 @@ try {
 
   // Test 7: "Optimize all" do() sets runtimeAtom.running to true
   const { runtimeAtom } = await import('../stores/runtime.ts')
-  runtimeAtom.set({ running: false, toasts: [] })
+  runtimeAtom.set({ running: false, toasts: [], svgoVersion: '4.0.1', codecVersion: '0.6.0', wasmInfo: 'WASM ready · 312 KB' })
   const optimizeAll = flat.find((i: import('../lib/commands.ts').CommandItem) => i.label === 'Optimize all')
   assert('"Optimize all" item found', !!optimizeAll)
   if (optimizeAll) {
