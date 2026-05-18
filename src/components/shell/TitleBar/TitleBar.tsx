@@ -1,7 +1,7 @@
 // Phase 03 — NAV-01: TitleBar with brand mark, Codec/View/Help menus, pills, ⌘K button. Source: 03-02-PLAN.md
 import { useStore } from '@nanostores/react'
 import { MagnifyingGlass } from '@phosphor-icons/react'
-import { uiAtom, setOpen, setTheme, openCmdk } from '@/stores/ui'
+import { uiAtom, setOpen, setView, setTheme, openCmdk, selectCodec, openDocs, openShortcuts, openChangelog } from '@/stores/ui'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Kbd } from '@/components/ui/kbd'
 
@@ -58,13 +58,13 @@ export function TitleBar() {
           </PopoverTrigger>
           <PopoverContent className={popoverContentClass} align="start">
             <div className="flex flex-col">
-              <MenuItem label="WebP" onClick={() => setOpen(null)} />
-              <MenuItem label="AVIF" onClick={() => setOpen(null)} />
-              <MenuItem label="JPEG" onClick={() => setOpen(null)} />
-              <MenuItem label="PNG" onClick={() => setOpen(null)} />
-              <MenuItem label="SVG" onClick={() => setOpen(null)} />
+              <MenuItem label="WebP" onClick={() => { selectCodec('webp'); setOpen(null) }} />
+              <MenuItem label="AVIF" onClick={() => { selectCodec('avif'); setOpen(null) }} />
+              <MenuItem label="JPEG" onClick={() => { selectCodec('jpeg'); setOpen(null) }} />
+              <MenuItem label="PNG" onClick={() => { selectCodec('png'); setOpen(null) }} />
+              <MenuItem label="SVG" onClick={() => { selectCodec('svg'); setOpen(null) }} />
               <MenuDivider />
-              <MenuItem label="Auto (Butteraugli target)" onClick={() => setOpen(null)} />
+              <MenuItem label="Auto (Butteraugli target)" onClick={() => { selectCodec('auto'); setOpen(null) }} />
             </div>
           </PopoverContent>
         </Popover>
@@ -76,9 +76,9 @@ export function TitleBar() {
           </PopoverTrigger>
           <PopoverContent className={popoverContentClass} align="start">
             <div className="flex flex-col">
-              <MenuItem label="Batch view" onClick={() => setOpen(null)} />
-              <MenuItem label="Compare view" onClick={() => setOpen(null)} />
-              <MenuItem label="Report view" onClick={() => setOpen(null)} />
+              <MenuItem label="Batch view" onClick={() => { setView('Batch'); setOpen(null) }} />
+              <MenuItem label="Compare view" onClick={() => { setView('Compare'); setOpen(null) }} />
+              <MenuItem label="Report view" onClick={() => { setView('Report'); setOpen(null) }} />
               <MenuDivider />
               <MenuItem label="Light theme" onClick={() => { setTheme('light'); setOpen(null) }} />
               <MenuItem label="Dark theme" onClick={() => { setTheme('dark'); setOpen(null) }} />
@@ -93,11 +93,11 @@ export function TitleBar() {
           </PopoverTrigger>
           <PopoverContent className={popoverContentClass} align="start">
             <div className="flex flex-col">
-              <MenuItem label="Documentation" onClick={() => setOpen(null)} />
-              <MenuItem label="Keyboard shortcuts" onClick={() => setOpen(null)} />
-              <MenuItem label="What's new" onClick={() => setOpen(null)} />
+              <MenuItem label="Documentation" onClick={() => { openDocs(); setOpen(null) }} />
+              <MenuItem label="Keyboard shortcuts" onClick={() => { openShortcuts(); setOpen(null) }} />
+              <MenuItem label="What's new" onClick={() => { openChangelog(); setOpen(null) }} />
               <MenuDivider />
-              <MenuItem label="v0.1.0 · 2026" onClick={() => setOpen(null)} />
+              <MenuItem label="v0.1.0 · 2026" />
             </div>
           </PopoverContent>
         </Popover>

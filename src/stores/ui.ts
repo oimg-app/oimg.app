@@ -80,6 +80,23 @@ export function setTheme(t: 'dark' | 'light'): void {
   uiAtom.setKey('theme', t)
 }
 
+export function selectCodec(codec: string): void {
+  // stub — real handler wires codec selection in v2
+  void codec
+}
+
+export function openDocs(): void {
+  // stub — open documentation in v2
+}
+
+export function openShortcuts(): void {
+  // stub — open keyboard shortcuts panel in v2
+}
+
+export function openChangelog(): void {
+  // stub — open changelog in v2
+}
+
 // ── STORE-03 completion / STORE-07 injection ────────────────────────────────
 // Commands are injected at boot from main.tsx via registerCommands to avoid
 // a runtime ESM cycle (commands.ts → ui.ts → commands.ts).
