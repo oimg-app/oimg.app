@@ -76,3 +76,15 @@ export function setFilter(q: string): void {
 export function setSortBy(s: SortKey): void {
   filesAtom.setKey('sortBy', s)
 }
+
+// Add-file stubs — real handlers wired in v2
+export function addFromDevice(): void {}
+export function addWatchFolder(): void {}
+export function addFromUrl(): void {}
+
+// Export stubs — real handlers wired in v2
+export function exportAsZip(): void {}
+export function exportIndividually(): void {}
+export function exportCopyHtml(): void {}
+export function exportCopyDataUris(): void {}
+export function exportManifestJson(): void {}

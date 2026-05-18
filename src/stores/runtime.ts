@@ -40,3 +40,8 @@ export function pushToast(msg: string, meta?: string): void {
 export function dismissToast(id: string): void {
   runtimeAtom.setKey('toasts', runtimeAtom.get().toasts.filter((t) => t.id !== id))
 }
+
+export function setWorkerCount(n: number): void {
+  // stub — configure worker pool size in v2
+  void n
+}

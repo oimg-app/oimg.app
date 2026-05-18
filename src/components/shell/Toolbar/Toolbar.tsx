@@ -1,10 +1,10 @@
 // Phase 03 — NAV-02 (full NAV-02: split buttons, segmented control, filter, theme toggle, settings). Source: 03-02-PLAN.md
 import { useStore } from '@nanostores/react'
 import { Plus, Export, CaretDown, MagnifyingGlass, Sun, Moon, GearSix, Lightning } from '@phosphor-icons/react'
-import { uiAtom, setOpen, setView, setTheme } from '@/stores/ui'
+import { uiAtom, setOpen, setView, setTheme, setAutoTarget } from '@/stores/ui'
 import type { View } from '@/stores/ui'
-import { filesAtom, setFilter } from '@/stores/files'
-import { startRun } from '@/stores/runtime'
+import { filesAtom, setFilter, addFromDevice, addWatchFolder, addFromUrl, exportAsZip, exportIndividually, exportCopyHtml, exportCopyDataUris, exportManifestJson } from '@/stores/files'
+import { startRun, setWorkerCount } from '@/stores/runtime'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { cn } from '@/lib/utils'
 
@@ -37,7 +37,7 @@ export function Toolbar() {
         <button
           type="button"
           className={cn(tbtnClass, 'rounded-r-none border-r-0')}
-          onClick={() => setOpen(null)}
+          onClick={() => { addFromDevice(); setOpen(null) }}
         >
           <Plus size={12} />
           Add files
@@ -57,9 +57,9 @@ export function Toolbar() {
           </PopoverTrigger>
           <PopoverContent className={popoverContentClass} align="start">
             <div className="flex flex-col">
-              <button type="button" className={menuItemClass} onClick={() => setOpen(null)}>From device</button>
-              <button type="button" className={menuItemClass} onClick={() => setOpen(null)}>Watch folder</button>
-              <button type="button" className={menuItemClass} onClick={() => setOpen(null)}>From URL or paste</button>
+              <button type="button" className={menuItemClass} onClick={() => { addFromDevice(); setOpen(null) }}>From device</button>
+              <button type="button" className={menuItemClass} onClick={() => { addWatchFolder(); setOpen(null) }}>Watch folder</button>
+              <button type="button" className={menuItemClass} onClick={() => { addFromUrl(); setOpen(null) }}>From URL or paste</button>
             </div>
           </PopoverContent>
         </Popover>
@@ -80,7 +80,7 @@ export function Toolbar() {
         <button
           type="button"
           className={cn(tbtnClass, 'rounded-r-none border-r-0')}
-          onClick={() => setOpen(null)}
+          onClick={() => { exportAsZip(); setOpen(null) }}
         >
           <Export size={12} />
           Export
@@ -100,11 +100,11 @@ export function Toolbar() {
           </PopoverTrigger>
           <PopoverContent className={popoverContentClass} align="start">
             <div className="flex flex-col">
-              <button type="button" className={menuItemClass} onClick={() => setOpen(null)}>All as ZIP</button>
-              <button type="button" className={menuItemClass} onClick={() => setOpen(null)}>Save individually</button>
-              <button type="button" className={menuItemClass} onClick={() => setOpen(null)}>{'Copy <picture> HTML'}</button>
-              <button type="button" className={menuItemClass} onClick={() => setOpen(null)}>Copy as data URIs</button>
-              <button type="button" className={menuItemClass} onClick={() => setOpen(null)}>Manifest JSON</button>
+              <button type="button" className={menuItemClass} onClick={() => { exportAsZip(); setOpen(null) }}>All as ZIP</button>
+              <button type="button" className={menuItemClass} onClick={() => { exportIndividually(); setOpen(null) }}>Save individually</button>
+              <button type="button" className={menuItemClass} onClick={() => { exportCopyHtml(); setOpen(null) }}>{'Copy <picture> HTML'}</button>
+              <button type="button" className={menuItemClass} onClick={() => { exportCopyDataUris(); setOpen(null) }}>Copy as data URIs</button>
+              <button type="button" className={menuItemClass} onClick={() => { exportManifestJson(); setOpen(null) }}>Manifest JSON</button>
             </div>
           </PopoverContent>
         </Popover>
@@ -140,7 +140,7 @@ export function Toolbar() {
         <button
           type="button"
           className={cn(tbtnClass, 'rounded-r-none border-r-0')}
-          onClick={() => setOpen(null)}
+          onClick={() => { setAutoTarget(1.4); setOpen(null) }}
         >
           Auto
         </button>
@@ -159,9 +159,9 @@ export function Toolbar() {
           </PopoverTrigger>
           <PopoverContent className={popoverContentClass} align="start">
             <div className="flex flex-col">
-              <button type="button" className={menuItemClass} onClick={() => setOpen(null)}>1.4 balanced</button>
-              <button type="button" className={menuItemClass} onClick={() => setOpen(null)}>1.0 high quality</button>
-              <button type="button" className={menuItemClass} onClick={() => setOpen(null)}>2.0 aggressive</button>
+              <button type="button" className={menuItemClass} onClick={() => { setAutoTarget(1.4); setOpen(null) }}>1.4 balanced</button>
+              <button type="button" className={menuItemClass} onClick={() => { setAutoTarget(1.0); setOpen(null) }}>1.0 high quality</button>
+              <button type="button" className={menuItemClass} onClick={() => { setAutoTarget(2.0); setOpen(null) }}>2.0 aggressive</button>
             </div>
           </PopoverContent>
         </Popover>
@@ -210,7 +210,7 @@ export function Toolbar() {
         </PopoverTrigger>
         <PopoverContent className={popoverContentClass} align="end">
           <div className="flex flex-col">
-            <button type="button" className={menuItemClass} onClick={() => setOpen(null)}>Workers: 4 (auto)</button>
+            <button type="button" className={menuItemClass} onClick={() => { setWorkerCount(4); setOpen(null) }}>Workers: 4 (auto)</button>
           </div>
         </PopoverContent>
       </Popover>

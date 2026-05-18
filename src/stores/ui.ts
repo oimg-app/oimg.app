@@ -97,6 +97,11 @@ export function openChangelog(): void {
   // stub — open changelog in v2
 }
 
+export function setAutoTarget(target: number): void {
+  // stub — set quality target for Auto mode in v2
+  void target
+}
+
 // ── STORE-03 completion / STORE-07 injection ────────────────────────────────
 // Commands are injected at boot from main.tsx via registerCommands to avoid
 // a runtime ESM cycle (commands.ts → ui.ts → commands.ts).
