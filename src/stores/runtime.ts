@@ -10,11 +10,17 @@ export interface Toast {
 interface RuntimeState {
   running: boolean
   toasts: Toast[]
+  svgoVersion: string
+  codecVersion: string
+  wasmInfo: string
 }
 
 export const runtimeAtom = map<RuntimeState>({
   running: false,
   toasts: [],
+  svgoVersion: '4.0.1',
+  codecVersion: '0.6.0',
+  wasmInfo: 'WASM ready · 312 KB',
 })
 
 export function startRun(): void {

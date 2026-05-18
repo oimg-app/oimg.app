@@ -6,7 +6,7 @@ import { fmtBytes } from '@/lib/format'
 import { cn } from '@/lib/utils'
 
 export function StatusBar() {
-  const { running } = useStore(runtimeAtom)
+  const { running, svgoVersion, codecVersion, wasmInfo } = useStore(runtimeAtom)
   const totals = useStore($totals)
   const { entries } = useStore(filesAtom)
 
@@ -28,13 +28,13 @@ export function StatusBar() {
       <span>{running ? 'Running' : 'Idle'}</span>
 
       <span aria-hidden="true">·</span>
-      <span className="font-mono text-[11px] font-semibold">SVGO 4.0.1</span>
+      <span className="font-mono text-[11px] font-semibold">SVGO {svgoVersion}</span>
 
       <span aria-hidden="true">·</span>
-      <span className="font-mono text-[11px] font-semibold">@squoosh-kit/core 0.6.0</span>
+      <span className="font-mono text-[11px] font-semibold">@squoosh-kit/core {codecVersion}</span>
 
       <span aria-hidden="true">·</span>
-      <span>WASM ready · 312 KB</span>
+      <span>{wasmInfo}</span>
 
       <span aria-hidden="true">·</span>
       <span data-testid="status-filecount">{entries.length} files</span>
