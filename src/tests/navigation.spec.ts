@@ -72,21 +72,21 @@ test('StatusBar shows versions and totals (NAV-03)', async ({ page }) => {
   await expect(fileCount).toHaveText(/^\d+ files$/)
 })
 
-// SHELL-03: html data-theme attribute
-test('html data-theme attribute set (SHELL-03)', async ({ page }) => {
+// SHELL-03: html.dark class (not data-theme — impl uses classList.toggle)
+test('html.dark class applied on load (SHELL-03)', async ({ page }) => {
   await page.goto('/')
-  const theme = await page.evaluate(() => document.documentElement.dataset.theme)
-  expect(theme).toBe('dark')
+  const hasDark = await page.evaluate(() => document.documentElement.classList.contains('dark'))
+  expect(hasDark).toBe(true)
 })
 
-test('Toolbar theme toggle swaps html data-theme (SHELL-03)', async ({ page }) => {
+test('Toolbar theme toggle swaps html.dark class (SHELL-03)', async ({ page }) => {
   await page.goto('/')
   await page.getByRole('button', { name: 'Toggle theme' }).click()
-  const themeLight = await page.evaluate(() => document.documentElement.dataset.theme)
-  expect(themeLight).toBe('light')
+  const hasDarkLight = await page.evaluate(() => document.documentElement.classList.contains('dark'))
+  expect(hasDarkLight).toBe(false)
   await page.getByRole('button', { name: 'Toggle theme' }).click()
-  const themeDark = await page.evaluate(() => document.documentElement.dataset.theme)
-  expect(themeDark).toBe('dark')
+  const hasDarkDark = await page.evaluate(() => document.documentElement.classList.contains('dark'))
+  expect(hasDarkDark).toBe(true)
 })
 
 // NAV-04: CommandPalette
