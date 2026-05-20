@@ -100,7 +100,12 @@ Plans:
   3. CodecPanel "Parameters" section quality and effort sliders move and call `setQuality`/`setMethod`; codec-specific controls (PNG palette seg, AVIF subsample seg) show/hide correctly
   4. CodecPanel "Resize" section toggle enables/disables width/height inputs; fit/algorithm segs call store actions
   5. SvgoPanel plugin grid renders 22 plugins from stub data; toggling a plugin calls `togglePlugin(id)` and reflects on/off state
-**Plans**: TBD
+**Plans:** 4 plans
+Plans:
+- [ ] 04-01-PLAN.md — Wave 1: settingsAtom (STORE-02) + Section/SegControl primitives + SvgoPanel stub contract
+- [ ] 04-02-PLAN.md — Wave 2: InspectorPane shell + tab bar + tab auto-switch (INSP-01)
+- [ ] 04-03-PLAN.md — Wave 2: CodecPanel — Output format + Parameters + Resize + Metadata sections (INSP-02, INSP-03, INSP-04, INSP-05)
+- [ ] 04-04-PLAN.md — Wave 2: SvgoPanel — aggressive toggle + 22-plugin list (INSP-06)
 **UI hint**: yes
 
 ### Phase 5: Center Pane
@@ -152,7 +157,7 @@ Plans:
 | 1. Foundation | 5/5 | Complete    | 2026-05-14 |
 | 2. Files Pane | 1/2 | In Progress|  |
 | 3. Navigation Shell | 0/3 | Planned     | - |
-| 4. Inspector — Codec + SVGO | 0/? | Not started | - |
+| 4. Inspector — Codec + SVGO | 0/4 | Planned | - |
 | 5. Center Pane | 0/? | Not started | - |
 | 6. Inspector — Output + Report | 0/? | Not started | - |
 | 7. Polish | 0/? | Not started | - |
