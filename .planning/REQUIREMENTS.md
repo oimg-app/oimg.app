@@ -14,7 +14,7 @@
 ### Stores
 
 - [x] **STORE-01**: `src/stores/files.ts` — `filesAtom` with `entries:FileEntry[]`, `selectedId:string|null`, `filterQuery:string`, `sortBy:SortKey`; types `FileEntry={id,name,type,orig,opt,status,target,dim,q:number|null,prog?}`, `SortKey='queue order'|'file size'|'savings %'|'name'|'format'`; computed `$selectedFile`, `$filteredFiles`, `$totals:{orig,opt,saved,pct}`; initial entries from `stub-data.ts`; actions: `selectFile(id)`, `setFilter(q)`, `setSortBy(s)`, `removeFile(id)`
-- [ ] **STORE-02**: `src/stores/settings.ts` — `settingsAtom` with `codec:Codec='WebP'`, `q=82`, `method=4`, `lossless=false`, `resizeOn=false`, `w='1600'`, `h='auto'`, `alg='lanczos3'`, `fit='contain'`, `stripMeta=true`, `keepIcc=false`, `aggressive=false`, `plugins:SvgoPlugin[]`; types `Codec='SVG'|'PNG'|'WebP'|'JPEG'|'AVIF'`, `SvgoPlugin={id,on,saves}`; constants exported: `CODECS`, `RESIZE_ALGS`, `FIT_MODES`; initial plugins from `stub-data.ts`; actions: `setCodec`, `setQuality`, `setMethod`, `setLossless`, `setResizeOn`, `setResizeDimensions(w,h)`, `setFit`, `setAlg`, `setStripMeta`, `setKeepIcc`, `setAggressive`, `togglePlugin(id)`
+- [x] **STORE-02**: `src/stores/settings.ts` — `settingsAtom` with `codec:Codec='WebP'`, `q=82`, `method=4`, `lossless=false`, `resizeOn=false`, `w='1600'`, `h='auto'`, `alg='lanczos3'`, `fit='contain'`, `stripMeta=true`, `keepIcc=false`, `aggressive=false`, `plugins:SvgoPlugin[]`; types `Codec='SVG'|'PNG'|'WebP'|'JPEG'|'AVIF'`, `SvgoPlugin={id,on,saves}`; constants exported: `CODECS`, `RESIZE_ALGS`, `FIT_MODES`; initial plugins from `stub-data.ts`; actions: `setCodec`, `setQuality`, `setMethod`, `setLossless`, `setResizeOn`, `setResizeDimensions(w,h)`, `setFit`, `setAlg`, `setStripMeta`, `setKeepIcc`, `setAggressive`, `togglePlugin(id)`
 - [x] **STORE-03**: `src/stores/ui.ts` — `uiAtom` with `open:string|null=null`, `view:View='Batch'`, `tab:Tab='codec'`, `split=50`, `zoom=100`, `cmdkOpen=false`, `cmdkQ=''`, `cmdkSel=0`, `rowMenu:string|null=null`, `theme:'dark'|'light'='dark'`; types `View='Batch'|'Compare'|'Report'`, `Tab='codec'|'svgo'|'output'|'report'`; computed `$cmdFlat` filtering `ALL_COMMANDS` by `cmdkQ`; actions: `setOpen`, `setView`, `setTab`, `setSplit`, `setZoom`, `openCmdk`, `closeCmdk`, `setCmdkQuery`, `setCmdkSel`, `setRowMenu`, `setTheme` — zero imports from other stores
 - [ ] **STORE-04**: `src/stores/runtime.ts` — `runtimeAtom` with `running=false`, `toasts:Toast[]`; `Toast={id:string,msg:string,meta?:string}`; actions: `startRun`, `stopRun`, `pushToast(msg,meta?)`, `dismissToast(id)`
 - [x] **STORE-05**: `src/lib/stub-data.ts` — typed exports: `STUB_FILES:FileEntry[]` (12 entries from `data.jsx`), `SVGO_PLUGINS:SvgoPlugin[]` (22 plugins from `data.jsx`), `CODECS`, `RESIZE_ALGS`, `FIT_MODES` — single source of truth; no component imports this directly
@@ -117,7 +117,7 @@
 | NAV-02 | 3 | Pending |
 | NAV-03 | 3 | Pending |
 | NAV-04 | 3 | Pending |
-| STORE-02 | 4 | Pending |
+| STORE-02 | 4 | Complete |
 | INSP-01 | 4 | Pending |
 | INSP-02 | 4 | Pending |
 | INSP-03 | 4 | Pending |
