@@ -110,7 +110,7 @@ export function CodecPanel() {
           {settings.codec === 'PNG' && (
             <div className="grid grid-cols-[100px_1fr] gap-2.5 mb-2 items-center">
               <span className="text-[12px] text-[var(--color-fg-2)]">Palette</span>
-              <SegControl options={['off', 'auto', 'PNG-8']} value="off" onChange={() => {}} />
+              <SegControl options={['off', 'auto', 'PNG-8']} value="off" onChange={() => {}} aria-label="Palette" disabled />
             </div>
           )}
 
@@ -118,7 +118,7 @@ export function CodecPanel() {
           {settings.codec === 'AVIF' && (
             <div className="grid grid-cols-[100px_1fr] gap-2.5 mb-2 items-center">
               <span className="text-[12px] text-[var(--color-fg-2)]">Subsample</span>
-              <SegControl options={['4:2:0', '4:4:4']} value="4:2:0" onChange={() => {}} />
+              <SegControl options={['4:2:0', '4:4:4']} value="4:2:0" onChange={() => {}} aria-label="Subsample" disabled />
             </div>
           )}
         </Section>
@@ -153,12 +153,12 @@ export function CodecPanel() {
             {/* Fit */}
             <div className="grid grid-cols-[100px_1fr] gap-2.5 items-center">
               <span className="text-[12px] text-[var(--color-fg-2)]">Fit</span>
-              <SegControl options={FIT_MODES} value={settings.fit} onChange={setFit} />
+              <SegControl options={FIT_MODES} value={settings.fit} onChange={setFit} aria-label="Fit" />
             </div>
             {/* Algorithm */}
             <div className="grid grid-cols-[100px_1fr] gap-2.5 items-center">
               <span className="text-[12px] text-[var(--color-fg-2)]">Algorithm</span>
-              <SegControl options={RESIZE_ALGS} value={settings.alg} onChange={setAlg} />
+              <SegControl options={RESIZE_ALGS} value={settings.alg} onChange={setAlg} aria-label="Algorithm" />
             </div>
           </div>
         )}

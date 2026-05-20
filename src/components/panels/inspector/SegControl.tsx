@@ -5,13 +5,22 @@ interface SegControlProps {
   options: readonly string[]
   value: string
   onChange: (v: string) => void
+  /** Accessible name for the radiogroup — required by ARIA spec */
+  'aria-label'?: string
+  /** When true, renders as visually disabled (pointer-events-none + opacity) */
+  disabled?: boolean
 }
 
-export function SegControl({ options, value, onChange }: SegControlProps) {
+export function SegControl({ options, value, onChange, 'aria-label': ariaLabel, disabled }: SegControlProps) {
   return (
     <div
-      role="group"
-      className="flex h-6 rounded-[4px] border border-[var(--color-line)] overflow-hidden bg-[var(--color-bg-1)]"
+      role="radiogroup"
+      aria-label={ariaLabel}
+      aria-disabled={disabled || undefined}
+      className={cn(
+        'flex h-6 rounded-[4px] border border-[var(--color-line)] overflow-hidden bg-[var(--color-bg-1)]',
+        disabled && 'pointer-events-none opacity-40',
+      )}
     >
       {options.map((o, i) => (
         <button
@@ -19,6 +28,7 @@ export function SegControl({ options, value, onChange }: SegControlProps) {
           type="button"
           role="radio"
           aria-checked={o === value}
+          disabled={disabled}
           onClick={() => onChange(o)}
           className={cn(
             'flex-1 px-2 text-[11px] font-mono transition-colors',
