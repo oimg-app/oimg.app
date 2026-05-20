@@ -13,14 +13,14 @@ export function InspectorPane() {
   const selectedFile = useStore($selectedFile)
 
   // Auto-switch tab based on file type. Dep array excludes `tab` to prevent infinite loop.
+  // Read current store value imperatively inside effect to avoid stale closure on `tab`.
   useEffect(() => {
     if (!selectedFile) return
     if (selectedFile.type === 'svg') {
       setTab('svgo')
-    } else if (tab === 'svgo') {
+    } else if (uiAtom.get().tab === 'svgo') {
       setTab('codec')
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedFile?.id, selectedFile?.type])
 
   return (
