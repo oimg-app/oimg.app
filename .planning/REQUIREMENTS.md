@@ -56,7 +56,7 @@
 
 ### Inspector Pane
 
-- [ ] **INSP-01**: `InspectorPane` renders pane header ("Inspector" + options popover: Apply to all files / Save as preset / preset list stubs); tab bar showing "Codec" tab when non-SVG file selected OR "SVGO" tab when SVG file selected, plus "Output" and "Report" tabs always visible; tab state in `uiAtom.tab`; tab auto-switches when `$selectedFile.type` changes (svg→'svgo', non-svg+'svgo'→'codec')
+- [x] **INSP-01**: `InspectorPane` renders pane header ("Inspector" + options popover: Apply to all files / Save as preset / preset list stubs); tab bar showing "Codec" tab when non-SVG file selected OR "SVGO" tab when SVG file selected, plus "Output" and "Report" tabs always visible; tab state in `uiAtom.tab`; tab auto-switches when `$selectedFile.type` changes (svg→'svgo', non-svg+'svgo'→'codec')
 - [ ] **INSP-02**: `CodecPanel` "Output format" `Section` renders codec selector buttons (reads `CODECS` from settings store, active from `settingsAtom.codec`, click calls `setCodec`); lossless toggle (hidden for SVG, reads `settingsAtom.lossless`, calls `setLossless`)
 - [ ] **INSP-03**: `CodecPanel` "Parameters" `Section` (hidden when codec='SVG') renders: quality `Slider` (0–100, reads `settingsAtom.q`, calls `setQuality`); effort `Slider` (0–6, reads `settingsAtom.method`, calls `setMethod`); PNG palette `Seg` (off/auto/PNG-8, shown when codec='PNG'); AVIF subsample `Seg` (4:2:0/4:4:4, shown when codec='AVIF'); section badge shows codec engine name
 - [ ] **INSP-04**: `CodecPanel` "Resize" `Section` renders: "Resize on export" toggle (reads `settingsAtom.resizeOn`, calls `setResizeOn`); when enabled: Width input, Height input (reads/writes `settingsAtom.w/h` via `setResizeDimensions`); Fit `Seg` (reads `FIT_MODES`, writes `setFit`); Algorithm `Seg` (reads `RESIZE_ALGS`, writes `setAlg`)
@@ -118,7 +118,7 @@
 | NAV-03 | 3 | Pending |
 | NAV-04 | 3 | Pending |
 | STORE-02 | 4 | Complete |
-| INSP-01 | 4 | Pending |
+| INSP-01 | 4 | Complete |
 | INSP-02 | 4 | Pending |
 | INSP-03 | 4 | Pending |
 | INSP-04 | 4 | Pending |

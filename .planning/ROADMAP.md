@@ -118,7 +118,7 @@ Plans:
   4. CodecPanel "Resize" section toggle enables/disables width/height inputs; fit/algorithm segs call store actions
   5. SvgoPanel plugin grid renders 22 plugins from stub data; toggling a plugin calls `togglePlugin(id)` and reflects on/off state
 
-**Plans:** 1/4 plans executed
+**Plans:** 2/4 plans executed
 Plans:
 **Wave 1**
 
@@ -126,7 +126,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 04-02-PLAN.md — Wave 2: InspectorPane shell + tab bar + tab auto-switch (INSP-01)
+- [x] 04-02-PLAN.md — Wave 2: InspectorPane shell + tab bar + tab auto-switch (INSP-01)
 - [ ] 04-03-PLAN.md — Wave 2: CodecPanel — Output format + Parameters + Resize + Metadata sections (INSP-02, INSP-03, INSP-04, INSP-05)
 - [ ] 04-04-PLAN.md — Wave 2: SvgoPanel — aggressive toggle + 22-plugin list (INSP-06)
 
@@ -190,7 +190,7 @@ Plans:
 | 1. Foundation | 5/5 | Complete    | 2026-05-14 |
 | 2. Files Pane | 1/2 | In Progress|  |
 | 3. Navigation Shell | 0/3 | Planned     | - |
-| 4. Inspector — Codec + SVGO | 1/4 | In Progress|  |
+| 4. Inspector — Codec + SVGO | 2/4 | In Progress|  |
 | 5. Center Pane | 0/? | Not started | - |
 | 6. Inspector — Output + Report | 0/? | Not started | - |
 | 7. Polish | 0/? | Not started | - |
