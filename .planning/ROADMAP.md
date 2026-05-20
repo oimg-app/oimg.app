@@ -22,7 +22,7 @@
 - [x] **Phase 1: Foundation** — Tailwind + design tokens + AppShell skeleton + stub data + format utils (completed 2026-05-14)
 - [ ] **Phase 2: Files Pane** — FilesPane, file rows, totals bar, context menu, backed by filesAtom + uiAtom
 - [ ] **Phase 3: Navigation Shell** — TitleBar, Toolbar, StatusBar + runtimeAtom; CommandPalette backed by uiAtom
-- [ ] **Phase 4: Inspector Pane — Codec + SVGO** — InspectorPane tabs, CodecPanel, SvgoPanel backed by settingsAtom
+- [x] **Phase 4: Inspector Pane — Codec + SVGO** — InspectorPane tabs, CodecPanel, SvgoPanel backed by settingsAtom (completed 2026-05-20)
 - [ ] **Phase 5: Center Pane** — CenterPane: header, compare stage, delta strip backed by $selectedFile
 - [ ] **Phase 6: Inspector Pane — Output + Report** — OutputPanel (snippets + copy), ReportPanel (chart)
 - [ ] **Phase 7: Polish** — BackpressureIndicator, theme toggle, WCAG AA audit, code review pass
@@ -118,7 +118,7 @@ Plans:
   4. CodecPanel "Resize" section toggle enables/disables width/height inputs; fit/algorithm segs call store actions
   5. SvgoPanel plugin grid renders 22 plugins from stub data; toggling a plugin calls `togglePlugin(id)` and reflects on/off state
 
-**Plans:** 3/4 plans executed
+**Plans:** 4/4 plans complete
 Plans:
 **Wave 1**
 
@@ -128,7 +128,7 @@ Plans:
 
 - [x] 04-02-PLAN.md — Wave 2: InspectorPane shell + tab bar + tab auto-switch (INSP-01)
 - [x] 04-03-PLAN.md — Wave 2: CodecPanel — Output format + Parameters + Resize + Metadata sections (INSP-02, INSP-03, INSP-04, INSP-05)
-- [ ] 04-04-PLAN.md — Wave 2: SvgoPanel — aggressive toggle + 22-plugin list (INSP-06)
+- [x] 04-04-PLAN.md — Wave 2: SvgoPanel — aggressive toggle + 22-plugin list (INSP-06)
 
 **UI hint**: yes
 
@@ -190,7 +190,7 @@ Plans:
 | 1. Foundation | 5/5 | Complete    | 2026-05-14 |
 | 2. Files Pane | 1/2 | In Progress|  |
 | 3. Navigation Shell | 0/3 | Planned     | - |
-| 4. Inspector — Codec + SVGO | 3/4 | In Progress|  |
+| 4. Inspector — Codec + SVGO | 4/4 | Complete   | 2026-05-20 |
 | 5. Center Pane | 0/? | Not started | - |
 | 6. Inspector — Output + Report | 0/? | Not started | - |
 | 7. Polish | 0/? | Not started | - |
