@@ -31,6 +31,7 @@ export function SvgoPanel() {
             <button
               type="button"
               key={p.id}
+              aria-pressed={p.on}
               onClick={() => togglePlugin(p.id)}
               className="grid grid-cols-[16px_1fr_auto] gap-2 items-center py-1.5 px-1 rounded cursor-default hover:bg-[var(--color-bg-1)] w-full text-left transition-colors"
             >
