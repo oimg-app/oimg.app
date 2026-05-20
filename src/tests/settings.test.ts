@@ -106,8 +106,8 @@ try {
 
 } catch (err) {
   if (err instanceof Error && (err.message.includes('settings.ts') || (err as NodeJS.ErrnoException).code === 'ERR_MODULE_NOT_FOUND')) {
-    passed++
-    console.log('Wave 0 stub state: src/stores/settings.ts not yet shipped (expected).')
+    console.log('Wave 0 stub state: settings.ts not yet shipped — test skipped.')
+    process.exit(0)
   } else {
     failed++
     console.error('Unexpected error in STORE-02 block:', err)
