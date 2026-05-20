@@ -47,8 +47,7 @@ export function setMethod(m: number): void { settingsAtom.setKey('method', m) }
 export function setLossless(v: boolean): void { settingsAtom.setKey('lossless', v) }
 export function setResizeOn(v: boolean): void { settingsAtom.setKey('resizeOn', v) }
 export function setResizeDimensions(w: string, h: string): void {
-  settingsAtom.setKey('w', w)
-  settingsAtom.setKey('h', h)
+  settingsAtom.set({ ...settingsAtom.get(), w, h })
 }
 export function setFit(f: string): void { settingsAtom.setKey('fit', f) }
 export function setAlg(a: string): void { settingsAtom.setKey('alg', a) }
