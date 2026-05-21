@@ -145,7 +145,17 @@ Plans:
   3. Compare stage shows left/right placeholder layers with split labels ("ORIGINAL · {orig}" / "{target} · {opt}"); split handle is draggable and calls `setSplit(pct)`; `--split` CSS var updates
   4. Delta strip shows 6 metric cards (Original, Optimized, Saved, SSIM, Butteraugli, Decode) with values from `$selectedFile` and `settingsAtom`
 
-**Plans**: TBD
+**Plans:** 2 plans
+Plans:
+
+**Wave 1**
+
+- [ ] 05-01-PLAN.md — Wave 1: CenterPane shell + CenterHeader breadcrumb/zoom + CompareStage drag (CENTER-01, CENTER-02, CENTER-03)
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [ ] 05-02-PLAN.md — Wave 2: DeltaStrip 6 metric cards + wire into CenterPane (CENTER-04)
+
 **UI hint**: yes
 
 ### Phase 6: Inspector Pane — Output + Report
@@ -191,6 +201,6 @@ Plans:
 | 2. Files Pane | 1/2 | In Progress|  |
 | 3. Navigation Shell | 0/3 | Planned     | - |
 | 4. Inspector — Codec + SVGO | 4/4 | Complete   | 2026-05-20 |
-| 5. Center Pane | 0/? | Not started | - |
+| 5. Center Pane | 0/2 | Planned     | - |
 | 6. Inspector — Output + Report | 0/? | Not started | - |
 | 7. Polish | 0/? | Not started | - |
