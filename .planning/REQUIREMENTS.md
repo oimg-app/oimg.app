@@ -62,7 +62,7 @@
 - [x] **INSP-04**: `CodecPanel` "Resize" `Section` renders: "Resize on export" toggle (reads `settingsAtom.resizeOn`, calls `setResizeOn`); when enabled: Width input, Height input (reads/writes `settingsAtom.w/h` via `setResizeDimensions`); Fit `Seg` (reads `FIT_MODES`, writes `setFit`); Algorithm `Seg` (reads `RESIZE_ALGS`, writes `setAlg`)
 - [x] **INSP-05**: `CodecPanel` "Metadata" `Section` renders: "Strip EXIF / XMP / IPTC" toggle (reads `settingsAtom.stripMeta`, calls `setStripMeta`); "Keep ICC profile" toggle (reads `settingsAtom.keepIcc`, calls `setKeepIcc`)
 - [x] **INSP-06**: `SvgoPanel` (shown when `uiAtom.tab='svgo'`) renders: "SVGO preset" `Section` with aggressive mode toggle (reads `settingsAtom.aggressive`, calls `setAggressive`) + info text; "Plugins" `Section` with plugin grid (reads `settingsAtom.plugins`, each item calls `togglePlugin(id)`, shows on/off state + saves %)
-- [ ] **INSP-07**: `OutputPanel` (shown when `uiAtom.tab='output'`) renders three `Section` blocks from `$selectedFile`: "Data URI · Base64" with `<img src="…">` label + copy button; "Data URI · URL-encoded" with CSS background label + copy button; "Responsive `<picture>`" with syntax-highlighted HTML snippet + copy button — copy calls `navigator.clipboard.writeText`
+- [x] **INSP-07**: `OutputPanel` (shown when `uiAtom.tab='output'`) renders three `Section` blocks from `$selectedFile`: "Data URI · Base64" with `<img src="…">` label + copy button; "Data URI · URL-encoded" with CSS background label + copy button; "Responsive `<picture>`" with syntax-highlighted HTML snippet + copy button — copy calls `navigator.clipboard.writeText`
 - [ ] **INSP-08**: `ReportPanel` (shown when `uiAtom.tab='report'`) renders "Total savings" `Section` with before/after stats grid + per-file bar chart (bar height = savings%, warn color if <30%); "Format breakdown" `Section` with per-format row (type label / file count / bytes saved) — all data from `filesAtom.entries`
 
 ## v2 Requirements
@@ -128,7 +128,7 @@
 | CENTER-02 | 5 | Pending |
 | CENTER-03 | 5 | Pending |
 | CENTER-04 | 5 | Pending |
-| INSP-07 | 6 | Pending |
+| INSP-07 | 6 | Complete |
 | INSP-08 | 6 | Pending |
 | SHELL-02 | 7 | Pending |
 | STORE-08 | 7 (audit) | Pending |

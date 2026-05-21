@@ -170,12 +170,12 @@ Plans:
   2. Report tab "Total savings" section shows before/after stats grid; per-file bar chart renders with stub data (12 bars, warn color on <30% savings)
   3. Report tab "Format breakdown" section shows per-format rows with type label, file count, and bytes saved from `filesAtom.entries`
 
-**Plans:** 3 plans
+**Plans:** 1/3 plans executed
 Plans:
 
 **Wave 1** *(parallel — no file overlap)*
 
-- [ ] 06-01-PLAN.md — Wave 1: snippets.ts builders + OutputPanel (INSP-07) — 3 copy-snippet sections + empty state
+- [x] 06-01-PLAN.md — Wave 1: snippets.ts builders + OutputPanel (INSP-07) — 3 copy-snippet sections + empty state
 - [ ] 06-02-PLAN.md — Wave 1: ReportPanel (INSP-08) — Total savings stats + per-file bar chart + Format breakdown
 
 **Wave 2** *(blocked on Wave 1 completion — shares InspectorPane.tsx)*
@@ -213,5 +213,5 @@ Plans:
 | 3. Navigation Shell | 0/3 | Planned     | - |
 | 4. Inspector — Codec + SVGO | 4/4 | Complete   | 2026-05-20 |
 | 5. Center Pane | 0/2 | Planned     | - |
-| 6. Inspector — Output + Report | 0/3 | Planned     | - |
+| 6. Inspector — Output + Report | 1/3 | In Progress|  |
 | 7. Polish | 0/? | Not started | - |
