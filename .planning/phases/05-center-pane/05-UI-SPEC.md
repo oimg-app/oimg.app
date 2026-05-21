@@ -1,7 +1,8 @@
 ---
 phase: 5
 slug: center-pane
-status: draft
+status: approved
+reviewed_at: 2026-05-21
 shadcn_initialized: true
 preset: oimg-oklch-dark-default
 created: 2026-05-21
