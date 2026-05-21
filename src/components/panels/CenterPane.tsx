@@ -1,12 +1,18 @@
-// Phase 01-foundation / Plan 05 — SHELL-01 skeleton pane
+// Phase 05 — CENTER-01: CenterPane shell composing header / compare stage / delta strip
+import { CenterHeader } from './center/CenterHeader'
+import { CompareStage } from './center/CompareStage'
+
 export function CenterPane() {
   return (
     <div
       data-testid="center-pane"
-      className="h-full flex flex-col bg-[var(--color-bg-0)]"
+      className="flex flex-col h-full min-h-0 bg-[var(--color-bg-0)] overflow-hidden"
     >
-      <div className="h-[var(--height-pane-header)] flex items-center px-3 text-xs text-[var(--color-fg-2)] border-b border-[var(--color-line)]">
-        Preview
+      <CenterHeader />
+      <CompareStage />
+      {/* DeltaStrip placeholder — replaced entirely in Plan 05-02 */}
+      <div className="h-[72px] shrink-0 border-t border-[var(--color-line)] bg-[var(--color-bg-1)] flex items-center justify-center">
+        <span className="text-[11px] font-mono text-[var(--color-fg-3)]">DeltaStrip — Plan 05-02</span>
       </div>
     </div>
   )
