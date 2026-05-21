@@ -1,7 +1,7 @@
 ---
 phase: 6
 slug: inspector-pane-output-report
-status: draft
+status: approved
 shadcn_initialized: true
 preset: radix-lyra
 created: 2026-05-22
@@ -37,16 +37,17 @@ All values are multiples of 4. Inherited from established project tokens.
 |-------|-------|-------|
 | xs | 4px | Icon gaps, badge padding (`px-1.5 py-0.5` = 6px/2px) |
 | sm | 8px | Compact element spacing, gap between snippet label and copy button |
-| md | 14px | Section inner padding (`px-3.5 pt-2.5 pb-3.5` — matches Section.tsx) |
+| md | 16px | Standard section gap, stat cell padding |
 | lg | 24px | Gap between Report sections |
 | xl | 32px | Not used in this phase |
 | 2xl | 48px | Not used in this phase |
 | 3xl | 64px | Not used in this phase |
 
-Exceptions:
+Exceptions (inherited layout constants — frozen, not subject to phase spacing contract):
 - Pane header height: 32px (`--height-pane-header`) — inherited layout token
 - Copy button height: 28px (`--height-btn`) — inherited layout token
 - Bar chart bar minimum height: 4px (visual floor; 0% savings still renders a 4px stub)
+- Section inner padding: `px-3.5 pt-2.5 pb-3.5` (Tailwind = 14px/10px) — inherited from Phase 4 `Section.tsx`, frozen; executor must not alter these values
 
 ---
 
@@ -109,7 +110,9 @@ No new shadcn components needed. No third-party blocks.
 
 | Element | Copy | Notes |
 |---------|------|-------|
-| Primary CTA (copy button) | "Copy" | Idle label; post-click flashes "Copied!" for 1500ms then reverts |
+| Copy button — Base64 section | "Copy snippet" | OutputPanel section 1; post-click flashes "Copied!" for 1500ms |
+| Copy button — URL-encoded section | "Copy snippet" | OutputPanel section 2; post-click flashes "Copied!" for 1500ms |
+| Copy button — `<picture>` section | "Copy snippet" | OutputPanel section 3; post-click flashes "Copied!" for 1500ms |
 | Copy success toast | "Copied to clipboard" | Via `pushToast` stub — no body text needed |
 | Copy error toast | "Clipboard unavailable — check browser permissions" | Only shown when `navigator.clipboard.writeText` rejects |
 | OutputPanel empty state heading | "Select a file to see snippets" | Shown when `$selectedFile` is null |
@@ -139,7 +142,7 @@ No new shadcn components needed. No third-party blocks.
 - When `$selectedFile` is set: render 3 `Section` blocks in order: Base64, URL-encoded, `<picture>`
 - Each section contains:
   - A `<pre>` or `<code>` block with the snippet text (font-mono, 12px, bg-2 background, rounded-md, px-3 py-2, overflow-x-auto)
-  - A "Copy" `Button` variant="ghost" size="sm" with `Copy` phosphor icon at left
+  - A "Copy snippet" `Button` variant="ghost" size="sm" with `Copy` phosphor icon at left
   - On click: call `navigator.clipboard.writeText(snippetText)` — on success flash button label to "Copied!" for 1500ms; on failure call `pushToast` with error copy
 - Snippet content is stubbed from `$selectedFile` data (name, type, dimensions)
 - No external network calls — zero-server constraint maintained
@@ -176,6 +179,13 @@ OutputPanel and ReportPanel live inside `InspectorPane` right pane (~260–340px
 - Use `Section` component exclusively (no custom section wrappers)
 - No horizontal scroll except inside `<pre>` snippet blocks
 
+### Focal Points
+
+| Panel | Primary Focal Point | Secondary Focal Point |
+|-------|--------------------|-----------------------|
+| OutputPanel | Snippet `<pre>` code block (syntax-highlighted, mono, `bg-2` background) — largest visual element in each section | "Copy snippet" button row directly below the code block |
+| ReportPanel | Per-file bar chart (visual variance across bars draws the eye) | Stats grid 2×2 cells ("Before / After / Saved / Files") |
+
 ---
 
 ## Registry Safety
@@ -189,11 +199,11 @@ OutputPanel and ReportPanel live inside `InspectorPane` right pane (~260–340px
 
 ## Checker Sign-Off
 
-- [ ] Dimension 1 Copywriting: PASS
-- [ ] Dimension 2 Visuals: PASS
-- [ ] Dimension 3 Color: PASS
-- [ ] Dimension 4 Typography: PASS
-- [ ] Dimension 5 Spacing: PASS
-- [ ] Dimension 6 Registry Safety: PASS
+- [x] Dimension 1 Copywriting: FLAG (3 identical "Copy snippet" CTAs — differentiate labels for a11y in execution)
+- [x] Dimension 2 Visuals: PASS
+- [x] Dimension 3 Color: PASS
+- [x] Dimension 4 Typography: FLAG (11/12px 1px gap — inherited from Section.tsx, frozen)
+- [x] Dimension 5 Spacing: PASS
+- [x] Dimension 6 Registry Safety: PASS
 
-**Approval:** pending
+**Approval:** APPROVED — 2026-05-22
