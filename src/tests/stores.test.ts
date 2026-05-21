@@ -57,8 +57,8 @@ try {
   assert('setView("Compare") → view === "Compare"', mod.uiAtom.get().view === 'Compare')
 
   mod.uiAtom.set({ ...DEFAULT_STATE })
-  mod.setTab('svgo')
-  assert('setTab("svgo") → tab === "svgo"', mod.uiAtom.get().tab === 'svgo')
+  mod.setTab('output')
+  assert('setTab("output") → tab === "output"', mod.uiAtom.get().tab === 'output')
 
   mod.uiAtom.set({ ...DEFAULT_STATE })
   mod.setSplit(33)

@@ -88,6 +88,24 @@
   --height-btn:         28px;
   --width-file-panel:   320px;
   --width-tweaks-panel: 340px;
+
+  --mono: var(--font-mono);
+  --sans: var(--font-sans);
+  --bg-0: var(--color-bg-0);
+  --bg-1: var(--color-bg-1);
+  --bg-2: var(--color-bg-2);
+  --bg-3: var(--color-bg-3);
+  --line: var(--color-line);
+  --line-strong: var(--color-line-strong);
+  --fg-0: var(--color-fg-0);
+  --fg-1: var(--color-fg-1);
+  --fg-2: var(--color-fg-2);
+  --fg-3: var(--color-fg-3);
+  --accent-dim: var(--color-accent-dim);
+  --accent-fg: var(--color-accent-fg);
+  --warn: var(--color-warn);
+  --err: var(--color-err);
+  --info: var(--color-info);
 }
 
 /* ── Dark theme (.dark) ──────────────────────────────────────────────── */

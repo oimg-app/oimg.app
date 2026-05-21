@@ -6,7 +6,7 @@ import { map, computed } from 'nanostores'
 import type { CommandItem } from '@/lib/commands'
 
 export type View = 'Batch' | 'Compare' | 'Report'
-export type Tab = 'codec' | 'svgo' | 'output' | 'report'
+export type Tab = 'codec' | 'output' | 'report'
 
 interface UiState {
   open: string | null
