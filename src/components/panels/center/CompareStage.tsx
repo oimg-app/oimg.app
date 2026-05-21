@@ -1,52 +1,167 @@
 // Phase 05 — CENTER-03: CompareStage compare view with CSS --split var
-import { useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import { useStore } from '@nanostores/react'
-import { uiAtom, setSplit } from '@/stores/ui'
+import { uiAtom, setSplit, setZoom } from '@/stores/ui'
 import { $selectedFile } from '@/stores/files'
 import { fmtBytes } from '@/lib/format'
 
-export function CompareStage() {
-  const { split } = useStore(uiAtom)
-  const selectedFile = useStore($selectedFile)
-  const frameRef = useRef<HTMLDivElement>(null)
-  const dragging = useRef(false)
+const CHECKER_BG: React.CSSProperties = {
+  background: [
+    'linear-gradient(45deg, var(--color-bg-1) 25%, transparent 25%)',
+    'linear-gradient(-45deg, var(--color-bg-1) 25%, transparent 25%)',
+    'linear-gradient(45deg, transparent 75%, var(--color-bg-1) 75%)',
+    'linear-gradient(-45deg, transparent 75%, var(--color-bg-1) 75%)',
+  ].join(', '),
+  backgroundSize: '16px 16px',
+  backgroundPosition: '0 0, 0 8px, 8px -8px, -8px 0',
+  backgroundColor: 'var(--color-bg-0)',
+}
 
-  function handleMouseDown() {
+function parseDimRatio(dim: string): string {
+  const [w, h] = dim.split('×').map(Number)
+  return w > 0 && h > 0 ? `${w} / ${h}` : '4 / 3'
+}
+
+const MIN_SCALE = 0.05
+const MAX_SCALE = 8
+const WHEEL_FACTOR = 0.001
+
+export function CompareStage() {
+  const { split, zoom } = useStore(uiAtom)
+  const selectedFile = useStore($selectedFile)
+
+  // stageRef = the overflow-hidden viewport that captures events
+  // frameRef = the image frame; also the CSS transform target and split-drag source
+  const stageRef = useRef<HTMLDivElement>(null)
+  const frameRef = useRef<HTMLDivElement>(null)
+
+  // View transform — lives in refs to avoid re-renders during interaction
+  const vs         = useRef({ x: 0, y: 0, scale: 1 })
+  const dragging   = useRef(false) // split handle drag active
+  const panning    = useRef(false) // right-click pan active
+  const fromScroll = useRef(false) // scroll originated the zoom change — skip effect reset
+
+  const isFit = zoom === 'fit'
+  const aspectRatio = parseDimRatio(selectedFile?.dim ?? '4×3')
+
+  function applyTransform() {
     if (!frameRef.current) return
+    const { x, y, scale } = vs.current
+    frameRef.current.style.transform = `translate(${x}px, ${y}px) scale(${scale})`
+  }
+
+  // Zoom dropdown → reset pan + snap scale. Skip when scroll set the zoom (no-op guard).
+  useEffect(() => {
+    if (fromScroll.current) { fromScroll.current = false; return }
+    vs.current = { x: 0, y: 0, scale: isFit ? 1 : zoom / 100 }
+    applyTransform()
+  }, [zoom]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Scroll-to-zoom — must be non-passive so preventDefault() blocks page scroll
+  useEffect(() => {
+    const stage = stageRef.current
+    if (!stage) return
+
+    function onWheel(e: WheelEvent) {
+      e.preventDefault()
+      const rect = stage!.getBoundingClientRect()
+      // cursor offset from stage centre (= transform-origin of frameRef)
+      const cx = e.clientX - rect.left - rect.width  / 2
+      const cy = e.clientY - rect.top  - rect.height / 2
+
+      const oldScale = vs.current.scale
+      const newScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE,
+        oldScale * (1 - e.deltaY * WHEEL_FACTOR),
+      ))
+      const ratio = newScale / oldScale
+
+      // Shift offset so the point under the cursor stays fixed
+      vs.current.x = cx + (vs.current.x - cx) * ratio
+      vs.current.y = cy + (vs.current.y - cy) * ratio
+      vs.current.scale = newScale
+      applyTransform()
+      fromScroll.current = true
+      setZoom(Math.round(newScale * 100))
+    }
+
+    stage.addEventListener('wheel', onWheel, { passive: false })
+    return () => stage.removeEventListener('wheel', onWheel)
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Split handle drag (left-click on the handle) ─────────────────────────
+  function handleSplitMouseDown() {
+    if (!frameRef.current) return
+    // getBoundingClientRect reflects the scaled visual size — correct for split %
     const rect = frameRef.current.getBoundingClientRect()
     dragging.current = true
 
     function onMove(e: MouseEvent) {
       if (!dragging.current) return
-      const pct = ((e.clientX - rect.left) / rect.width) * 100
-      const clamped = Math.min(98, Math.max(2, pct))
-      setSplit(clamped)
+      setSplit(Math.min(98, Math.max(2, (e.clientX - rect.left) / rect.width * 100)))
     }
-
     function onUp() {
       dragging.current = false
       window.removeEventListener('mousemove', onMove)
       window.removeEventListener('mouseup', onUp)
     }
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('mouseup', onUp)
+  }
 
+  // ── Right-click viewport pan ─────────────────────────────────────────────
+  function handleStageMouseDown(e: React.MouseEvent<HTMLDivElement>) {
+    if (e.button !== 2 || !stageRef.current) return
+    e.preventDefault()
+    panning.current = true
+    stageRef.current.style.cursor = 'grabbing'
+
+    // anchor: mouse position minus current offset = constant during the drag
+    const anchorX = e.clientX - vs.current.x
+    const anchorY = e.clientY - vs.current.y
+
+    function onMove(ev: MouseEvent) {
+      if (!panning.current) return
+      vs.current.x = ev.clientX - anchorX
+      vs.current.y = ev.clientY - anchorY
+      applyTransform()
+    }
+    function onUp() {
+      panning.current = false
+      if (stageRef.current) stageRef.current.style.cursor = ''
+      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('mouseup', onUp)
+    }
     window.addEventListener('mousemove', onMove)
     window.addEventListener('mouseup', onUp)
   }
 
   return (
-    <div className="flex-1 min-h-0 flex flex-col overflow-hidden bg-[var(--color-bg-0)]">
-      {/* image-frame */}
+    <div
+      ref={stageRef}
+      className="flex-1 min-h-0 overflow-hidden flex items-center justify-center"
+      style={CHECKER_BG}
+      onMouseDown={handleStageMouseDown}
+      onContextMenu={(e) => e.preventDefault()}
+    >
+      {/*
+        frameRef is both the transform target and the image frame.
+        Fixed 640px width for non-fit — CSS scale handles zoom levels.
+        transform-origin defaults to centre, matching where flex centres it.
+      */}
       <div
         ref={frameRef}
-        className="relative w-full h-full overflow-hidden"
-        style={{ '--split': split + '%' } as React.CSSProperties}
+        className="relative border border-[var(--color-line)] overflow-hidden select-none"
+        style={{
+          '--split': split + '%',
+          width: isFit ? '100%' : '640px',
+          aspectRatio,
+        } as React.CSSProperties}
       >
         {/* layer-orig */}
         <div
           className="absolute inset-0 bg-[var(--color-bg-2)]"
           style={{ clipPath: 'inset(0 calc(100% - var(--split)) 0 0)' }}
         />
-
         {/* layer-opt */}
         <div
           className="absolute inset-0 bg-[var(--color-bg-3)]"
@@ -55,18 +170,24 @@ export function CompareStage() {
 
         {/* split-handle */}
         <div
-          className="absolute top-0 bottom-0 w-1 cursor-col-resize bg-[var(--color-accent)]"
-          style={{ left: 'var(--split)', transform: 'translateX(-50%)' }}
-          onMouseDown={handleMouseDown}
-        />
+          className="absolute top-0 bottom-0 w-[1px] cursor-col-resize bg-[var(--color-accent)]"
+          style={{ left: 'var(--split)', transform: 'translateX(-0.5px)' }}
+          onMouseDown={handleSplitMouseDown}
+        >
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[22px] h-[22px] rounded-full bg-[var(--color-accent)] flex items-center justify-center">
+            <span className="font-mono text-[11px] font-semibold text-[var(--color-accent-fg)] pointer-events-none select-none">
+              ⇆
+            </span>
+          </div>
+        </div>
 
-        {/* Split label left */}
+        {/* split label left */}
         <div className="absolute bottom-3 left-3 flex items-center gap-1.5 px-2 py-1 rounded-[4px] font-mono text-[11px] font-semibold text-[var(--color-fg-2)] bg-[var(--color-bg-0)]/70 backdrop-blur-sm pointer-events-none">
           <span className="w-2 h-2 rounded-full bg-[var(--color-fg-3)] shrink-0" />
           ORIGINAL · {fmtBytes(selectedFile?.orig ?? null)}
         </div>
 
-        {/* Split label right */}
+        {/* split label right */}
         <div className="absolute bottom-3 right-3 flex items-center gap-1.5 px-2 py-1 rounded-[4px] font-mono text-[11px] font-semibold text-[var(--color-fg-2)] bg-[var(--color-bg-0)]/70 backdrop-blur-sm pointer-events-none">
           <span className="w-2 h-2 rounded-full bg-[var(--color-accent)] shrink-0" />
           {selectedFile?.target.toUpperCase() ?? '—'} · {fmtBytes(selectedFile?.opt ?? null)}

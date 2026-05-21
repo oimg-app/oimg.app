@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { useStore } from '@nanostores/react'
 import { uiAtom, setZoom } from '@/stores/ui'
 import { $selectedFile } from '@/stores/files'
+import { settingsAtom } from '@/stores/settings'
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover'
 import { Eye, Check, CaretDown } from '@phosphor-icons/react'
 
@@ -14,6 +15,7 @@ const ZOOM_OPTS = [25, 50, 100, 200, 'fit'] as const
 export function CenterHeader() {
   const { zoom } = useStore(uiAtom)
   const selectedFile = useStore($selectedFile)
+  const { codec, q, resizeOn, w, h } = useStore(settingsAtom)
   const [open, setOpen] = useState(false)
 
   return (
@@ -27,12 +29,17 @@ export function CenterHeader() {
             <span className="text-[13px] font-medium text-[var(--color-fg-0)] truncate max-w-[200px]">
               {selectedFile.name}
             </span>
+            {/* type→codec from inspector */}
             <span className={FILE_TAG}>
-              {selectedFile.type.toUpperCase()}-&gt;{selectedFile.target.toUpperCase()}
+              {selectedFile.type.toUpperCase()}→{codec.toUpperCase()}
             </span>
-            <span className={FILE_TAG}>{selectedFile.dim}</span>
-            {selectedFile.q !== null && (
-              <span className={FILE_TAG}>q{selectedFile.q}</span>
+            {/* dim — extended with resize target when resizeOn */}
+            <span className={FILE_TAG}>
+              {resizeOn ? `${selectedFile.dim}→${w}×${h}` : selectedFile.dim}
+            </span>
+            {/* quality from inspector slider — hidden for SVG */}
+            {codec !== 'SVG' && (
+              <span className={FILE_TAG}>q{q}</span>
             )}
           </>
         )}
@@ -66,7 +73,7 @@ export function CenterHeader() {
                 type="button"
                 className="w-full flex items-center justify-between h-7 px-2 font-mono text-[11px] rounded hover:bg-[var(--color-bg-2)] text-[var(--color-fg-1)]"
                 onClick={() => {
-                  ;(setZoom as (z: number | string) => void)(opt)
+                  setZoom(opt)
                   setOpen(false)
                 }}
               >

@@ -13,7 +13,7 @@ interface UiState {
   view: View
   tab: Tab
   split: number
-  zoom: number
+  zoom: number | 'fit'
   cmdkOpen: boolean
   cmdkQ: string
   cmdkSel: number
@@ -54,7 +54,7 @@ export function setSplit(pct: number): void {
   uiAtom.setKey('split', pct)
 }
 
-export function setZoom(z: number): void {
+export function setZoom(z: number | 'fit'): void {
   uiAtom.setKey('zoom', z)
 }
 
