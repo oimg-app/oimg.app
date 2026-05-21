@@ -76,7 +76,7 @@ export function FileRow({ file }: { file: FileEntry }) {
         onClick={() => selectFile(file.id)}
         className={cn(
           'grid grid-cols-[28px_1fr_auto] gap-[10px] items-center px-3 py-[7px] border-b border-[var(--line)] relative cursor-default group',
-          'hover:bg-[var(--bg-1)]',
+          !isSelected && 'hover:bg-[var(--bg-2)] cursor-pointer',
           (isSelected || hasMenu) && 'bg-[var(--accent-dim)] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[2px] before:bg-[var(--primary)]'
         )}
       >
@@ -115,7 +115,7 @@ export function FileRow({ file }: { file: FileEntry }) {
         {/* Right column: ctxbtn + status dot */}
         <div className="flex items-center gap-[6px]">
           <button
-            className="w-[22px] h-[22px] grid place-items-center rounded text-[var(--fg-2)] hover:bg-[var(--bg-3)] hover:text-[var(--fg-0)]"
+            className="w-[22px] h-[22px] grid place-items-center rounded text-[var(--fg-2)] hover:bg-[var(--bg-3)] cursor-pointer hover:text-[var(--fg-0)]"
             aria-label="File options"
             onClick={handleCtxBtn}
           >
