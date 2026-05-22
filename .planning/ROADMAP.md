@@ -199,7 +199,12 @@ Plans:
   4. No component imports stub-data directly; no app-level `useState` for data (STORE-08 audit passes)
   5. Code review finds no circular ESM imports between ui.ts and other stores
 
-**Plans**: TBD
+**Plans:** 3 plans
+Plans:
+
+- [ ] 07-01-PLAN.md — Wave 1: BackpressureIndicator component + mount in AppShell + SHELL-02 Playwright spec (SHELL-02)
+- [ ] 07-02-PLAN.md — Wave 1: FOUC fix (inline script) + data-theme wire + global :focus-visible CSS + type import redirect (STORE-08 audit)
+- [ ] 07-03-PLAN.md — Wave 2: Automated audit (tsc, ESM grep, STORE-08 grep, Playwright) + human visual checkpoint
 **UI hint**: yes
 
 ---
@@ -214,4 +219,4 @@ Plans:
 | 4. Inspector — Codec + SVGO | 4/4 | Complete   | 2026-05-20 |
 | 5. Center Pane | 0/2 | Planned     | - |
 | 6. Inspector — Output + Report | 2/3 | In Progress|  |
-| 7. Polish | 0/? | Not started | - |
+| 7. Polish | 0/3 | Planned     | - |
