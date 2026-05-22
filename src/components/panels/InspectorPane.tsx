@@ -4,6 +4,8 @@ import type { Tab } from '@/stores/ui'
 import { $selectedFile } from '@/stores/files'
 import { cn } from '@/lib/utils'
 import { CodecPanel } from './inspector/CodecPanel'
+import { OutputPanel } from './inspector/OutputPanel'
+import { ReportPanel } from './inspector/ReportPanel'
 
 const TABS: Tab[] = ['codec', 'output', 'report']
 
@@ -51,12 +53,8 @@ export function InspectorPane() {
           {/* Tab content */}
           <div className="flex-1 overflow-y-auto pb-20">
             {tab === 'codec' && <CodecPanel />}
-            {tab === 'output' && (
-              <div className="p-3 text-xs text-[var(--color-fg-3)]">Output — coming in Phase 6</div>
-            )}
-            {tab === 'report' && (
-              <div className="p-3 text-xs text-[var(--color-fg-3)]">Report — coming in Phase 6</div>
-            )}
+            {tab === 'output' && <OutputPanel />}
+            {tab === 'report' && <ReportPanel />}
           </div>
         </div>
       )}
