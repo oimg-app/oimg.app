@@ -4,6 +4,19 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      // Phase 07-polish / Plan 02 — FOUC fix: set theme synchronously before first paint.
+      (function () {
+        try {
+          var t = localStorage.getItem('oimg-theme') || 'dark';
+          document.documentElement.classList.toggle('dark', t === 'dark');
+          document.documentElement.setAttribute('data-theme', t);
+        } catch (e) {
+          document.documentElement.classList.add('dark');
+          document.documentElement.setAttribute('data-theme', 'dark');
+        }
+      })();
+    </script>
     <title>oimg.app — Image Optimizer</title>
   </head>
   <body>
