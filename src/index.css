@@ -181,3 +181,9 @@
   --selection:           oklch(0.80 0.17 145 / 0.30);
   --shadow-elev:         0 12px 40px oklch(0 0 0 / 0.45);
 }
+
+/* ── Global focus ring — WCAG AA — Phase 07-polish / Plan 02 ─────────── */
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
