@@ -27,7 +27,7 @@ import {
   removeFile,
   setRowMenu,
 } from '@/stores'
-import type { FileEntry } from '@/lib/stub-data'
+import type { FileEntry } from '@/stores/files'
 
 // PITFALL-05: key on 'jpg' not 'jpeg' (type field in FileEntry uses 'jpg')
 const BADGE_CLASS: Record<string, string> = {

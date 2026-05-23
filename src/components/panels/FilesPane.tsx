@@ -2,7 +2,7 @@
 import { useStore } from '@nanostores/react'
 import { Funnel, Plus } from '@phosphor-icons/react'
 import { $filteredFiles, $totals, setSortBy } from '@/stores'
-import type { SortKey } from '@/lib/stub-data'
+import type { SortKey } from '@/stores/files'
 import { fmtBytes } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { FileRow } from '@/components/file-row/FileRow'

@@ -3,6 +3,9 @@ import { map, computed } from 'nanostores'
 import type { FileEntry, SortKey } from '@/lib/stub-data'
 import { STUB_FILES } from '@/lib/stub-data'
 
+// Re-export types so components import from store barrel, not from stub-data directly (STORE-08 convention)
+export type { FileEntry, SortKey }
+
 interface FilesState {
   entries: FileEntry[]
   selectedId: string | null
