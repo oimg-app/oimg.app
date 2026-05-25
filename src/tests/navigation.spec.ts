@@ -34,10 +34,30 @@ test('TitleBar renders (NAV-01)', async ({ page }) => {
 test('TitleBar Codec menu opens (NAV-01)', async ({ page }) => {
   await page.goto('/')
   await page.getByRole('button', { name: 'Codec' }).click()
-  await expect(page.getByRole('button', { name: 'WebP' })).toBeVisible()
+  await expect(page.getByRole('menuitem', { name: 'WebP' })).toBeVisible()
   await page.getByRole('button', { name: 'View' }).click()
-  await expect(page.getByRole('button', { name: 'WebP' })).not.toBeVisible()
-  await expect(page.getByRole('button', { name: 'Light theme' })).toBeVisible()
+  await expect(page.getByRole('menuitem', { name: 'WebP' })).not.toBeVisible()
+  await expect(page.getByRole('menuitem', { name: 'Light theme' })).toBeVisible()
+})
+
+// Phase 07-polish — WCAG AA: menus are DropdownMenu, arrow keys move highlight between items.
+// Radix focuses the content on pointer-open; the first ArrowDown lands on item 1.
+test('TitleBar Codec menu is keyboard navigable (WCAG AA)', async ({ page }) => {
+  await page.goto('/')
+  await page.getByRole('button', { name: 'Codec' }).click()
+  // ArrowDown moves focus into the list, item by item
+  await page.keyboard.press('ArrowDown')
+  await expect(page.getByRole('menuitem', { name: 'WebP' })).toBeFocused()
+  await page.keyboard.press('ArrowDown')
+  await expect(page.getByRole('menuitem', { name: 'AVIF' })).toBeFocused()
+  await page.keyboard.press('ArrowDown')
+  await expect(page.getByRole('menuitem', { name: 'JPEG' })).toBeFocused()
+  // ArrowUp moves it back
+  await page.keyboard.press('ArrowUp')
+  await expect(page.getByRole('menuitem', { name: 'AVIF' })).toBeFocused()
+  // Escape closes the menu
+  await page.keyboard.press('Escape')
+  await expect(page.getByRole('menuitem', { name: 'WebP' })).not.toBeVisible()
 })
 
 // NAV-02: Toolbar segmented control + filter tests

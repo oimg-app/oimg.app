@@ -1,10 +1,15 @@
 // Phase 05 — CENTER-02: CenterHeader breadcrumb + zoom popover
-import { useState } from 'react'
+// Phase 07-polish — WCAG AA: zoom dropdown migrated Popover→DropdownMenu for arrow-key navigation.
 import { useStore } from '@nanostores/react'
 import { uiAtom, setZoom } from '@/stores/ui'
 import { $selectedFile } from '@/stores/files'
 import { settingsAtom } from '@/stores/settings'
-import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover'
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from '@/components/ui/dropdown-menu'
 import { Eye, Check, CaretDown } from '@phosphor-icons/react'
 
 const FILE_TAG =
@@ -16,7 +21,6 @@ export function CenterHeader() {
   const { zoom } = useStore(uiAtom)
   const selectedFile = useStore($selectedFile)
   const { codec, q, resizeOn, w, h } = useStore(settingsAtom)
-  const [open, setOpen] = useState(false)
 
   return (
     <header className="flex items-center justify-between h-9 px-3 border-b border-[var(--color-line)] bg-[var(--color-bg-1)] shrink-0">
@@ -54,9 +58,9 @@ export function CenterHeader() {
           </span>
         )}
 
-        {/* Zoom popover */}
-        <Popover open={open} onOpenChange={setOpen}>
-          <PopoverTrigger asChild>
+        {/* Zoom dropdown */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
             <button
               type="button"
               className="flex items-center gap-1 h-6 px-2 font-mono text-[11px] text-[var(--color-fg-1)] hover:text-[var(--color-fg-0)] hover:bg-[var(--color-bg-2)] rounded transition-colors"
@@ -65,24 +69,20 @@ export function CenterHeader() {
               {zoom === 'fit' ? 'Fit' : `${zoom}%`}
               <CaretDown size={10} />
             </button>
-          </PopoverTrigger>
-          <PopoverContent side="bottom" align="end" className="w-32 p-1 bg-[var(--color-bg-1)] border-[var(--color-line)]">
+          </DropdownMenuTrigger>
+          <DropdownMenuContent side="bottom" align="end" className="w-32 min-w-0 p-1 bg-[var(--color-bg-1)] text-[var(--color-fg-1)] border border-[var(--color-line)] ring-0 shadow-md">
             {ZOOM_OPTS.map((opt) => (
-              <button
+              <DropdownMenuItem
                 key={opt}
-                type="button"
-                className="w-full flex items-center justify-between h-7 px-2 font-mono text-[11px] rounded hover:bg-[var(--color-bg-2)] text-[var(--color-fg-1)]"
-                onClick={() => {
-                  setZoom(opt)
-                  setOpen(false)
-                }}
+                className="flex items-center justify-between h-7 px-2 font-mono text-[11px] rounded cursor-pointer focus:bg-[var(--color-bg-2)] data-[highlighted]:bg-[var(--color-bg-2)] text-[var(--color-fg-1)]"
+                onSelect={() => setZoom(opt)}
               >
                 <span>{typeof opt === 'number' ? `${opt}%` : 'Fit'}</span>
                 {zoom === opt && <Check size={10} />}
-              </button>
+              </DropdownMenuItem>
             ))}
-          </PopoverContent>
-        </Popover>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </header>
   )
