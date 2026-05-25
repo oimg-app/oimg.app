@@ -25,7 +25,7 @@
 - [x] **Phase 4: Inspector Pane — Codec + SVGO** — InspectorPane tabs, CodecPanel, SvgoPanel backed by settingsAtom (completed 2026-05-20)
 - [ ] **Phase 5: Center Pane** — CenterPane: header, compare stage, delta strip backed by $selectedFile
 - [ ] **Phase 6: Inspector Pane — Output + Report** — OutputPanel (snippets + copy), ReportPanel (chart)
-- [ ] **Phase 7: Polish** — BackpressureIndicator, theme toggle, WCAG AA audit, code review pass
+- [x] **Phase 7: Polish** — BackpressureIndicator, theme toggle, WCAG AA audit, code review pass
 
 ---
 
@@ -202,9 +202,9 @@ Plans:
 **Plans:** 3 plans
 Plans:
 
-- [ ] 07-01-PLAN.md — Wave 1: BackpressureIndicator component + mount in AppShell + SHELL-02 Playwright spec (SHELL-02)
-- [ ] 07-02-PLAN.md — Wave 1: FOUC fix (inline script) + data-theme wire + global :focus-visible CSS + type import redirect (STORE-08 audit)
-- [ ] 07-03-PLAN.md — Wave 2: Automated audit (tsc, ESM grep, STORE-08 grep, Playwright) + human visual checkpoint
+- [x] 07-01-PLAN.md — Wave 1: BackpressureIndicator component + mount in AppShell + SHELL-02 Playwright spec (SHELL-02)
+- [x] 07-02-PLAN.md — Wave 1: FOUC fix (inline script) + data-theme wire + global :focus-visible CSS + type import redirect (STORE-08 audit)
+- [x] 07-03-PLAN.md — Wave 2: Automated audit (tsc, ESM grep, STORE-08 grep, Playwright) + human visual checkpoint
 **UI hint**: yes
 
 ---
@@ -219,4 +219,4 @@ Plans:
 | 4. Inspector — Codec + SVGO | 4/4 | Complete   | 2026-05-20 |
 | 5. Center Pane | 0/2 | Planned     | - |
 | 6. Inspector — Output + Report | 2/3 | In Progress|  |
-| 7. Polish | 0/3 | Planned     | - |
+| 7. Polish | 3/3 | Complete    | 2026-05-25 |
