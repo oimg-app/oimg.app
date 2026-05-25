@@ -8,6 +8,18 @@ A 100% client-side, zero-server browser tool for web developers to batch-optimiz
 
 A developer drops a folder of source assets, adjusts settings once, and walks away with a ZIP of optimized files plus copy-paste HTML/CSS snippets — without anything leaving the browser.
 
+## Current Milestone: v1.1 Real Optimization Pipeline
+
+**Goal:** Reconnect the full codec pipeline behind the v1.0 UI so a developer can drop assets, adjust settings, and walk away with real optimized files + ZIP + paste-ready snippets — all client-side.
+
+**Target features:**
+- Full jSquash worker pipeline — WebP, JPEG (MozJPEG), AVIF (lazy-loaded), OxiPNG, SVG (svgo v4)
+- Single-file optimize + download (drop → adjust → real output)
+- Batch ZIP export (jszip)
+- Real paste-ready snippets — Output panel wired to actual encoded bytes
+
+**Deferred:** 1×/2×/3× density variants (future milestone).
+
 ## Requirements
 
 ### Validated
@@ -22,13 +34,18 @@ A developer drops a folder of source assets, adjusts settings once, and walks aw
 - ✓ oklch design tokens + fonts ported verbatim from OIMG.html, Tailwind v4 @theme — v1.0
 - ✓ WCAG AA keyboard nav (DropdownMenu menus, focus rings), theme toggle w/ no FOUC — v1.0
 
-### Active
+### Active (v1.1)
 
-(None — v1.0 shipped. Next milestone defines fresh requirements via `/gsd-new-milestone`.)
+- [ ] Worker pipeline: WorkerPool + Comlink, codecs dynamic-imported inside workers (WebP/JPEG/AVIF/OxiPNG/SVG)
+- [ ] Single-file optimize: drop → decode → encode → real optimized output, wired to runtime store
+- [ ] Settings actually drive encoding (quality/effort/lossless/resize/metadata per codec)
+- [ ] Batch ZIP export via jszip
+- [ ] Output panel snippets wired to real encoded bytes (Base64 / URL-encoded / `<picture>`)
+- [ ] COOP/COEP headers for SharedArrayBuffer (MT codecs)
 
-Likely next-milestone candidates (not yet committed):
-- Reconnect workers + stores to the UI (the UI-only milestone rendered from stub data)
-- Close v1.0 deferred items: phase verification, duplicate `banner` landmarks (WCAG)
+Deferred to a future milestone:
+- 1×/2×/3× density variants (@jsquash/resize)
+- v1.0 tech debt: phase verification, duplicate `banner` landmarks (WCAG)
 
 ### Out of Scope
 
