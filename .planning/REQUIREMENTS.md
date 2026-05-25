@@ -62,31 +62,29 @@ Deferred to a later milestone. Tracked but not in this roadmap.
 
 ## Traceability
 
-Populated during roadmap creation.
-
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| PIPE-01 | TBD | Pending |
-| PIPE-02 | TBD | Pending |
-| PIPE-03 | TBD | Pending |
-| PIPE-04 | TBD | Pending |
-| ENC-01 | TBD | Pending |
-| ENC-02 | TBD | Pending |
-| ENC-03 | TBD | Pending |
-| ENC-04 | TBD | Pending |
-| ENC-05 | TBD | Pending |
-| ENC-06 | TBD | Pending |
-| OPT-01 | TBD | Pending |
-| OPT-02 | TBD | Pending |
-| EXP-01 | TBD | Pending |
-| EXP-02 | TBD | Pending |
-| SNIP-01 | TBD | Pending |
+| PIPE-01 | Phase 8 | Pending |
+| PIPE-02 | Phase 8 | Pending |
+| PIPE-03 | Phase 8 | Pending |
+| PIPE-04 | Phase 8 | Pending |
+| ENC-01 | Phase 9 | Pending |
+| ENC-02 | Phase 9 | Pending |
+| ENC-03 | Phase 9 | Pending |
+| ENC-04 | Phase 9 | Pending |
+| ENC-05 | Phase 9 | Pending |
+| ENC-06 | Phase 9 | Pending |
+| OPT-01 | Phase 10 | Pending |
+| OPT-02 | Phase 11 | Pending |
+| EXP-01 | Phase 11 | Pending |
+| EXP-02 | Phase 11 | Pending |
+| SNIP-01 | Phase 12 | Pending |
 
 **Coverage:**
 - v1.1 requirements: 15 total
-- Mapped to phases: 0 (roadmap pending)
-- Unmapped: 15 ⚠️
+- Mapped to phases: 15 ✓
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-05-25*
-*Last updated: 2026-05-25 after milestone v1.1 definition*
+*Last updated: 2026-05-25 after roadmap creation (Phases 8–12)*
