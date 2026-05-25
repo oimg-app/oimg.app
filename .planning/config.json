@@ -20,7 +20,8 @@
     "ui_review": true,
     "research_before_questions": false,
     "skip_discuss": false,
-    "use_worktrees": false
+    "use_worktrees": false,
+    "_auto_chain_active": false
   },
   "intel": {
     "enabled": true

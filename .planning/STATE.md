@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executed
-last_updated: "2026-05-25T00:00:00.000Z"
+status: Awaiting next milestone
+last_updated: "2026-05-25T21:31:36.423Z"
+last_activity: 2026-05-25 — Milestone v1.0 completed and archived
 progress:
   total_phases: 7
-  completed_phases: 0
+  completed_phases: 7
   total_plans: 22
   completed_plans: 22
   percent: 100
-  note: "All 7 phases EXECUTED (22/22 plans, all summaries). 0 formally verified (no VERIFICATION.md) — milestone accepted as Executed per user decision 2026-05-25. percent reflects plan completion, not verification."
 ---
 
 # STATE: oimg.app — UI Port Milestone
@@ -22,17 +22,10 @@ progress:
 
 ## Current Position
 
-Phase: 07 (polish) — COMPLETE
-Plan: 3 of 3 — all plans complete, human-verified
-| Field | Value |
-|-------|-------|
-| **Current Phase** | — (all 7 phases complete) |
-| **Last Completed Phase** | 07 — polish |
-| **Status** | Milestone EXECUTED (unverified) — accepted as-is 2026-05-25 |
-| **Progress** | `[x][x][x][x][x][x][x]` 7/7 phases executed · 0 formally verified |
-| **Follow-up** | Duplicate banner landmarks (WCAG) — see 07-03-SUMMARY deferred |
-
----
+Phase: Milestone v1.0 complete
+Plan: —
+Status: Awaiting next milestone
+Last activity: 2026-05-25 — Milestone v1.0 completed and archived
 
 ## Performance Metrics
 
@@ -130,3 +123,23 @@ Plan: 3 of 3 — all plans complete, human-verified
 | INSP-08 | 6 | Pending |
 | SHELL-02 | 7 | Pending |
 | STORE-08 (audit) | 7 | Pending |
+
+---
+
+## Deferred Items
+
+Acknowledged and deferred at v1.0 milestone close (2026-05-25). Milestone shipped as **Executed** — all 22 plans built + summarized, formal verification skipped per user decision.
+
+| Category | Item | Status |
+|----------|------|--------|
+| verification_gap | Phase 01 VERIFICATION.md | human_needed |
+| verification_gap | Phase 02 VERIFICATION.md | human_needed |
+| verification_gap | Phase 04 VERIFICATION.md | human_needed |
+| verification_gap | Phases 03/05/06/07 — no VERIFICATION.md | unverified (executed) |
+| requirements | 18/36 requirements unchecked in traceability (likely tracking drift; code largely shipped) | accepted as tech debt |
+| wcag | Duplicate `banner` landmarks — 3 `<header>` elements (TitleBar + CenterHeader + InspectorPane) | deferred follow-up |
+| git | 3 stale locked `agent-*` worktrees from flaky-agent sessions | cleanup pending |
+
+## Operator Next Steps
+
+- Start the next milestone with /gsd-new-milestone

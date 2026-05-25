@@ -18,27 +18,27 @@ A developer drops a folder of source assets, adjusts settings once, and walks aw
 - ✓ Decode/resize memory model (jSquash PNG decode, @jsquash/resize, ICC strip) — Phase 4
 - ✓ Raster encoders (WebP, JPEG, AVIF, OxiPNG adapters + worker routing) — Phase 5
 - ✓ Shadcn UI configured (`radix-lyra` style, phosphor icons, CSS variables, neutral base) — Phase 10
+- ✓ example-ui prototype ported to React + TS + Tailwind + Radix — full 3-pane AppShell, TitleBar/Toolbar/StatusBar/CommandPalette, FilesPane, InspectorPane (codec + SVGO + Output + Report), CenterPane — v1.0
+- ✓ oklch design tokens + fonts ported verbatim from OIMG.html, Tailwind v4 @theme — v1.0
+- ✓ WCAG AA keyboard nav (DropdownMenu menus, focus rings), theme toggle w/ no FOUC — v1.0
 
 ### Active
 
-- [ ] Port example-ui prototype to React + TypeScript + Tailwind + Shadcn UI (full panel set, UI-only milestone)
-  - AppShell: resizable 3-pane layout (FilesPane | CenterPane | InspectorPane)
-  - TitleBar, Toolbar, StatusBar, CommandPalette (BackpressureIndicator)
-  - FilesPane: file list, drag-drop zone, ContextMenu, TargetDensityCheckboxes
-  - InspectorPane: tabs — codec panels (JPEG / PNG / WebP / AVIF / SVG / Tweaks), SnippetPanel, ReportPanel
-  - All components render from static stub data (workers reconnected in next milestone)
-- [ ] Port CSS variables from OIMG.html → Tailwind config (oklch palette locked)
-- [ ] Port all CSS classes to Tailwind utility classes — no inline styles, no CSS modules
-- [ ] Preserve HTML structure exactly as in example-ui prototype
+(None — v1.0 shipped. Next milestone defines fresh requirements via `/gsd-new-milestone`.)
+
+Likely next-milestone candidates (not yet committed):
+- Reconnect workers + stores to the UI (the UI-only milestone rendered from stub data)
+- Close v1.0 deferred items: phase verification, duplicate `banner` landmarks (WCAG)
 
 ### Out of Scope
 
-- Worker/store reconnection — deferred to next milestone
-- New codec features or settings panels not in example-ui — not in this milestone
+- New codec features or settings panels not in example-ui — not in v1.0
 - Server-side rendering — non-negotiable, this is a client-side-only app
 - IE/legacy browser support — non-negotiable
 
 ## Context
+
+**Current state (after v1.0, 2026-05-25):** UI Port shipped as Executed — 7 phases, 22 plans, ~379 commits over 27 days. Full React + TS + Tailwind + Radix component tree renders from Zustand stores against static stub data. Workers/stores not yet reconnected (next-milestone work). Formal phase verification was skipped at close (accepted as tech debt — see MILESTONES.md Known Gaps / STATE.md Deferred Items).
 
 **Source of truth:** `example-ui/` directory contains the reference prototype:
 - `OIMG.html` (938 lines) — full HTML prototype with design tokens and CSS variables
