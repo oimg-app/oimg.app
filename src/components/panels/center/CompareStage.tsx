@@ -1,5 +1,6 @@
 // Phase 05 — CENTER-03: CompareStage compare view with CSS --split var
-import { useEffect, useRef } from 'react'
+// Phase 09 — Plan 04: real original/encoded <img> via object URLs (T-9-URL: revoke on cleanup)
+import { useEffect, useRef, useState } from 'react'
 import { useStore } from '@nanostores/react'
 import { uiAtom, setSplit, setZoom } from '@/stores/ui'
 import { $selectedFile } from '@/stores/files'
@@ -30,6 +31,10 @@ export function CompareStage() {
   const { split, zoom } = useStore(uiAtom)
   const selectedFile = useStore($selectedFile)
 
+  // Object URLs for original and encoded image layers (T-9-URL: revoke on cleanup)
+  const [origSrc, setOrigSrc] = useState<string | null>(null)
+  const [encodedSrc, setEncodedSrc] = useState<string | null>(null)
+
   // stageRef = the overflow-hidden viewport that captures events
   // frameRef = the image frame; also the CSS transform target and split-drag source
   const stageRef = useRef<HTMLDivElement>(null)
@@ -49,6 +54,30 @@ export function CompareStage() {
     const { x, y, scale } = vs.current
     frameRef.current.style.transform = `translate(${x}px, ${y}px) scale(${scale})`
   }
+
+  // Build object URL for original layer — revoke on cleanup (T-9-URL)
+  useEffect(() => {
+    if (!selectedFile?.rawBuffer) {
+      setOrigSrc(null)
+      return
+    }
+    const blob = new Blob([selectedFile.rawBuffer])
+    const url = URL.createObjectURL(blob)
+    setOrigSrc(url)
+    return () => URL.revokeObjectURL(url)
+  }, [selectedFile?.rawBuffer])
+
+  // Build object URL for encoded layer — revoke on cleanup (T-9-URL)
+  useEffect(() => {
+    if (!selectedFile?.encodedBuffer) {
+      setEncodedSrc(null)
+      return
+    }
+    const blob = new Blob([selectedFile.encodedBuffer])
+    const url = URL.createObjectURL(blob)
+    setEncodedSrc(url)
+    return () => URL.revokeObjectURL(url)
+  }, [selectedFile?.encodedBuffer])
 
   // Zoom dropdown → reset pan + snap scale. Skip when scroll set the zoom (no-op guard).
   useEffect(() => {
@@ -157,16 +186,37 @@ export function CompareStage() {
           aspectRatio,
         } as React.CSSProperties}
       >
-        {/* layer-orig */}
-        <div
-          className="absolute inset-0 bg-[var(--color-bg-2)]"
-          style={{ clipPath: 'inset(0 calc(100% - var(--split)) 0 0)' }}
-        />
-        {/* layer-opt */}
-        <div
-          className="absolute inset-0 bg-[var(--color-bg-3)]"
-          style={{ clipPath: 'inset(0 0 0 var(--split))' }}
-        />
+        {/* layer-orig — real original image via object URL */}
+        {origSrc ? (
+          <img
+            src={origSrc}
+            alt="Original"
+            className="absolute inset-0 w-full h-full object-contain"
+            style={{ clipPath: 'inset(0 calc(100% - var(--split)) 0 0)' }}
+            draggable={false}
+          />
+        ) : (
+          <div
+            className="absolute inset-0 bg-[var(--color-bg-2)]"
+            style={{ clipPath: 'inset(0 calc(100% - var(--split)) 0 0)' }}
+          />
+        )}
+
+        {/* layer-opt — real encoded image via object URL */}
+        {encodedSrc ? (
+          <img
+            src={encodedSrc}
+            alt="Optimized"
+            className="absolute inset-0 w-full h-full object-contain"
+            style={{ clipPath: 'inset(0 0 0 var(--split))' }}
+            draggable={false}
+          />
+        ) : (
+          <div
+            className="absolute inset-0 bg-[var(--color-bg-3)]"
+            style={{ clipPath: 'inset(0 0 0 var(--split))' }}
+          />
+        )}
 
         {/* split-handle */}
         <div
