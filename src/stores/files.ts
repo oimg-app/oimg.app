@@ -1,10 +1,11 @@
 // Phase 02 — STORE-01: filesAtom map + computed atoms + actions. Source: 02-01-PLAN.md
+// Phase 09 — Plan 01: per-file settings actions (D-01/D-03/D-13) + buffer/error actions
 import { map, computed } from 'nanostores'
-import type { FileEntry, SortKey } from '@/lib/stub-data'
+import type { FileEntry, FileSettings, SortKey } from '@/lib/stub-data'
 import { STUB_FILES } from '@/lib/stub-data'
 
 // Re-export types so components import from store barrel, not from stub-data directly (STORE-08 convention)
-export type { FileEntry, SortKey }
+export type { FileEntry, FileSettings, SortKey }
 
 interface FilesState {
   entries: FileEntry[]
@@ -91,3 +92,35 @@ export function exportIndividually(): void {}
 export function exportCopyHtml(): void {}
 export function exportCopyDataUris(): void {}
 export function exportManifestJson(): void {}
+
+// Phase 09 — Plan 01: per-file settings + buffer/error actions (D-01/D-03/D-13)
+
+// D-01/D-03: update a single key in the selected file's own FileSettings (T-9-01: typed key prevents arbitrary write)
+export function setFileSettings<K extends keyof FileSettings>(
+  id: string, key: K, value: FileSettings[K]
+): void {
+  filesAtom.setKey('entries', filesAtom.get().entries.map(e =>
+    e.id === id ? { ...e, settings: { ...e.settings!, [key]: value } } : e
+  ))
+}
+
+// D-13: record per-file error (or clear it)
+export function setFileError(id: string, error: string | undefined): void {
+  filesAtom.setKey('entries', filesAtom.get().entries.map(e =>
+    e.id === id ? { ...e, error } : e
+  ))
+}
+
+// Store encoded result + clear error on success
+export function setFileResult(id: string, encodedBuffer: ArrayBuffer, optimizedSize: number): void {
+  filesAtom.setKey('entries', filesAtom.get().entries.map(e =>
+    e.id === id ? { ...e, encodedBuffer, opt: optimizedSize, error: undefined } : e
+  ))
+}
+
+// Cache raw file bytes for live re-encode (D-05)
+export function setFileRawBuffer(id: string, rawBuffer: ArrayBuffer): void {
+  filesAtom.setKey('entries', filesAtom.get().entries.map(e =>
+    e.id === id ? { ...e, rawBuffer } : e
+  ))
+}

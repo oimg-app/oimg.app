@@ -52,11 +52,9 @@ export function setWorkerCount(n: number): void {
 
 // Phase 08 — PIPE-04: called by WorkerPool.onCountChange to reflect real running/queued state.
 // `running` (boolean) remains the BackpressureIndicator contract — derived from counts.
+// CR-01 fix: atomic setKey per field — eliminates read-modify-write race under concurrent pushToast
 export function setJobCounts(running: number, queued: number): void {
-  runtimeAtom.set({
-    ...runtimeAtom.get(),
-    runningJobs: running,
-    queuedJobs: queued,
-    running: running > 0 || queued > 0,
-  })
+  runtimeAtom.setKey('runningJobs', running)
+  runtimeAtom.setKey('queuedJobs', queued)
+  runtimeAtom.setKey('running', running > 0 || queued > 0)
 }

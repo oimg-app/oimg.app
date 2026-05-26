@@ -59,3 +59,15 @@ export function togglePlugin(id: string): void {
     p.id === id ? { ...p, on: !p.on } : p
   ))
 }
+
+// Phase 09 — Plan 01: D-02 "Apply to all" — push global defaults onto every FileEntry.settings
+// Lazy import avoids circular dep: settings.ts → files.ts (CIRCULAR ESM GUARD — see line 2)
+export function applyToAll(): void {
+  import('@/stores/files').then(({ filesAtom }) => {
+    const defaults = settingsAtom.get()
+    filesAtom.setKey('entries', filesAtom.get().entries.map(e => ({
+      ...e,
+      settings: { ...defaults },
+    })))
+  })
+}
