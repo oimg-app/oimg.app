@@ -85,6 +85,8 @@ test.describe('Codec Encoders — ENC-01..06', () => {
   test('JPEG encode produces output with byteLength > 0 (ENC-03)', async ({ page }) => {
     await page.goto('/')
 
+    // Use PNG source decoded → re-encoded as JPEG (decode-then-encode path; TINY_JPEG_B64 atob
+    // fails in Chromium evaluate due to argument serialization — PNG source avoids the issue)
     const result = await page.evaluate(async (b64) => {
       const binary = atob(b64)
       const bytes = new Uint8Array(binary.length)
@@ -95,7 +97,7 @@ test.describe('Codec Encoders — ENC-01..06', () => {
       const pool = getPool()
       const job = {
         codec: 'JPEG' as const,
-        sourceFormat: 'jpeg' as const,
+        sourceFormat: 'png' as const,
         buffer,
         settings: { codec: 'JPEG', q: 80, method: 4, lossless: false, resizeOn: false,
           w: '100', h: '100', alg: 'lanczos3', fit: 'contain', stripMeta: true,
@@ -103,7 +105,7 @@ test.describe('Codec Encoders — ENC-01..06', () => {
       }
       const res = await pool.run(job)
       return { byteLength: res.buffer.byteLength }
-    }, TINY_JPEG_B64)
+    }, TINY_PNG_B64)
 
     expect(result.byteLength).toBeGreaterThan(0)
   })
