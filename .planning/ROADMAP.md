@@ -57,7 +57,7 @@ Shipped as **Executed** — all 22 plans built + summarized; formal phase verifi
   4. Changing an inspector setting (quality / effort / lossless / resize / strip-metadata) measurably changes the encoded output for the corresponding codec
 **Plans**: 4 plans (4 waves)
 - [x] 09-01-PLAN.md — Per-file settings store refactor + applyToAll + CR-01 fix + Wave 0 test scaffolds [ENC-06, D-01/D-02/D-03]
-- [ ] 09-02-PLAN.md — Worker codec adapters (PNG/WebP/JPEG/AVIF/SVG) + EncodeJob schema + WR-02/WR-03 [ENC-01..05]
+- [x] 09-02-PLAN.md — Worker codec adapters (PNG/WebP/JPEG/AVIF/SVG) + EncodeJob schema + WR-02/WR-03 [ENC-01..05]
 - [ ] 09-03-PLAN.md — Real-bytes useOptimize + debounced useLiveEncode + encodingFileId [ENC-06, D-04/D-05/D-07/D-13]
 - [ ] 09-04-PLAN.md — Inspector + center wiring: per-file controls, Apply-to-all, resize, error UI, real images [ENC-06, D-02/D-03/D-10/D-13]
 **UI hint**: yes
@@ -108,7 +108,7 @@ Shipped as **Executed** — all 22 plans built + summarized; formal phase verifi
 | 6. Inspector — Output + Report | v1.0 | 3/3 | Executed | 2026-05-25 |
 | 7. Polish | v1.0 | 3/3 | Executed | 2026-05-25 |
 | 8. Worker Pipeline Foundation | v1.1 | 3/3 | Complete   | 2026-05-26 |
-| 9. Codec Encoders | v1.1 | 1/4 | In Progress|  |
+| 9. Codec Encoders | v1.1 | 2/4 | In Progress|  |
 | 10. Single-File Optimize Loop | v1.1 | 0/? | Not started | - |
 | 11. Batch Optimize + Export | v1.1 | 0/? | Not started | - |
 | 12. Real Snippets | v1.1 | 0/? | Not started | - |

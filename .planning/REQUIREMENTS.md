@@ -16,11 +16,11 @@ Reconnecting the real optimization pipeline behind the v1.0 UI. The v1.0 milesto
 
 ### Encoding
 
-- [ ] **ENC-01**: User can optimize a PNG via OxiPNG (decode through @jsquash/png, re-encode) and get real reduced-size output
-- [ ] **ENC-02**: User can encode/convert to WebP with quality and lossless controls
-- [ ] **ENC-03**: User can encode/convert to JPEG (MozJPEG) with quality and progressive controls
-- [ ] **ENC-04**: User can encode/convert to AVIF (lazy-loaded) with quality control
-- [ ] **ENC-05**: User can optimize an SVG via svgo with the inspector's plugin toggles actually applied
+- [x] **ENC-01**: User can optimize a PNG via OxiPNG (decode through @jsquash/png, re-encode) and get real reduced-size output
+- [x] **ENC-02**: User can encode/convert to WebP with quality and lossless controls
+- [x] **ENC-03**: User can encode/convert to JPEG (MozJPEG) with quality and progressive controls
+- [x] **ENC-04**: User can encode/convert to AVIF (lazy-loaded) with quality control
+- [x] **ENC-05**: User can optimize an SVG via svgo with the inspector's plugin toggles actually applied
 - [x] **ENC-06**: Inspector settings (quality, effort, lossless, resize, strip-metadata) drive the real encode output per codec
 
 ### Optimize Loop
@@ -68,11 +68,11 @@ Deferred to a later milestone. Tracked but not in this roadmap.
 | PIPE-02 | Phase 8 | Complete |
 | PIPE-03 | Phase 8 | Complete |
 | PIPE-04 | Phase 8 | Complete |
-| ENC-01 | Phase 9 | Pending |
-| ENC-02 | Phase 9 | Pending |
-| ENC-03 | Phase 9 | Pending |
-| ENC-04 | Phase 9 | Pending |
-| ENC-05 | Phase 9 | Pending |
+| ENC-01 | Phase 9 | Complete |
+| ENC-02 | Phase 9 | Complete |
+| ENC-03 | Phase 9 | Complete |
+| ENC-04 | Phase 9 | Complete |
+| ENC-05 | Phase 9 | Complete |
 | ENC-06 | Phase 9 | Complete |
 | OPT-01 | Phase 10 | Pending |
 | OPT-02 | Phase 11 | Pending |
