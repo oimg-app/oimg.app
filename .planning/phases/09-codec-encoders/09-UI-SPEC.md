@@ -77,6 +77,8 @@ Pre-existing palette from `src/index.css`. Phase 9 maps new states to existing t
 | Dominant surface (60%) | `--color-bg-0` / `--color-bg-1` | `oklch(0.165…)` | `oklch(0.985…)` | Inspector pane background, file list background |
 | Secondary surface (30%) | `--color-bg-2` / `--color-bg-3` | `oklch(0.235…)` | `oklch(0.945…)` | Card surfaces, section inset backgrounds |
 | Accent (10%) | `--color-accent` | `oklch(0.80 0.17 145)` | `oklch(0.62 0.18 145)` | See reserved-for list below |
+| Accent dim | `--color-accent-dim` | `oklch(0.80 0.17 145 / 0.16)` | `oklch(0.62 0.18 145 / 0.14)` | "Apply to all" button rest background |
+| Accent foreground | `--color-accent-fg` | `oklch(0.18 0.05 145)` | `oklch(0.99 0 0)` | "Apply to all" button text on accent hover |
 | Warning | `--color-warn` | `oklch(0.82 0.15 75)` | `oklch(0.62 0.16 65)` | Reserved: encoding-in-progress shimmer tint |
 | Error | `--color-err` | `oklch(0.72 0.19 25)` | `oklch(0.58 0.20 25)` | Per-file error badge, error toast |
 | Muted foreground | `--color-fg-3` | `oklch(0.42…)` | `oklch(0.66…)` | Fallback/original label on errored file |
@@ -270,7 +272,7 @@ Pre-existing resize controls in `CodecPanel` (Resize section with `resizeOn` Swi
 
 **JPEG progressive toggle (new — from 09-RESEARCH.md Open Question #1):**
 Recommendation: Add a `progressive` boolean row to the JPEG parameters section in CodecPanel.
-- Row: `grid grid-cols-[100px_1fr] gap-2.5 mb-2 items-center`
+- Row: `grid grid-cols-[100px_1fr] gap-2 mb-2 items-center`
 - Label: `"Progressive"` at `text-[12px] text-[var(--color-fg-2)]`
 - Control: `<Switch checked={settings.progressive ?? true} onCheckedChange={setProgressive} />`
 - Shown only when `settings.codec === 'JPEG'` (mirrors existing Lossless switch pattern).
