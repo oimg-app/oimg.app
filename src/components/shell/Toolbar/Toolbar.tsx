@@ -4,7 +4,8 @@ import { Plus, Export, CaretDown, MagnifyingGlass, Sun, Moon, GearSix, Lightning
 import { uiAtom, setOpen, setView, setTheme, setAutoTarget } from '@/stores/ui'
 import type { View } from '@/stores/ui'
 import { filesAtom, setFilter, addFromDevice, addWatchFolder, addFromUrl, exportAsZip, exportIndividually, exportCopyHtml, exportCopyDataUris, exportManifestJson } from '@/stores/files'
-import { startRun, setWorkerCount } from '@/stores/runtime'
+import { setWorkerCount } from '@/stores/runtime'
+import { useOptimize } from '@/hooks/useOptimize'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { cn } from '@/lib/utils'
 
@@ -24,6 +25,7 @@ function ToolbarDivider() {
 export function Toolbar() {
   const { open, view, theme } = useStore(uiAtom)
   const { filterQuery } = useStore(filesAtom)
+  const { runOptimize } = useOptimize()
 
   return (
     <div
@@ -68,7 +70,7 @@ export function Toolbar() {
       {/* 2. Optimize all primary button (UNCHANGED from Plan 01) */}
       <button
         type="button"
-        onClick={startRun}
+        onClick={runOptimize}
         className="h-7 px-3 text-xs font-semibold bg-[var(--color-accent)] text-[var(--color-accent-fg)] border-transparent rounded-[5px] hover:brightness-105 flex items-center gap-1"
       >
         <Lightning size={13} />
