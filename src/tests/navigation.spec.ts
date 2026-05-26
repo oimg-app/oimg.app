@@ -28,7 +28,8 @@ test('TitleBar renders (NAV-01)', async ({ page }) => {
   await page.goto('/')
   await expect(page.getByTestId('titlebar')).toBeVisible()
   await expect(page.getByText('OIMG · image optimizer')).toBeVisible()
-  await expect(page.getByRole('banner')).toBeVisible()
+  // Titlebar is the banner landmark (scoped: the page has multiple <header> elements)
+  await expect(page.getByTestId('titlebar')).toHaveAttribute('role', 'banner')
 })
 
 test('TitleBar Codec menu opens (NAV-01)', async ({ page }) => {
