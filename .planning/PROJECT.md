@@ -33,6 +33,7 @@ A developer drops a folder of source assets, adjusts settings once, and walks aw
 - ✓ example-ui prototype ported to React + TS + Tailwind + Radix — full 3-pane AppShell, TitleBar/Toolbar/StatusBar/CommandPalette, FilesPane, InspectorPane (codec + SVGO + Output + Report), CenterPane — v1.0
 - ✓ oklch design tokens + fonts ported verbatim from OIMG.html, Tailwind v4 @theme — v1.0
 - ✓ WCAG AA keyboard nav (DropdownMenu menus, focus rings), theme toggle w/ no FOUC — v1.0
+- ✓ Worker pipeline foundation — bounded Comlink WorkerPool (`getPool()`, cap min(hwConc,4)), codecs dynamic-imported inside the worker, COOP/COEP isolation, real backpressure via `runtimeAtom`; PNG→OxiPNG is the one real path (other codecs stubbed for Phase 9). Initial route 144KB gzip < 200KB. — Phase 8
 
 ### Active (v1.1)
 
@@ -41,7 +42,7 @@ A developer drops a folder of source assets, adjusts settings once, and walks aw
 - [ ] Settings actually drive encoding (quality/effort/lossless/resize/metadata per codec)
 - [ ] Batch ZIP export via jszip
 - [ ] Output panel snippets wired to real encoded bytes (Base64 / URL-encoded / `<picture>`)
-- [ ] COOP/COEP headers for SharedArrayBuffer (MT codecs)
+- [x] COOP/COEP headers for SharedArrayBuffer (MT codecs) — Phase 8
 
 Deferred to a future milestone:
 - 1×/2×/3× density variants (@jsquash/resize)
@@ -119,4 +120,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-05-14 after initialization*
+*Last updated: 2026-05-26 after Phase 8 (Worker Pipeline Foundation) complete*
