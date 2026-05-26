@@ -41,7 +41,10 @@ Shipped as **Executed** — all 22 plans built + summarized; formal phase verifi
   2. Codecs are dynamic-imported inside workers — the initial route loads < 200KB gzipped and AVIF's WASM is not fetched until AVIF is selected
   3. SharedArrayBuffer is available in the running app (`crossOriginIsolated === true`) via COOP/COEP response headers in dev and the Cloudflare Pages `_headers` file
   4. The pool caps concurrent jobs; when more jobs are queued than slots, excess jobs wait, and the BackpressureIndicator reflects the pool's real running/queued state
-**Plans**: TBD
+**Plans**: 3 plans (2 waves)
+- [ ] 08-01-PLAN.md — COOP/COEP verification + Wave 0 test scaffolds (worker-pipeline.spec.ts; extend backpressure.spec.ts) [PIPE-03]
+- [ ] 08-02-PLAN.md — Comlink codec worker (dynamic imports, real PNG→OxiPNG path) + bounded WorkerPool [PIPE-01, PIPE-02]
+- [ ] 08-03-PLAN.md — Extend runtimeAtom job counts + useOptimize hook + wire Toolbar to the pool [PIPE-04]
 
 ### Phase 9: Codec Encoders
 **Goal**: Every codec in the locked jSquash + svgo surface has a worker-side adapter, and the inspector's controls actually shape the encoded bytes.
@@ -100,7 +103,7 @@ Shipped as **Executed** — all 22 plans built + summarized; formal phase verifi
 | 5. Center Pane | v1.0 | 2/2 | Executed | 2026-05-25 |
 | 6. Inspector — Output + Report | v1.0 | 3/3 | Executed | 2026-05-25 |
 | 7. Polish | v1.0 | 3/3 | Executed | 2026-05-25 |
-| 8. Worker Pipeline Foundation | v1.1 | 0/? | Not started | - |
+| 8. Worker Pipeline Foundation | v1.1 | 0/3 | Planned | - |
 | 9. Codec Encoders | v1.1 | 0/? | Not started | - |
 | 10. Single-File Optimize Loop | v1.1 | 0/? | Not started | - |
 | 11. Batch Optimize + Export | v1.1 | 0/? | Not started | - |
@@ -108,4 +111,4 @@ Shipped as **Executed** — all 22 plans built + summarized; formal phase verifi
 
 ---
 
-*Active milestone: v1.1 — next, run `/gsd-plan-phase 8` to plan the worker pipeline foundation.*
+*Active milestone: v1.1 — Phase 8 planned (3 plans, 2 waves). Next, run `/gsd-execute-phase 8`.*
