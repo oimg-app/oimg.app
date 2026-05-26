@@ -1,4 +1,5 @@
 // Phase 03 — STORE-04: runtimeAtom + startRun/stopRun/pushToast/dismissToast. Source: 03-01-PLAN.md
+// Phase 09 — Plan 03: encodingFileId + setEncodingFile for DeltaStrip in-flight shimmer (UI-SPEC §4)
 import { map } from 'nanostores'
 
 export interface Toast {
@@ -15,6 +16,7 @@ interface RuntimeState {
   svgoVersion: string
   codecVersion: string
   wasmInfo: string
+  encodingFileId: string | null  // tracks in-flight file for DeltaStrip shimmer (UI-SPEC §4)
 }
 
 export const runtimeAtom = map<RuntimeState>({
@@ -25,6 +27,7 @@ export const runtimeAtom = map<RuntimeState>({
   svgoVersion: '4.0.1',
   codecVersion: '0.6.0',
   wasmInfo: 'WASM ready · 312 KB',
+  encodingFileId: null,
 })
 
 export function startRun(): void {
@@ -57,4 +60,9 @@ export function setJobCounts(running: number, queued: number): void {
   runtimeAtom.setKey('runningJobs', running)
   runtimeAtom.setKey('queuedJobs', queued)
   runtimeAtom.setKey('running', running > 0 || queued > 0)
+}
+
+// Phase 09 — Plan 03: CR-01 atomic setKey — drives DeltaStrip in-flight shimmer (UI-SPEC §4)
+export function setEncodingFile(id: string | null): void {
+  runtimeAtom.setKey('encodingFileId', id)
 }
