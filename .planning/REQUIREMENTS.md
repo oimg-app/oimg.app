@@ -12,7 +12,7 @@ Reconnecting the real optimization pipeline behind the v1.0 UI. The v1.0 milesto
 - [x] **PIPE-01**: Optimization runs off the main thread via a Comlink-wrapped WorkerPool — the UI stays responsive (no jank) while files encode
 - [x] **PIPE-02**: Codecs are dynamically imported inside workers so the initial route stays < 200KB gzipped; AVIF loads only when the user selects it
 - [x] **PIPE-03**: COOP/COEP response headers are configured so SharedArrayBuffer is available for multi-threaded codecs (OxiPNG, AVIF)
-- [ ] **PIPE-04**: Backpressure is enforced — the pool bounds concurrent jobs and the BackpressureIndicator reflects real running state
+- [x] **PIPE-04**: Backpressure is enforced — the pool bounds concurrent jobs and the BackpressureIndicator reflects real running state
 
 ### Encoding
 
@@ -67,7 +67,7 @@ Deferred to a later milestone. Tracked but not in this roadmap.
 | PIPE-01 | Phase 8 | Complete |
 | PIPE-02 | Phase 8 | Complete |
 | PIPE-03 | Phase 8 | Complete |
-| PIPE-04 | Phase 8 | Pending |
+| PIPE-04 | Phase 8 | Complete |
 | ENC-01 | Phase 9 | Pending |
 | ENC-02 | Phase 9 | Pending |
 | ENC-03 | Phase 9 | Pending |
