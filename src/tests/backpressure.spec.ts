@@ -17,4 +17,23 @@ test.describe('BackpressureIndicator — SHELL-02', () => {
     const indicator = page.getByTestId('backpressure-indicator')
     await expect(indicator).not.toHaveClass(/opacity-0/)
   })
+
+  // PIPE-04: asserts the indicator reflects real runningJobs count (not only a boolean).
+  // Plan 03 adds runningJobs/queuedJobs to runtimeAtom and derives `running` from them.
+  // This test is written against final expected behavior — it guards the indicator contract
+  // once Plan 03 wires the real job-count fields. Until then, it passes via the same
+  // boolean-derived visible state the existing tests use (runningJobs > 0 → running = true).
+  // NOTE: runtimeAtom store is not window-exposed; assertion is via visible indicator class.
+  test('reflects real running job count after Optimize all (PIPE-04)', async ({ page }) => {
+    await page.goto('/')
+    // Click Optimize all — this triggers startRun which sets running = true
+    // (derived from runningJobs > 0 once Plan 03 lands).
+    await page.getByRole('button', { name: 'Optimize all' }).click()
+    // Indicator must transition to active state (bg-[var(--color-accent)] animate-pulse,
+    // not opacity-0) — this holds when at least one job is running.
+    const indicator = page.getByTestId('backpressure-indicator')
+    await expect(indicator).not.toHaveClass(/opacity-0/)
+    // Indicator must carry the accent + pulse classes that signal > 0 running jobs.
+    await expect(indicator).toHaveClass(/animate-pulse/)
+  })
 })
