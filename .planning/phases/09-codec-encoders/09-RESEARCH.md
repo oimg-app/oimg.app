@@ -588,22 +588,22 @@ export interface EncodeJob {
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **JPEG progressive toggle in UI**
+1. **JPEG progressive toggle in UI** — RESOLVED
    - What we know: `@jsquash/jpeg` has `progressive: boolean` (default true per meta.js). The CodecPanel has no progressive toggle visible.
-   - What's unclear: Should Phase 9 add a progressive switch to CodecPanel for JPEG, or leave it always-on?
    - Recommendation: Add a boolean `progressive` field to `FileSettings`; default to `true`; add a small toggle in CodecPanel under JPEG parameters. Low effort.
+   - **Resolution:** Adopted. Planned in 09-04 (Progressive `<Switch>` for JPEG) + `progressive` field in `FileSettings` (09-01).
 
-2. **AVIF speed/quality UX: separate slider or unified effort slider?**
+2. **AVIF speed/quality UX: separate slider or unified effort slider?** — RESOLVED
    - What we know: AVIF `speed` (0=slowest/best, 10=fastest) is NOT the same scale as WebP `method`. AVIF default speed=6. Inverting gives confusing semantics.
-   - What's unclear: Should AVIF get its own labeled control or share the generic Effort slider?
-   - Recommendation: Share the generic Effort slider (0–6) and document the inversion internally. Exposing AVIF speed directly would require a new UI control.
+   - Recommendation: Share the generic Effort slider (0–6) and document the inversion internally.
+   - **Resolution:** Adopted. 09-02 maps the shared Effort slider to AVIF speed via internal inversion (`Math.max(0, 6 - method)`).
 
-3. **decode-once ImageData caching in worker**
+3. **decode-once ImageData caching in worker** — RESOLVED (deferred)
    - What we know: Every live re-encode re-decodes rawBuffer → ImageData (same source pixels). For a 4K image, PNG decode can take 50–150ms.
-   - What's unclear: Is caching ImageData in a worker-side Map worth the complexity in Phase 9?
    - Recommendation: Defer to Phase 10/performance tuning. Phase 9 correctness first; caching is a separate optimization.
+   - **Resolution:** Deferred to a future performance phase. Not planned in Phase 9.
 
 ---
 

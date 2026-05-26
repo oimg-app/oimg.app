@@ -32,7 +32,7 @@ This phase replaces the Phase 8 stubs (codecs that throw NotImplemented; `useOpt
 
 ### Resize & metadata (ENC-06)
 - **D-10:** **Wire single-image resize this phase** using the existing `resizeOn` / `w` / `h` / `alg` / `fit` controls via `@jsquash/resize`, applied **before** encode.
-- **D-11:** 1×/2×/3× **density variants remain deferred** to a future milestone (per PROJECT.md) — single-image resize only.
+- **D-11 [deferred]:** 1×/2×/3× **density variants remain deferred** to a future milestone (per PROJECT.md) — single-image resize only.
 - **D-12:** **strip-metadata default stays ON**; `keepIcc` is opt-in. Per-codec EXIF/ICC handling specifics are for research to map.
 
 ### Failure / unsupported handling
