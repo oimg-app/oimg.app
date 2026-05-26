@@ -20,7 +20,7 @@ export class WorkerPool {
   get queued() { return this.queue.length }
 
   constructor(
-    private readonly size: number,
+    size: number,
     private readonly onCountChange: (active: number, queued: number) => void,
   ) {
     for (let i = 0; i < size; i++) {
