@@ -9,6 +9,8 @@ export interface Toast {
 
 interface RuntimeState {
   running: boolean
+  runningJobs: number
+  queuedJobs: number
   toasts: Toast[]
   svgoVersion: string
   codecVersion: string
@@ -17,6 +19,8 @@ interface RuntimeState {
 
 export const runtimeAtom = map<RuntimeState>({
   running: false,
+  runningJobs: 0,
+  queuedJobs: 0,
   toasts: [],
   svgoVersion: '4.0.1',
   codecVersion: '0.6.0',
@@ -44,4 +48,15 @@ export function dismissToast(id: string): void {
 export function setWorkerCount(n: number): void {
   // stub — configure worker pool size in v2
   void n
+}
+
+// Phase 08 — PIPE-04: called by WorkerPool.onCountChange to reflect real running/queued state.
+// `running` (boolean) remains the BackpressureIndicator contract — derived from counts.
+export function setJobCounts(running: number, queued: number): void {
+  runtimeAtom.set({
+    ...runtimeAtom.get(),
+    runningJobs: running,
+    queuedJobs: queued,
+    running: running > 0 || queued > 0,
+  })
 }
