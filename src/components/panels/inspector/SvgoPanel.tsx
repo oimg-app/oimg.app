@@ -1,13 +1,42 @@
 // Phase 04 — INSP-06: SvgoPanel aggressive toggle + plugin list. Source: 04-04-PLAN.md
+// Phase 09 — Plan 04: wire to selectedFile.settings (D-03/D-09) + useLiveEncode trigger (D-05)
 import { useStore } from '@nanostores/react'
+import { $selectedFile, setFileSettings } from '@/stores/files'
 import { settingsAtom, setAggressive, togglePlugin } from '@/stores/settings'
+import { useLiveEncode } from '@/hooks/useLiveEncode'
 import { Switch } from '@/components/ui/switch'
 import { cn } from '@/lib/utils'
 import { Section } from './Section'
 
 export function SvgoPanel() {
-  const settings = useStore(settingsAtom)
+  const globalSettings = useStore(settingsAtom)
+  const selectedFile = useStore($selectedFile)
+  const { trigger } = useLiveEncode()
+
+  // D-03: read from file's own settings when selected, fall back to global
+  const settings = selectedFile?.settings ?? globalSettings
   const onCount = settings.plugins.filter(p => p.on).length
+
+  function handleSetAggressive(v: boolean) {
+    if (selectedFile) {
+      setFileSettings(selectedFile.id, 'aggressive', v)
+      trigger(selectedFile.id)
+    } else {
+      setAggressive(v)
+    }
+  }
+
+  function handleTogglePlugin(pluginId: string) {
+    if (selectedFile) {
+      const updatedPlugins = settings.plugins.map(p =>
+        p.id === pluginId ? { ...p, on: !p.on } : p
+      )
+      setFileSettings(selectedFile.id, 'plugins', updatedPlugins)
+      trigger(selectedFile.id)
+    } else {
+      togglePlugin(pluginId)
+    }
+  }
 
   return (
     <div>
@@ -17,7 +46,7 @@ export function SvgoPanel() {
           <Switch
             size="sm"
             checked={settings.aggressive}
-            onCheckedChange={setAggressive}
+            onCheckedChange={handleSetAggressive}
           />
         </div>
         <p className="text-[10px] font-mono text-[var(--color-fg-3)] mt-1 leading-[1.5]">
@@ -32,7 +61,7 @@ export function SvgoPanel() {
               type="button"
               key={p.id}
               aria-pressed={p.on}
-              onClick={() => togglePlugin(p.id)}
+              onClick={() => handleTogglePlugin(p.id)}
               className="grid grid-cols-[16px_1fr_auto] gap-2 items-center py-1.5 px-1 rounded cursor-default hover:bg-[var(--color-bg-1)] w-full text-left transition-colors"
             >
               <div
