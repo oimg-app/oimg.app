@@ -46,7 +46,7 @@ export class WorkerPool {
       const pending = this.queue.shift()!
       this._active++
       this.onCountChange(this._active, this.queue.length)
-      worker.optimize(pending.job).then(
+      worker.optimize(Comlink.transfer(pending.job, [pending.job.buffer])).then(
         (result) => { pending.resolve(result); this._release(worker) },
         (err) => { pending.reject(err); this._release(worker) },
       )
