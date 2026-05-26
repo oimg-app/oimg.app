@@ -25,7 +25,7 @@ Shipped as **Executed** — all 22 plans built + summarized; formal phase verifi
 ### 🚧 v1.1 Real Optimization Pipeline (Phases 8–12)
 
 - [x] **Phase 8: Worker Pipeline Foundation** — Bounded Comlink WorkerPool + dynamic codec imports + COOP/COEP, backpressure wired to real running state (completed 2026-05-26)
-- [ ] **Phase 9: Codec Encoders** — PNG/WebP/JPEG/AVIF/SVG adapters wired so inspector settings drive real encode output
+- [x] **Phase 9: Codec Encoders** — PNG/WebP/JPEG/AVIF/SVG adapters wired so inspector settings drive real encode output (completed 2026-05-26)
 - [ ] **Phase 10: Single-File Optimize Loop** — Drop one file → real optimized output with accurate before/after sizes in the Report
 - [ ] **Phase 11: Batch Optimize + Export** — Optimize-all through the pool with live progress, single-file download, and batch ZIP export
 - [ ] **Phase 12: Real Snippets** — Output panel snippets reflect the selected file's actual encoded bytes
@@ -59,7 +59,7 @@ Shipped as **Executed** — all 22 plans built + summarized; formal phase verifi
 - [x] 09-01-PLAN.md — Per-file settings store refactor + applyToAll + CR-01 fix + Wave 0 test scaffolds [ENC-06, D-01/D-02/D-03]
 - [x] 09-02-PLAN.md — Worker codec adapters (PNG/WebP/JPEG/AVIF/SVG) + EncodeJob schema + WR-02/WR-03 [ENC-01..05]
 - [x] 09-03-PLAN.md — Real-bytes useOptimize + debounced useLiveEncode + encodingFileId [ENC-06, D-04/D-05/D-07/D-13]
-- [ ] 09-04-PLAN.md — Inspector + center wiring: per-file controls, Apply-to-all, resize, error UI, real images [ENC-06, D-02/D-03/D-10/D-13]
+- [x] 09-04-PLAN.md — Inspector + center wiring: per-file controls, Apply-to-all, resize, error UI, real images [ENC-06, D-02/D-03/D-10/D-13]
 **UI hint**: yes
 
 ### Phase 10: Single-File Optimize Loop
@@ -108,7 +108,7 @@ Shipped as **Executed** — all 22 plans built + summarized; formal phase verifi
 | 6. Inspector — Output + Report | v1.0 | 3/3 | Executed | 2026-05-25 |
 | 7. Polish | v1.0 | 3/3 | Executed | 2026-05-25 |
 | 8. Worker Pipeline Foundation | v1.1 | 3/3 | Complete   | 2026-05-26 |
-| 9. Codec Encoders | v1.1 | 3/4 | In Progress|  |
+| 9. Codec Encoders | v1.1 | 4/4 | Complete   | 2026-05-26 |
 | 10. Single-File Optimize Loop | v1.1 | 0/? | Not started | - |
 | 11. Batch Optimize + Export | v1.1 | 0/? | Not started | - |
 | 12. Real Snippets | v1.1 | 0/? | Not started | - |
