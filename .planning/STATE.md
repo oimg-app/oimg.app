@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Real Optimization Pipeline
 status: executing
-last_updated: "2026-05-26T13:30:20.022Z"
+last_updated: "2026-05-26T13:35:02.661Z"
 last_activity: 2026-05-26
 progress:
   total_phases: 5
   completed_phases: 0
   total_plans: 3
-  completed_plans: 1
+  completed_plans: 2
   percent: 0
 ---
 
@@ -31,10 +31,10 @@ progress:
 ## Current Position
 
 Phase: 08 (worker-pipeline-foundation) — EXECUTING
-Plan: 2 of 3
+Plan: 3 of 3
 Status: Ready to execute
 Last activity: 2026-05-26
-Progress: [███░░░░░░░] 33%
+Progress: [███████░░░] 67%
 
 ## Performance Metrics
 
@@ -62,6 +62,8 @@ Progress: [███░░░░░░░] 33%
 - comlink for worker RPC; roll-your-own bounded WorkerPool for backpressure
 - COOP/COEP headers required for SharedArrayBuffer (MT codecs) — dev server + Cloudflare Pages `_headers`
 - svgo v4 browser ESM, preset-default + overrides (no legacy `extendDefaultPlugins`)
+- [Phase ?]: Codec worker stubs all non-PNG formats
+- [Phase ?]: runtime.ts extended for worker-pool backpressure
 
 ### Conventions (carried from v1.0)
 
@@ -84,7 +86,7 @@ Progress: [███░░░░░░░] 33%
 
 ## Session Continuity
 
-**Last session:** 2026-05-26T13:30:20.019Z
+**Last session:** 2026-05-26T13:35:02.657Z
 **To resume:** Run `/gsd-plan-phase 8` to plan the Worker Pipeline Foundation phase.
 
 ---
