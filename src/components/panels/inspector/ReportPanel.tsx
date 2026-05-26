@@ -10,7 +10,7 @@ import {
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from '@/components/ui/Tooltip'
+} from '@/components/ui/tooltip'
 import { filesAtom } from '@/stores/files'
 import { fmtBytes, fmtPct } from '@/lib/format'
 
