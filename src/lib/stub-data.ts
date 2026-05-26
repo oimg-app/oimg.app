@@ -18,12 +18,39 @@ export interface FileEntry {
   dim: string
   q: number | null
   prog?: number
+  settings?: FileSettings      // per-file settings (D-01) — optional until initialized
+  rawBuffer?: ArrayBuffer      // original file bytes; cache for live re-encode (D-05)
+  encodedBuffer?: ArrayBuffer  // result of last encode
+  error?: string               // per-file error message (D-13)
 }
 
 export interface SvgoPlugin {
   id: string
   on: boolean
   saves: string
+}
+
+// Phase 09, Plan 01 — D-01/D-03: per-file settings shape (mirrors SettingsState in settings.ts)
+export interface FileSettings {
+  codec: Codec
+  q: number
+  method: number
+  lossless: boolean
+  resizeOn: boolean
+  w: string
+  h: string
+  alg: string
+  fit: string
+  stripMeta: boolean
+  keepIcc: boolean
+  aggressive: boolean
+  plugins: SvgoPlugin[]
+  progressive?: boolean  // JPEG only — default true (Pitfall 6)
+}
+
+// D-01: shallow-copy helper — call when adding entries to assign per-file defaults without aliasing
+export function initFileSettings(defaults: FileSettings): FileSettings {
+  return { ...defaults }
 }
 
 // --- Data exports (verbatim from example-ui/data.jsx) ---
