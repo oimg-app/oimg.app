@@ -21,7 +21,7 @@
     "research_before_questions": false,
     "skip_discuss": false,
     "use_worktrees": false,
-    "_auto_chain_active": false
+    "_auto_chain_active": true
   },
   "intel": {
     "enabled": true
