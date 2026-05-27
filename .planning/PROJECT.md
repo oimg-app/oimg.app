@@ -34,12 +34,13 @@ A developer drops a folder of source assets, adjusts settings once, and walks aw
 - ✓ oklch design tokens + fonts ported verbatim from OIMG.html, Tailwind v4 @theme — v1.0
 - ✓ WCAG AA keyboard nav (DropdownMenu menus, focus rings), theme toggle w/ no FOUC — v1.0
 - ✓ Worker pipeline foundation — bounded Comlink WorkerPool (`getPool()`, cap min(hwConc,4)), codecs dynamic-imported inside the worker, COOP/COEP isolation, real backpressure via `runtimeAtom`; PNG→OxiPNG is the one real path (other codecs stubbed for Phase 9). Initial route 144KB gzip < 200KB. — Phase 8
+- ✓ Codec encoders — all five jSquash/svgo adapters real (PNG/OxiPNG, WebP, JPEG/MozJPEG, lazy AVIF, SVG/svgo v4 in-worker), per-file settings model + "Apply to all", debounced live re-encode feeding CompareStage/DeltaStrip, single-image resize-before-encode, D-13 per-file error fallback. Inspector controls measurably shape encoded bytes. WR-02/WR-03/CR-01 Phase 8 fixes folded in. — Phase 9
 
 ### Active (v1.1)
 
-- [ ] Worker pipeline: WorkerPool + Comlink, codecs dynamic-imported inside workers (WebP/JPEG/AVIF/OxiPNG/SVG)
+- [x] Worker pipeline: WorkerPool + Comlink, codecs dynamic-imported inside workers (WebP/JPEG/AVIF/OxiPNG/SVG) — Phase 9
 - [ ] Single-file optimize: drop → decode → encode → real optimized output, wired to runtime store
-- [ ] Settings actually drive encoding (quality/effort/lossless/resize/metadata per codec)
+- [x] Settings actually drive encoding (quality/effort/lossless/resize/metadata per codec) — Phase 9
 - [ ] Batch ZIP export via jszip
 - [ ] Output panel snippets wired to real encoded bytes (Base64 / URL-encoded / `<picture>`)
 - [x] COOP/COEP headers for SharedArrayBuffer (MT codecs) — Phase 8
@@ -120,4 +121,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-05-26 after Phase 8 (Worker Pipeline Foundation) complete*
+*Last updated: 2026-05-27 after Phase 9 (Codec Encoders) complete*
