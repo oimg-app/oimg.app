@@ -2,6 +2,7 @@
 // Phase 09 — Plan 02: Real jSquash + svgo adapters (ENC-01..05). WR-02/WR-03 fold-in.
 import * as Comlink from 'comlink'
 import type { FileSettings } from '@/lib/stub-data'
+import { SVGO_PLUGINS } from '@/lib/stub-data'
 
 // Dev guard: warn if crossOriginIsolated is false (OxiPNG MT will be disabled)
 if (import.meta.env.DEV && !crossOriginIsolated) {
@@ -72,6 +73,16 @@ async function optimize(job: EncodeJob): Promise<EncodeResult> {
   if (!KNOWN_CODECS.has(String(job.codec))) {
     throw new Error('Invalid codec: ' + String(job.codec))
   }
+
+  // CR-03 / D-12 metadata limitation (KNOWN, by design — see 09-RESEARCH "strip-metadata note"):
+  // The raster path is decode → ImageData → encode. EXIF/XMP/IPTC/ICC all live in the file
+  // *container*, NOT in raw pixel data, so they are unconditionally dropped at the decode boundary
+  // for ALL raster codecs (MozJPEG, libwebp, libavif). Consequences:
+  //   • settings.stripMeta is effectively ALWAYS honored — there is no jSquash flag to *retain*
+  //     EXIF, so we cannot do less than strip it. No per-codec wiring is possible or needed.
+  //   • settings.keepIcc CANNOT be honored — no jSquash codec exposes an ICC-preservation option.
+  //     The UI disables that switch (CodecPanel) so we never claim control we don't have.
+  // Do not fabricate fake metadata wiring here; if jSquash adds an ICC API, wire keepIcc then.
 
   // Wrap in try/catch so malformed buffers reject the job Promise but never crash the worker (T-08-01)
   try {
@@ -154,8 +165,11 @@ async function optimize(job: EncodeJob): Promise<EncodeResult> {
         const { optimize: svgoOptimize } = await import('svgo/browser')
         // Pitfall 1: ArrayBuffer → UTF-8 string before svgo (svgo.optimize takes a string)
         const svgString = new TextDecoder('utf-8').decode(job.buffer)
-        // D-09: curated plugin toggles drive overrides; disabled plugins get overrides[id]=false
-        const plugins = job.settings.plugins ?? []
+        // D-09: curated plugin toggles drive overrides; disabled plugins get overrides[id]=false.
+        // CR-03: fall back to SVGO_PLUGINS defaults (not an empty array) when settings.plugins is
+        // missing. An empty array produced zero overrides → every disabled plugin silently
+        // re-enabled. Using the curated defaults preserves the intended on/off baseline instead.
+        const plugins = job.settings.plugins ?? SVGO_PLUGINS
         const overrides: Record<string, false | Record<string, unknown>> = {}
         for (const p of plugins) {
           if (!p.on) overrides[p.id] = false

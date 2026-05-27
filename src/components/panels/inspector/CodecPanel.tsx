@@ -14,8 +14,6 @@ import {
   setResizeDimensions,
   setFit,
   setAlg,
-  setStripMeta,
-  setKeepIcc,
 } from '@/stores/settings'
 import type { Codec } from '@/stores/settings'
 import type { FileSettings } from '@/stores/files'
@@ -130,23 +128,8 @@ export function CodecPanel() {
     }
   }
 
-  function handleSetStripMeta(v: boolean) {
-    if (selectedFile) {
-      setFileSettings(selectedFile.id, 'stripMeta', v)
-      trigger(selectedFile.id)
-    } else {
-      setStripMeta(v)
-    }
-  }
-
-  function handleSetKeepIcc(v: boolean) {
-    if (selectedFile) {
-      setFileSettings(selectedFile.id, 'keepIcc', v)
-      trigger(selectedFile.id)
-    } else {
-      setKeepIcc(v)
-    }
-  }
+  // CR-03: stripMeta is always-on and keepIcc is unsupported (no jSquash API), so neither has an
+  // interactive handler anymore — the Metadata section renders them read-only/disabled.
 
   function handleSetProgressive(v: boolean) {
     if (selectedFile) {
@@ -285,16 +268,26 @@ export function CodecPanel() {
             )}
           </Section>
 
-          {/* INSP-05 — Metadata */}
+          {/* INSP-05 — Metadata.
+              CR-03 / D-12: the raster pipeline is decode → ImageData → encode, so EXIF/XMP/IPTC
+              (file-container metadata) is ALWAYS stripped at the decode boundary — "Strip EXIF" is
+              therefore always-on and shown read-only so the UI doesn't imply optional control it
+              lacks. ICC preservation has no jSquash API, so "Keep ICC" is disabled + annotated. */}
           <Section title="Metadata">
             <div className="flex items-center justify-between mb-1.5">
               <span className="text-[12px] text-[var(--color-fg-2)]">Strip EXIF / XMP / IPTC</span>
-              <Switch checked={settings.stripMeta} onCheckedChange={handleSetStripMeta} />
+              <Switch checked disabled aria-label="Strip EXIF / XMP / IPTC (always on)" />
             </div>
-            <div className="flex items-center justify-between mb-1.5">
-              <span className="text-[12px] text-[var(--color-fg-2)]">Keep ICC profile</span>
-              <Switch checked={settings.keepIcc} onCheckedChange={handleSetKeepIcc} />
+            <p className="text-[10px] font-mono text-[var(--color-fg-3)] mb-1.5 leading-[1.5]">
+              always stripped — metadata is dropped when decoding to pixels
+            </p>
+            <div className="flex items-center justify-between mb-0.5">
+              <span className="text-[12px] text-[var(--color-fg-3)]">Keep ICC profile</span>
+              <Switch checked={false} disabled aria-label="Keep ICC profile (not supported)" />
             </div>
+            <p className="text-[10px] font-mono text-[var(--color-fg-3)] leading-[1.5]">
+              not supported by current codecs
+            </p>
           </Section>
         </>
       )}
