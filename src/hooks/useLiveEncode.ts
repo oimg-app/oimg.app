@@ -28,10 +28,16 @@ function toCodec(type: string): EncodeJob['codec'] | null {
 export function useLiveEncode() {
   // Debounce timer ref — no library needed (09-RESEARCH "Don't Hand-Roll" table)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  // CR-02: monotonic invocation token. Each trigger bumps seqRef; an in-flight pool.run whose
+  // token no longer matches the latest seq is stale (the user changed settings or switched files
+  // mid-encode) and its result must be dropped so it never lands on the wrong/superseded file.
+  const seqRef = useRef(0)
 
   const trigger = useCallback((fileId: string) => {
     // Cancel any pending debounce before starting a new one
     if (timerRef.current !== null) clearTimeout(timerRef.current)
+    // Claim this invocation's token now; the debounced callback captures it by closure.
+    const seq = ++seqRef.current
 
     timerRef.current = setTimeout(async () => {
       const entry = filesAtom.get().entries.find((e) => e.id === fileId)
@@ -56,14 +62,20 @@ export function useLiveEncode() {
       try {
         const pool = getPool()
         const result = await pool.run(job)
+        // CR-02: drop superseded results — a newer trigger has run since this job started,
+        // so applying this result would write stale (or another file's) bytes.
+        if (seq !== seqRef.current) return
         setFileResult(fileId, result.buffer, result.optimizedSize)
       } catch (err) {
+        // CR-02: only surface errors from the still-current invocation
+        if (seq !== seqRef.current) return
         // D-13: per-file error + sonner toast; original bytes retained as fallback
         setFileError(fileId, String(err))
         toast.error('Encode failed: ' + String(err))
       } finally {
-        // Always clear the in-flight indicator — success or failure
-        setEncodingFile(null)
+        // CR-02: only the latest invocation clears the shimmer — an earlier job's finally
+        // must not clear the in-flight flag set by a later job (shared single-slot bug).
+        if (seq === seqRef.current) setEncodingFile(null)
       }
     }, 300) // 300 ms — within D-07 range (250–350 ms)
   }, [])
