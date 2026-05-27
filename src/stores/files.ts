@@ -2,7 +2,7 @@
 // Phase 09 — Plan 01: per-file settings actions (D-01/D-03/D-13) + buffer/error actions
 import { map, computed } from 'nanostores'
 import type { FileEntry, FileSettings, SortKey } from '@/lib/stub-data'
-import { STUB_FILES } from '@/lib/stub-data'
+import { STUB_FILES, defaultFileSettings } from '@/lib/stub-data'
 
 // Re-export types so components import from store barrel, not from stub-data directly (STORE-08 convention)
 export type { FileEntry, FileSettings, SortKey }
@@ -96,11 +96,17 @@ export function exportManifestJson(): void {}
 // Phase 09 — Plan 01: per-file settings + buffer/error actions (D-01/D-03/D-13)
 
 // D-01/D-03: update a single key in the selected file's own FileSettings (T-9-01: typed key prevents arbitrary write)
+// CR-01: self-healing base — if an entry somehow lacks `settings` (legacy entry, future upload path
+// that skipped seeding), fall back to a complete default derived from the entry's own type/q rather
+// than spreading `undefined` (which collapsed the object to the single edited key). Entries are
+// seeded with full settings at creation (stub-data.ts), so this is belt-and-suspenders.
 export function setFileSettings<K extends keyof FileSettings>(
   id: string, key: K, value: FileSettings[K]
 ): void {
   filesAtom.setKey('entries', filesAtom.get().entries.map(e =>
-    e.id === id ? { ...e, settings: { ...e.settings!, [key]: value } } : e
+    e.id === id
+      ? { ...e, settings: { ...(e.settings ?? defaultFileSettings(e.type, e.q)), [key]: value } }
+      : e
   ))
 }
 

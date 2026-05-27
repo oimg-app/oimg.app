@@ -48,9 +48,55 @@ export interface FileSettings {
   progressive?: boolean  // JPEG only — default true (Pitfall 6)
 }
 
-// D-01: shallow-copy helper — call when adding entries to assign per-file defaults without aliasing
+// D-01: shallow-copy helper — call when adding entries to assign per-file defaults without aliasing.
+// `plugins` is deep-copied (map + spread) so per-file plugin toggles never alias the shared
+// SVGO_PLUGINS array or another entry's plugin objects (CR-01 fold-in).
 export function initFileSettings(defaults: FileSettings): FileSettings {
-  return { ...defaults }
+  return { ...defaults, plugins: defaults.plugins.map((p) => ({ ...p })) }
+}
+
+// Map a raw FileEntry.type (lowercase, e.g. 'png'/'jpg'/'svg') to its natural output Codec.
+// Used to seed per-file defaults so a freshly-seeded entry encodes to a sane target before
+// the user touches the inspector (CR-01).
+function codecForType(type: string): Codec {
+  switch (type.toLowerCase()) {
+    case 'svg':
+      return 'SVG'
+    case 'png':
+      return 'PNG'
+    case 'jpg':
+    case 'jpeg':
+      return 'JPEG'
+    case 'webp':
+      return 'WebP'
+    case 'avif':
+      return 'AVIF'
+    default:
+      return 'WebP'
+  }
+}
+
+// CR-01: build a complete, self-contained FileSettings for a seeded/uploaded entry. Without this,
+// entries had no `settings` field and the first inspector edit spread `undefined` — collapsing the
+// whole settings object down to the single edited key (data loss + broken encodes). codec derives
+// from the entry's own type; q from the entry's own q (falling back to the WebP-ish default 82).
+export function defaultFileSettings(type: string, q: number | null): FileSettings {
+  return {
+    codec: codecForType(type),
+    q: q ?? 82,
+    method: 4,
+    lossless: false,
+    resizeOn: false,
+    w: '1600',
+    h: 'auto',
+    alg: 'lanczos3',
+    fit: 'contain',
+    stripMeta: true,
+    keepIcc: false,
+    aggressive: false,
+    plugins: SVGO_PLUGINS.map((p) => ({ ...p })),
+    progressive: true,
+  }
 }
 
 // --- Sample bytes (tiny valid 1×1 images) so the seeded demo files actually optimize ---
@@ -110,9 +156,12 @@ const STUB_FILES_SEED: FileEntry[] = [
 
 // Seed each entry with real (tiny, valid) bytes so "Optimize all" dispatches real jobs on
 // first load (see sampleBytesFor above). Real uploads supply their own bytes via File handles.
+// CR-01: also seed a complete per-file `settings` object so the first inspector edit mutates a
+// real object instead of spreading `undefined` (which collapsed settings to a single key).
 export const STUB_FILES: FileEntry[] = STUB_FILES_SEED.map((e) => ({
   ...e,
   rawBuffer: sampleBytesFor(e.type),
+  settings: defaultFileSettings(e.type, e.q),
 }))
 
 export const SVGO_PLUGINS: SvgoPlugin[] = [
