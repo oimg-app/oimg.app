@@ -1,11 +1,13 @@
 // Phase 03 — NAV-02 (full NAV-02: split buttons, segmented control, filter, theme toggle, settings). Source: 03-02-PLAN.md
+// Phase 10 — Plan 04: Add files + From device → openPicker via useIngest. Source: 10-04-PLAN.md
 import { useStore } from '@nanostores/react'
 import { Plus, Export, CaretDown, MagnifyingGlass, Sun, Moon, GearSix, Lightning } from '@phosphor-icons/react'
 import { uiAtom, setOpen, setView, setTheme, setAutoTarget } from '@/stores/ui'
 import type { View } from '@/stores/ui'
-import { filesAtom, setFilter, addFromDevice, addWatchFolder, addFromUrl, exportAsZip, exportIndividually, exportCopyHtml, exportCopyDataUris, exportManifestJson } from '@/stores/files'
+import { filesAtom, setFilter, addWatchFolder, addFromUrl, exportAsZip, exportIndividually, exportCopyHtml, exportCopyDataUris, exportManifestJson } from '@/stores/files'
 import { setWorkerCount } from '@/stores/runtime'
 import { useOptimize } from '@/hooks/useOptimize'
+import { useIngest } from '@/hooks/useIngest'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { cn } from '@/lib/utils'
 
@@ -26,6 +28,7 @@ export function Toolbar() {
   const { open, view, theme } = useStore(uiAtom)
   const { filterQuery } = useStore(filesAtom)
   const { runOptimize } = useOptimize()
+  const { openPicker } = useIngest()
 
   return (
     <div
@@ -39,7 +42,7 @@ export function Toolbar() {
         <button
           type="button"
           className={cn(tbtnClass, 'rounded-r-none border-r-0')}
-          onClick={() => { addFromDevice(); setOpen(null) }}
+          onClick={() => { openPicker(); setOpen(null) }}
         >
           <Plus size={12} />
           Add files
@@ -59,7 +62,7 @@ export function Toolbar() {
           </PopoverTrigger>
           <PopoverContent className={popoverContentClass} align="start">
             <div className="flex flex-col">
-              <button type="button" className={menuItemClass} onClick={() => { addFromDevice(); setOpen(null) }}>From device</button>
+              <button type="button" className={menuItemClass} onClick={() => { openPicker(); setOpen(null) }}>From device</button>
               <button type="button" className={menuItemClass} onClick={() => { addWatchFolder(); setOpen(null) }}>Watch folder</button>
               <button type="button" className={menuItemClass} onClick={() => { addFromUrl(); setOpen(null) }}>From URL or paste</button>
             </div>
