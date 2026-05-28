@@ -95,6 +95,18 @@ export function exportManifestJson(): void {}
 
 // Phase 09 — Plan 01: per-file settings + buffer/error actions (D-01/D-03/D-13)
 
+// WR-02: single funnel for every per-entry mutation. All entry writers go through this one
+// read-map-write helper so there is exactly one update path over the `entries` array. Each call is
+// a synchronous nanostores read+setKey (no await spans the read and the write), so two writers
+// touching different fields of the same id cannot interleave a stale snapshot between read and
+// write — the second call always re-reads the array the first one just committed. `patch` receives
+// the current entry and returns the changed fields to merge.
+function updateEntry(id: string, patch: (e: FileEntry) => Partial<FileEntry>): void {
+  filesAtom.setKey('entries', filesAtom.get().entries.map(e =>
+    e.id === id ? { ...e, ...patch(e) } : e
+  ))
+}
+
 // D-01/D-03: update a single key in the selected file's own FileSettings (T-9-01: typed key prevents arbitrary write)
 // CR-01: self-healing base — if an entry somehow lacks `settings` (legacy entry, future upload path
 // that skipped seeding), fall back to a complete default derived from the entry's own type/q rather
@@ -103,30 +115,22 @@ export function exportManifestJson(): void {}
 export function setFileSettings<K extends keyof FileSettings>(
   id: string, key: K, value: FileSettings[K]
 ): void {
-  filesAtom.setKey('entries', filesAtom.get().entries.map(e =>
-    e.id === id
-      ? { ...e, settings: { ...(e.settings ?? defaultFileSettings(e.type, e.q)), [key]: value } }
-      : e
-  ))
+  updateEntry(id, (e) => ({
+    settings: { ...(e.settings ?? defaultFileSettings(e.type, e.q)), [key]: value },
+  }))
 }
 
 // D-13: record per-file error (or clear it)
 export function setFileError(id: string, error: string | undefined): void {
-  filesAtom.setKey('entries', filesAtom.get().entries.map(e =>
-    e.id === id ? { ...e, error } : e
-  ))
+  updateEntry(id, () => ({ error }))
 }
 
 // Store encoded result + clear error on success
 export function setFileResult(id: string, encodedBuffer: ArrayBuffer, optimizedSize: number): void {
-  filesAtom.setKey('entries', filesAtom.get().entries.map(e =>
-    e.id === id ? { ...e, encodedBuffer, opt: optimizedSize, error: undefined } : e
-  ))
+  updateEntry(id, () => ({ encodedBuffer, opt: optimizedSize, error: undefined }))
 }
 
 // Cache raw file bytes for live re-encode (D-05)
 export function setFileRawBuffer(id: string, rawBuffer: ArrayBuffer): void {
-  filesAtom.setKey('entries', filesAtom.get().entries.map(e =>
-    e.id === id ? { ...e, rawBuffer } : e
-  ))
+  updateEntry(id, () => ({ rawBuffer }))
 }
