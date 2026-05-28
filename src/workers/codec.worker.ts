@@ -113,7 +113,9 @@ async function optimize(job: EncodeJob): Promise<EncodeResult> {
         if (job.buffer.byteLength === 0) throw new Error('Empty buffer')
         // OxiPNG optimise accepts ArrayBuffer directly for PNG→PNG; no decode needed
         const { optimise } = await import('@jsquash/oxipng')
-        const level = (job.settings.method as number) ?? 2  // map effort→level (Pitfall 4)
+        // WR-05: clamp effort→level to OxiPNG's valid 0–6 range. `as number` + `?? 2` only caught
+        // null/undefined, not NaN or out-of-range; Number(...) || 2 also rescues NaN.
+        const level = Math.min(6, Math.max(0, Number(job.settings.method) || 2))  // map effort→level (Pitfall 4)
         const result = await optimise(job.buffer, { level, interlace: false, optimiseAlpha: true })
         // WR-03: zero-copy return via Comlink.transfer
         return Comlink.transfer(
@@ -166,7 +168,10 @@ async function optimize(job: EncodeJob): Promise<EncodeResult> {
           const { encode } = await import('@jsquash/avif')
           const result = await encode(imageData, {
             quality: job.settings.q ?? 50,
-            speed: Math.max(0, 6 - (job.settings.method ?? 4)),  // invert effort→speed (A1)
+            // WR-05: invert effort→speed and clamp to 0–10 (libavif range). Number(...) || 4
+            // rescues NaN; the outer min/max prevents a corrupted method (e.g. -1 → speed 7)
+            // from escaping the valid range.
+            speed: Math.min(10, Math.max(0, 6 - (Number(job.settings.method) || 4))),  // invert effort→speed (A1)
             lossless: job.settings.lossless ?? false,
           })
           return Comlink.transfer(
