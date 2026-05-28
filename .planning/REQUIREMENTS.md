@@ -25,7 +25,7 @@ Reconnecting the real optimization pipeline behind the v1.0 UI. The v1.0 milesto
 
 ### Optimize Loop
 
-- [ ] **OPT-01**: User drops a single file → sees real optimized output with accurate before/after byte sizes in the Report
+- [x] **OPT-01**: User drops a single file → sees real optimized output with accurate before/after byte sizes in the Report
 - [ ] **OPT-02**: User clicks Optimize-all → the batch runs through the worker pool with live per-file progress
 
 ### Export
@@ -74,7 +74,7 @@ Deferred to a later milestone. Tracked but not in this roadmap.
 | ENC-04 | Phase 9 | Complete |
 | ENC-05 | Phase 9 | Complete |
 | ENC-06 | Phase 9 | Complete |
-| OPT-01 | Phase 10 | Pending |
+| OPT-01 | Phase 10 | Complete |
 | OPT-02 | Phase 11 | Pending |
 | EXP-01 | Phase 11 | Pending |
 | EXP-02 | Phase 11 | Pending |

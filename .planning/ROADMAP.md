@@ -72,7 +72,7 @@ Shipped as **Executed** — all 22 plans built + summarized; formal phase verifi
   3. Re-adjusting a setting and re-optimizing updates the output and the reported sizes
 **Plans**: 4 plans (4 waves)
 - [x] 10-01-PLAN.md — Wave 0 test scaffolds: ingest-helper + ingest.spec + 5 D-05 spec migrations [OPT-01]
-- [ ] 10-02-PLAN.md — Remove seeded demos (D-04) + FileEntry.createdAt + queue-order sort fix [OPT-01]
+- [x] 10-02-PLAN.md — Remove seeded demos (D-04) + FileEntry.createdAt + queue-order sort fix [OPT-01]
 - [ ] 10-03-PLAN.md — useIngest hook: format gate + File→FileEntry mapping + auto-optimize dispatch [OPT-01]
 - [ ] 10-04-PLAN.md — Wire FilesPane dropzone/Add files + Toolbar From device to useIngest [OPT-01]
 **UI hint**: yes
@@ -113,7 +113,7 @@ Shipped as **Executed** — all 22 plans built + summarized; formal phase verifi
 | 7. Polish | v1.0 | 3/3 | Executed | 2026-05-25 |
 | 8. Worker Pipeline Foundation | v1.1 | 3/3 | Complete   | 2026-05-26 |
 | 9. Codec Encoders | v1.1 | 4/4 | Complete   | 2026-05-26 |
-| 10. Single-File Optimize Loop | v1.1 | 1/4 | In Progress|  |
+| 10. Single-File Optimize Loop | v1.1 | 2/4 | In Progress|  |
 | 11. Batch Optimize + Export | v1.1 | 0/? | Not started | - |
 | 12. Real Snippets | v1.1 | 0/? | Not started | - |
 
