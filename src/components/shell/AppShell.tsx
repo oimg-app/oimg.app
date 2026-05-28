@@ -9,14 +9,8 @@ import {
   ResizablePanel,
   ResizableHandle,
 } from '@/components/ui/resizable'
-import { FilesPane } from '@/components/panels/FilesPane'
-import { CenterPane } from '@/components/panels/CenterPane'
-import { InspectorPane } from '@/components/panels/InspectorPane'
-import { Toolbar } from '@/components/shell/Toolbar/Toolbar'
-import { StatusBar } from '@/components/shell/StatusBar/StatusBar'
-import { TitleBar } from '@/components/shell/TitleBar/TitleBar'
-import { CommandPalette } from '@/components/shell/CommandPalette/CommandPalette'
-import { BackpressureIndicator } from '@/components/shell/BackpressureIndicator/BackpressureIndicator'
+import { FilesPane, CenterPane, InspectorPane } from '@/components/panels'
+import { Toolbar, StatusBar, TitleBar, CommandPalette, BackpressureIndicator } from '@/components/shell'
 import { uiAtom, openCmdk, closeCmdk, setOpen } from '@/stores/ui'
 import { cn } from '@/lib/utils'
 

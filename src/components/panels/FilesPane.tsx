@@ -5,8 +5,8 @@ import { $filteredFiles, $totals, setSortBy } from '@/stores'
 import type { SortKey } from '@/stores/files'
 import { fmtBytes } from '@/lib/format'
 import { cn } from '@/lib/utils'
-import { FileRow } from '@/components/file-row/FileRow'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { FileRow } from './files/FileRow'
 
 const SORT_OPTIONS: { label: string; key: SortKey }[] = [
   { label: 'Queue order', key: 'queue order' },
