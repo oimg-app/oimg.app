@@ -12,7 +12,7 @@ import type { Page } from '@playwright/test'
  */
 export async function ingestFixtureFiles(page: Page, count = 1): Promise<void> {
   await page.evaluate(async (n: number) => {
-    const { filesAtom, setFileRawBuffer, selectFile } = await import('/src/stores/files.ts')
+    const { filesAtom, setFileRawBuffer } = await import('/src/stores/files.ts')
     const { defaultFileSettings } = await import('/src/lib/stub-data.ts')
 
     // Reuse the same 1×1 PNG base64 string as TINY_PNG_B64 in stub-data.ts (line 135-136)
