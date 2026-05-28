@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Real Optimization Pipeline
 status: executing
-last_updated: "2026-05-28T13:06:35.213Z"
+last_updated: "2026-05-28T14:06:41.086Z"
 last_activity: 2026-05-28
 progress:
   total_phases: 5
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 11
-  completed_plans: 10
-  percent: 40
+  completed_plans: 11
+  percent: 60
 ---
 
 # STATE: oimg.app — v1.1 Real Optimization Pipeline
@@ -31,10 +31,10 @@ progress:
 ## Current Position
 
 Phase: 10 (single-file-optimize-loop) — EXECUTING
-Plan: 3 of 4
+Plan: 4 of 4
 Status: Ready to execute
 Last activity: 2026-05-28
-Progress: [█████████░] 91%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -72,6 +72,7 @@ Progress: [█████████░] 91%
 - [Phase ?]: pool.run API correction
 - [Phase ?]: filesAtom starts empty (D-04) — app opens on dropzone first-run view
 - [Phase ?]: queue-order sort uses createdAt timestamp replacing STUB_FILES.findIndex
+- [Phase ?]: useOptimize stale-closure fix: read filesAtom.get() at call time
 
 ### Conventions (carried from v1.0)
 
@@ -94,7 +95,7 @@ Progress: [█████████░] 91%
 
 ## Session Continuity
 
-**Last session:** 2026-05-28T13:06:35.208Z
+**Last session:** 2026-05-28T14:06:41.083Z
 **To resume:** Run `/gsd-plan-phase 8` to plan the Worker Pipeline Foundation phase.
 
 ---

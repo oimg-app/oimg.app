@@ -26,7 +26,7 @@ Shipped as **Executed** — all 22 plans built + summarized; formal phase verifi
 
 - [x] **Phase 8: Worker Pipeline Foundation** — Bounded Comlink WorkerPool + dynamic codec imports + COOP/COEP, backpressure wired to real running state (completed 2026-05-26)
 - [x] **Phase 9: Codec Encoders** — PNG/WebP/JPEG/AVIF/SVG adapters wired so inspector settings drive real encode output (completed 2026-05-26)
-- [ ] **Phase 10: Single-File Optimize Loop** — Drop one file → real optimized output with accurate before/after sizes in the Report
+- [x] **Phase 10: Single-File Optimize Loop** — Drop one file → real optimized output with accurate before/after sizes in the Report (completed 2026-05-28)
 - [ ] **Phase 11: Batch Optimize + Export** — Optimize-all through the pool with live progress, single-file download, and batch ZIP export
 - [ ] **Phase 12: Real Snippets** — Output panel snippets reflect the selected file's actual encoded bytes
 
@@ -74,7 +74,7 @@ Shipped as **Executed** — all 22 plans built + summarized; formal phase verifi
 - [x] 10-01-PLAN.md — Wave 0 test scaffolds: ingest-helper + ingest.spec + 5 D-05 spec migrations [OPT-01]
 - [x] 10-02-PLAN.md — Remove seeded demos (D-04) + FileEntry.createdAt + queue-order sort fix [OPT-01]
 - [x] 10-03-PLAN.md — useIngest hook: format gate + File→FileEntry mapping + auto-optimize dispatch [OPT-01]
-- [ ] 10-04-PLAN.md — Wire FilesPane dropzone/Add files + Toolbar From device to useIngest [OPT-01]
+- [x] 10-04-PLAN.md — Wire FilesPane dropzone/Add files + Toolbar From device to useIngest [OPT-01]
 **UI hint**: yes
 
 ### Phase 11: Batch Optimize + Export
@@ -113,7 +113,7 @@ Shipped as **Executed** — all 22 plans built + summarized; formal phase verifi
 | 7. Polish | v1.0 | 3/3 | Executed | 2026-05-25 |
 | 8. Worker Pipeline Foundation | v1.1 | 3/3 | Complete   | 2026-05-26 |
 | 9. Codec Encoders | v1.1 | 4/4 | Complete   | 2026-05-26 |
-| 10. Single-File Optimize Loop | v1.1 | 3/4 | In Progress|  |
+| 10. Single-File Optimize Loop | v1.1 | 4/4 | Complete   | 2026-05-28 |
 | 11. Batch Optimize + Export | v1.1 | 0/? | Not started | - |
 | 12. Real Snippets | v1.1 | 0/? | Not started | - |
 
