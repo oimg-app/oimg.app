@@ -81,9 +81,16 @@ export function InspectorPane() {
             </span>
           </div>
 
-          {/* Apply-to-all button (D-02) — UI-SPEC §2: only when >= 2 files */}
-          {entries.length >= 2 && (
-            <div className="px-3 py-2 shrink-0">
+          {/* Tab content */}
+          <div className="flex-1 overflow-y-auto pb-20">
+            {tab === 'codec' && <CodecPanel />}
+            {tab === 'output' && <OutputPanel />}
+            {tab === 'report' && <ReportPanel />}
+          </div>
+
+          {/* Apply-to-all (D-02) — pinned to the bottom, codec tab only, when >= 2 files */}
+          {tab === 'codec' && entries.length >= 2 && (
+            <div className="px-3 py-2 shrink-0 border-t border-[var(--color-line)] bg-[var(--color-bg-1)]">
               <button
                 type="button"
                 aria-label="Apply global codec settings to all files in queue"
@@ -97,13 +104,6 @@ export function InspectorPane() {
               </p>
             </div>
           )}
-
-          {/* Tab content */}
-          <div className="flex-1 overflow-y-auto pb-20">
-            {tab === 'codec' && <CodecPanel />}
-            {tab === 'output' && <OutputPanel />}
-            {tab === 'report' && <ReportPanel />}
-          </div>
         </div>
       )}
     </div>
