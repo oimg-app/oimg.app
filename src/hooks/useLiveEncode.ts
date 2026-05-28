@@ -20,6 +20,19 @@ function toCodec(type: string): EncodeJob['codec'] | null {
   }
 }
 
+/** WR-03: validate FileEntry.type against the worker's known source formats (no unchecked cast). */
+function toSourceFormat(type: string): EncodeJob['sourceFormat'] | null {
+  switch (type.toLowerCase()) {
+    case 'png':  return 'png'
+    case 'jpg':  return 'jpg'
+    case 'jpeg': return 'jpeg'
+    case 'webp': return 'webp'
+    case 'avif': return 'avif'
+    case 'svg':  return 'svg'
+    default:     return null
+  }
+}
+
 /**
  * useLiveEncode — debounced single-file re-encode for the inspector (D-05/D-07).
  * Returns { trigger } — call trigger(fileId) on every settings change; only the last
@@ -48,9 +61,13 @@ export function useLiveEncode() {
       const codec = toCodec(entry.type)
       if (codec === null) return
 
+      // WR-03: validate source format (no unchecked cast); silently skip unsupported live re-encode
+      const sourceFormat = toSourceFormat(entry.type)
+      if (sourceFormat === null) return
+
       const job: EncodeJob = {
         codec,
-        sourceFormat: entry.type.toLowerCase() as EncodeJob['sourceFormat'],
+        sourceFormat,
         // slice(0) = copy so the cached rawBuffer survives Comlink.transfer (Pitfall 3)
         buffer: entry.rawBuffer.slice(0),
         settings: entry.settings,

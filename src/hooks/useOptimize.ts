@@ -26,6 +26,31 @@ function toCodec(type: string): EncodeJob['codec'] | null {
   }
 }
 
+/**
+ * WR-03: validate a FileEntry.type against the worker's known source formats before dispatch,
+ * instead of an unchecked `as EncodeJob['sourceFormat']` cast. Returns null for unsupported inputs
+ * (e.g. gif/bmp) so the caller can skip with a clear message rather than letting decodeSource throw
+ * a generic "Unknown source format" deep in the worker.
+ */
+function toSourceFormat(type: string): EncodeJob['sourceFormat'] | null {
+  switch (type.toLowerCase()) {
+    case 'png':
+      return 'png'
+    case 'jpg':
+      return 'jpg'
+    case 'jpeg':
+      return 'jpeg'
+    case 'webp':
+      return 'webp'
+    case 'avif':
+      return 'avif'
+    case 'svg':
+      return 'svg'
+    default:
+      return null
+  }
+}
+
 export function useOptimize() {
   const { entries } = useStore(filesAtom)
 
@@ -39,6 +64,14 @@ export function useOptimize() {
     for (const entry of entries) {
       const codec = toCodec(entry.type)
       if (codec === null) continue
+
+      // WR-03: validate the source format up front — skip unsupported inputs with a clear toast
+      // instead of dispatching a job that throws "Unknown source format" inside the worker.
+      const sourceFormat = toSourceFormat(entry.type)
+      if (sourceFormat === null) {
+        toast.error('Unsupported input format: ' + entry.name)
+        continue
+      }
 
       let rawBuffer = entry.rawBuffer ?? null
 
@@ -56,7 +89,7 @@ export function useOptimize() {
 
       const job: EncodeJob = {
         codec,
-        sourceFormat: entry.type.toLowerCase() as EncodeJob['sourceFormat'],
+        sourceFormat,
         // slice(0) = copy so the cached rawBuffer survives Comlink.transfer (Pitfall 3)
         buffer: rawBuffer.slice(0),
         settings: entry.settings ?? settingsAtom.get(),
