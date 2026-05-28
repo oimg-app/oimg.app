@@ -113,7 +113,7 @@ Shipped as **Executed** — all 22 plans built + summarized; formal phase verifi
 | 7. Polish | v1.0 | 3/3 | Executed | 2026-05-25 |
 | 8. Worker Pipeline Foundation | v1.1 | 3/3 | Complete   | 2026-05-26 |
 | 9. Codec Encoders | v1.1 | 4/4 | Complete   | 2026-05-26 |
-| 10. Single-File Optimize Loop | v1.1 | 4/4 | Complete   | 2026-05-28 |
+| 10. Single-File Optimize Loop | v1.1 | 4/4 | Complete    | 2026-05-28 |
 | 11. Batch Optimize + Export | v1.1 | 0/? | Not started | - |
 | 12. Real Snippets | v1.1 | 0/? | Not started | - |
 
