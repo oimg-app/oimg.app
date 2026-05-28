@@ -22,9 +22,19 @@ test('Clicking Optimize all flips worker pip to Running (NAV-02 wire)', async ({
   await page.goto('/')
   // D-05: inject a fixture file so Optimize all has ≥1 file to process
   await ingestFixtureFiles(page, 1)
+  // Latch the transient Running transition BEFORE clicking. A 1×1 PNG optimizes in
+  // milliseconds (Phase 10 D-05 shrank the workload to one tiny file), so polling the
+  // pip's current attribute after the click races completion and is flaky. The pip
+  // aria-label is a pure projection of runtimeAtom.running — subscribe and record
+  // whether it ever flipped true.
+  await page.evaluate(async () => {
+    const { runtimeAtom } = await import('/src/stores/runtime.ts')
+    const w = window as unknown as { __sawRunning?: boolean }
+    w.__sawRunning = runtimeAtom.get().running
+    runtimeAtom.subscribe((s) => { if (s.running) w.__sawRunning = true })
+  })
   await page.getByRole('button', { name: 'Optimize all' }).click()
-  const pip = page.getByTestId('worker-pip')
-  await expect(pip).toHaveAttribute('aria-label', 'Worker status: Running')
+  await page.waitForFunction(() => (window as unknown as { __sawRunning?: boolean }).__sawRunning === true)
 })
 
 // NAV-01: TitleBar tests
