@@ -35,11 +35,12 @@ A developer drops a folder of source assets, adjusts settings once, and walks aw
 - ✓ WCAG AA keyboard nav (DropdownMenu menus, focus rings), theme toggle w/ no FOUC — v1.0
 - ✓ Worker pipeline foundation — bounded Comlink WorkerPool (`getPool()`, cap min(hwConc,4)), codecs dynamic-imported inside the worker, COOP/COEP isolation, real backpressure via `runtimeAtom`; PNG→OxiPNG is the one real path (other codecs stubbed for Phase 9). Initial route 144KB gzip < 200KB. — Phase 8
 - ✓ Codec encoders — all five jSquash/svgo adapters real (PNG/OxiPNG, WebP, JPEG/MozJPEG, lazy AVIF, SVG/svgo v4 in-worker), per-file settings model + "Apply to all", debounced live re-encode feeding CompareStage/DeltaStrip, single-image resize-before-encode, D-13 per-file error fallback. Inspector controls measurably shape encoded bytes. WR-02/WR-03/CR-01 Phase 8 fixes folded in. — Phase 9
+- ✓ Single-file optimize loop (OPT-01) — `useIngest` is the one ingestion seam (drop + picker), empties the seeded demo list (D-04), format-gates with silent skip (D-06/D-07), maps File→FileEntry with truthful `File.size`, and auto-optimizes via Phase 9 `runOptimize`. Report/DeltaStrip show real before/after bytes; re-adjusting a setting re-optimizes (useLiveEncode). 53/53 e2e green; review fixes WR-01/04/05 (status transition, WCAG-AA dropzone, cross-browser picker fallback) resolved. — Phase 10
 
 ### Active (v1.1)
 
 - [x] Worker pipeline: WorkerPool + Comlink, codecs dynamic-imported inside workers (WebP/JPEG/AVIF/OxiPNG/SVG) — Phase 9
-- [ ] Single-file optimize: drop → decode → encode → real optimized output, wired to runtime store
+- [x] Single-file optimize: drop → decode → encode → real optimized output, wired to runtime store — Phase 10
 - [x] Settings actually drive encoding (quality/effort/lossless/resize/metadata per codec) — Phase 9
 - [ ] Batch ZIP export via jszip
 - [ ] Output panel snippets wired to real encoded bytes (Base64 / URL-encoded / `<picture>`)
@@ -121,4 +122,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-05-27 after Phase 9 (Codec Encoders) complete*
+*Last updated: 2026-05-28 after Phase 10 (Single-File Optimize Loop) complete*
