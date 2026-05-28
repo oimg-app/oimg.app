@@ -1,8 +1,9 @@
 // Phase 02 — STORE-01: filesAtom map + computed atoms + actions. Source: 02-01-PLAN.md
 // Phase 09 — Plan 01: per-file settings actions (D-01/D-03/D-13) + buffer/error actions
+// Phase 10 — Plan 02: D-04 — empty seed (app starts with no demo files); queue-order sort uses createdAt
 import { map, computed } from 'nanostores'
 import type { FileEntry, FileSettings, SortKey } from '@/lib/stub-data'
-import { STUB_FILES, defaultFileSettings } from '@/lib/stub-data'
+import { defaultFileSettings } from '@/lib/stub-data'
 
 // Re-export types so components import from store barrel, not from stub-data directly (STORE-08 convention)
 export type { FileEntry, FileSettings, SortKey }
@@ -15,7 +16,7 @@ interface FilesState {
 }
 
 export const filesAtom = map<FilesState>({
-  entries: STUB_FILES,
+  entries: [],  // D-04: app starts empty — no seeded demo files (Phase 10 Plan 02)
   selectedId: null,
   filterQuery: '',
   sortBy: 'queue order',
@@ -27,12 +28,8 @@ export const $filteredFiles = computed(filesAtom, (s) => {
 
   switch (s.sortBy) {
     case 'queue order':
-      // Preserve original STUB_FILES index order
-      result = result.slice().sort((a, b) => {
-        const ai = STUB_FILES.findIndex((f) => f.id === a.id)
-        const bi = STUB_FILES.findIndex((f) => f.id === b.id)
-        return ai - bi
-      })
+      // Sort ascending by createdAt (insertion order). ?? 0 handles legacy entries without the field (Pitfall 2 / D-04).
+      result = result.slice().sort((a, b) => (a.createdAt ?? 0) - (b.createdAt ?? 0))
       break
     case 'file size':
       result = result.slice().sort((a, b) => b.orig - a.orig)
