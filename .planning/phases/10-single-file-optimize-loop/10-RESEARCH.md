@@ -516,22 +516,22 @@ Phase 10 is pure browser/client-side code + test updates. No new external tools 
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **`createdAt` field on FileEntry**
+1. **`createdAt` field on FileEntry** — RESOLVED
    - What we know: 'queue order' sort uses `STUB_FILES.findIndex` which breaks after D-04.
-   - What's unclear: Whether to add `createdAt: number` to `FileEntry` type, or sort by array index (implicit push order).
    - Recommendation: Add `createdAt: Date.now()` at ingest — explicit, testable, forward-compatible with Phase 11 batch sorting. Add to `FileEntry` interface in `stub-data.ts`.
+   - **Resolution:** Adopted. Plan 02 adds `createdAt` to `FileEntry` and switches `$filteredFiles` queue-order sort to a `createdAt` comparison.
 
-2. **Status transitions: 'queued' → 'processing' → 'done'/'error'**
+2. **Status transitions: 'queued' → 'processing' → 'done'/'error'** — RESOLVED
    - What we know: `FileEntry.status` type is `'done' | 'processing' | 'queued' | 'error'`. `useOptimize` does not currently set status per entry.
-   - What's unclear: Whether to set `status: 'processing'` before dispatch and `status: 'done'` in `setFileResult` — this enables the shimmer without needing `runtimeAtom.encodingFileId`.
    - Recommendation: Wire status transitions inside `useOptimize` (`updateEntry(id, () => ({ status: 'processing' }))` before dispatch; `setFileResult` sets `status: 'done'`).
+   - **Resolution:** Adopted. Plan 03 sets `status: 'processing'` before dispatch and `'done'` on result.
 
-3. **`addFromDevice` function signature change**
-   - What we know: Currently `addFromDevice(): void` (no args). After Phase 10 it needs to accept a `FileList` or trigger the picker and ingest.
-   - What's unclear: Whether to keep it as a store action that triggers the picker, or move the picker trigger entirely to the component/hook layer.
-   - Recommendation: Keep `addFromDevice` as a store-level no-op or remove it; have the component call `useIngest`'s `openPicker()` directly. This avoids coupling store actions to UI-layer async picker flows.
+3. **`addFromDevice` function signature change** — RESOLVED
+   - What we know: Currently `addFromDevice(): void` (no args). After Phase 10 it needs to trigger the picker and ingest.
+   - Recommendation: Have the component call `useIngest`'s `openPicker()` directly rather than coupling a store action to the UI-layer async picker flow.
+   - **Resolution:** Adopted. Plan 04 wires FilesPane/Toolbar to `useIngest().openPicker()`; the `addFromDevice` store no-op is removed/superseded.
 
 ---
 
