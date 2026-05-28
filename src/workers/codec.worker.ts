@@ -51,20 +51,41 @@ async function decodeSource(buffer: ArrayBuffer, sourceFormat: string): Promise<
   }
 }
 
+// Map the inspector Fit mode to jSquash's fitMethod. WR-04: jSquash resize only offers
+// 'stretch' | 'contain' (no native 'cover'); its 'contain' crops to fill the target box, which is
+// the closest available behavior to 'cover'. 'fill' distorts → 'stretch'. 'cover' and 'contain'
+// both map to jSquash 'contain' (documented limitation: true letterbox-contain vs cover-crop are
+// not separately expressible with the current @jsquash/resize surface).
+function toFitMethod(fit: string): 'stretch' | 'contain' {
+  switch (fit) {
+    case 'fill':
+      return 'stretch'
+    case 'cover':
+    case 'contain':
+    default:
+      return 'contain'
+  }
+}
+
 // Resize-before-encode helper (D-10) — returns imageData unchanged if resizeOn is falsy
 async function maybeResize(imageData: ImageData, settings: FileSettings): Promise<ImageData> {
   if (!settings.resizeOn || !settings.w) return imageData
-  const { default: resize } = await import('@jsquash/resize')
+  // WR-04: width comes from a free-text input — Number('') / Number('abc') is NaN, which would make
+  // resize() throw or produce garbage. Bail out (no resize) on non-finite or non-positive width.
   const width = Number(settings.w)
+  if (!Number.isFinite(width) || width <= 0) return imageData
   const height =
     settings.h === 'auto' || !settings.h
       ? Math.round(imageData.height * (width / imageData.width))
       : Number(settings.h)
+  // WR-04: same numeric guard for an explicit height
+  if (!Number.isFinite(height) || height <= 0) return imageData
+  const { default: resize } = await import('@jsquash/resize')
   return resize(imageData, {
     width,
     height,
     method: settings.alg as 'lanczos3' | 'mitchell' | 'catrom' | 'triangle',
-    fitMethod: settings.fit === 'contain' ? 'contain' : 'stretch',
+    fitMethod: toFitMethod(settings.fit),
   })
 }
 
