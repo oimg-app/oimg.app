@@ -1,5 +1,6 @@
 // STORE-08: this module must NOT be imported by components. Only stores (Phase 2+) and tests may import it.
 // Phase 01, Plan 04 — STORE-05 + ICON-01
+// Phase 10, Plan 02 — D-04: added optional createdAt field to FileEntry (queue-order sort key)
 
 // --- Type exports ---
 
@@ -17,6 +18,8 @@ export interface FileEntry {
   target: string
   dim: string
   q: number | null
+  /** Set to Date.now() at ingest; used as queue-order sort key (D-04 / Phase 10 Plan 02). Optional so legacy STUB_FILES entries without it remain valid. */
+  createdAt?: number
   prog?: number
   settings?: FileSettings      // per-file settings (D-01) — optional until initialized
   rawBuffer?: ArrayBuffer      // original file bytes; cache for live re-encode (D-05)
