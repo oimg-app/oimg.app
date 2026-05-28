@@ -1,11 +1,16 @@
 // Phase 09 — Plan 01: Wave 0 per-file settings D-01/D-02/D-03 test scaffold
 // Tests assert FINAL expected behavior — RED until Plan 04 wires inspector to per-file settings.
 // Analogs: src/tests/worker-pipeline.spec.ts, src/tests/inspector-tabs.spec.ts
+// Phase 10, Plan 01 — D-05 migration: inject 2 fixture files before evaluates that need ≥2 entries
 import { test, expect } from '@playwright/test'
+import { ingestFixtureFiles } from './fixtures/ingest-helper'
 
 test.describe('per-file settings — D-01/D-02/D-03', () => {
   test('D-01: editing one file settings does not mutate another file settings', async ({ page }) => {
     await page.goto('/')
+
+    // D-05: inject 2 fixture files so entries.length >= 2 (Pitfall 7)
+    await ingestFixtureFiles(page, 2)
 
     // Use store actions directly via page.evaluate to test isolation
     const result = await page.evaluate(async () => {
@@ -53,6 +58,9 @@ test.describe('per-file settings — D-01/D-02/D-03', () => {
   test('D-02: applyToAll copies global defaults into every entry settings', async ({ page }) => {
     await page.goto('/')
 
+    // D-05: inject 1 fixture file so entries is non-empty
+    await ingestFixtureFiles(page, 1)
+
     const result = await page.evaluate(async () => {
       const { filesAtom } = await import('/src/stores/files.ts')
       const { settingsAtom, applyToAll } = await import('/src/stores/settings.ts')
@@ -82,6 +90,9 @@ test.describe('per-file settings — D-01/D-02/D-03', () => {
   test('D-03: selecting a different file shows that file own settings in inspector', async ({ page }) => {
     await page.goto('/')
 
+    // D-05: inject 2 fixture files so we can select between them
+    await ingestFixtureFiles(page, 2)
+
     // Set up two files with different settings via the store, then observe the inspector UI
     await page.evaluate(async () => {
       const { filesAtom, setFileSettings } = await import('/src/stores/files.ts')
@@ -106,10 +117,10 @@ test.describe('per-file settings — D-01/D-02/D-03', () => {
     })
 
     // Select file 1 — inspector should reflect its own settings (D-03)
-    await page.getByText('hero-banner@2x.png').click()
+    await page.getByTestId('files-pane').getByText('fixture-0.png').click()
 
     // Select file 2 — inspector should switch to file 2's settings
-    await page.getByText('product-shot-01.jpg').click()
+    await page.getByTestId('files-pane').getByText('fixture-1.png').click()
 
     // Verify via store that selected file has the correct per-file settings
     const selectedQ = await page.evaluate(async () => {

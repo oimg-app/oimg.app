@@ -1,6 +1,8 @@
 // Phase 06, Plan 03 — INSP-07 + INSP-08 end-to-end: Output + Report tabs wired
 // into InspectorPane. Exercises the full vertical slice: file select → tab click → panel render.
+// Phase 10, Plan 01 — D-05 migration: replaced hero-banner@2x.png selectors with ingestFixtureFiles
 import { test, expect } from '@playwright/test'
+import { ingestFixtureFiles } from './fixtures/ingest-helper'
 
 test.use({
   permissions: ['clipboard-read', 'clipboard-write'],
@@ -10,8 +12,9 @@ test.describe('Output tab — OutputPanel wired into InspectorPane', () => {
   test('Output tab renders output-panel after selecting a file', async ({ page }) => {
     await page.goto('/')
 
-    // Select the first stub file by clicking its name text
-    await page.getByText('hero-banner@2x.png').click()
+    // D-05: inject fixture files instead of relying on seeded demo list
+    await ingestFixtureFiles(page, 1)
+    await page.getByTestId('files-pane').getByText('fixture-0.png').click()
 
     // Click the Output tab button
     await page.getByRole('button', { name: 'output' }).click()
@@ -22,7 +25,8 @@ test.describe('Output tab — OutputPanel wired into InspectorPane', () => {
 
   test('Output tab shows three snippet sections with copy buttons', async ({ page }) => {
     await page.goto('/')
-    await page.getByText('hero-banner@2x.png').click()
+    await ingestFixtureFiles(page, 1)
+    await page.getByTestId('files-pane').getByText('fixture-0.png').click()
     await page.getByRole('button', { name: 'output' }).click()
 
     await expect(page.getByTestId('output-panel')).toBeVisible()
@@ -36,7 +40,8 @@ test.describe('Output tab — OutputPanel wired into InspectorPane', () => {
   test('Copy Base64 snippet button flashes "Copied!" then reverts', async ({ page, context }) => {
     await context.grantPermissions(['clipboard-read', 'clipboard-write'])
     await page.goto('/')
-    await page.getByText('hero-banner@2x.png').click()
+    await ingestFixtureFiles(page, 1)
+    await page.getByTestId('files-pane').getByText('fixture-0.png').click()
     await page.getByRole('button', { name: 'output' }).click()
 
     const copyBtn = page.getByRole('button', { name: 'Copy Base64 snippet' })
@@ -55,7 +60,8 @@ test.describe('Output tab — OutputPanel wired into InspectorPane', () => {
   test('Clipboard receives real snippet text after copy', async ({ page, context }) => {
     await context.grantPermissions(['clipboard-read', 'clipboard-write'])
     await page.goto('/')
-    await page.getByText('hero-banner@2x.png').click()
+    await ingestFixtureFiles(page, 1)
+    await page.getByTestId('files-pane').getByText('fixture-0.png').click()
     await page.getByRole('button', { name: 'output' }).click()
 
     const copyBtn = page.getByRole('button', { name: 'Copy Base64 snippet' })
@@ -72,7 +78,8 @@ test.describe('Output tab — OutputPanel wired into InspectorPane', () => {
 test.describe('Report tab — ReportPanel wired into InspectorPane', () => {
   test('Report tab renders report-panel after selecting a file', async ({ page }) => {
     await page.goto('/')
-    await page.getByText('hero-banner@2x.png').click()
+    await ingestFixtureFiles(page, 1)
+    await page.getByTestId('files-pane').getByText('fixture-0.png').click()
     await page.getByRole('button', { name: 'report' }).click()
 
     await expect(page.getByTestId('report-panel')).toBeVisible()
@@ -80,7 +87,8 @@ test.describe('Report tab — ReportPanel wired into InspectorPane', () => {
 
   test('Report panel shows at least one savings bar', async ({ page }) => {
     await page.goto('/')
-    await page.getByText('hero-banner@2x.png').click()
+    await ingestFixtureFiles(page, 1)
+    await page.getByTestId('files-pane').getByText('fixture-0.png').click()
     await page.getByRole('button', { name: 'report' }).click()
 
     await expect(page.getByTestId('report-panel')).toBeVisible()
@@ -93,7 +101,8 @@ test.describe('Report tab — ReportPanel wired into InspectorPane', () => {
 
   test('Report panel shows at least one format-row', async ({ page }) => {
     await page.goto('/')
-    await page.getByText('hero-banner@2x.png').click()
+    await ingestFixtureFiles(page, 1)
+    await page.getByTestId('files-pane').getByText('fixture-0.png').click()
     await page.getByRole('button', { name: 'report' }).click()
 
     await expect(page.getByTestId('report-panel')).toBeVisible()
@@ -105,7 +114,8 @@ test.describe('Report tab — ReportPanel wired into InspectorPane', () => {
 
   test('Report panel shows Total savings section with stat cells', async ({ page }) => {
     await page.goto('/')
-    await page.getByText('hero-banner@2x.png').click()
+    await ingestFixtureFiles(page, 1)
+    await page.getByTestId('files-pane').getByText('fixture-0.png').click()
     await page.getByRole('button', { name: 'report' }).click()
 
     await expect(page.getByTestId('report-panel')).toBeVisible()
@@ -121,7 +131,8 @@ test.describe('Report tab — ReportPanel wired into InspectorPane', () => {
 
 test('Placeholder divs are gone — InspectorPane no longer shows "coming in Phase 6"', async ({ page }) => {
   await page.goto('/')
-  await page.getByText('hero-banner@2x.png').click()
+  await ingestFixtureFiles(page, 1)
+  await page.getByTestId('files-pane').getByText('fixture-0.png').click()
 
   // Check output tab
   await page.getByRole('button', { name: 'output' }).click()

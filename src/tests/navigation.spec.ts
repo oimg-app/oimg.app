@@ -1,5 +1,7 @@
 // Phase 03 Plan 01 — Wave 0 Playwright smoke: Toolbar Optimize + StatusBar pip slice.
+// Phase 10, Plan 01 — D-05 migration: inject fixture files before running-state assertions
 import { test, expect } from '@playwright/test'
+import { ingestFixtureFiles } from './fixtures/ingest-helper'
 
 test('Toolbar mounts (NAV-02 slice)', async ({ page }) => {
   await page.goto('/')
@@ -18,6 +20,8 @@ test('StatusBar mounts with worker pip (NAV-03 slice)', async ({ page }) => {
 
 test('Clicking Optimize all flips worker pip to Running (NAV-02 wire)', async ({ page }) => {
   await page.goto('/')
+  // D-05: inject a fixture file so Optimize all has ≥1 file to process
+  await ingestFixtureFiles(page, 1)
   await page.getByRole('button', { name: 'Optimize all' }).click()
   const pip = page.getByTestId('worker-pip')
   await expect(pip).toHaveAttribute('aria-label', 'Worker status: Running')
@@ -152,6 +156,8 @@ test('Arrow keys move selection (NAV-04)', async ({ page }) => {
 
 test('Enter on Optimize all sets running (NAV-04 + STORE-04)', async ({ page }) => {
   await page.goto('/')
+  // D-05: inject a fixture file so Optimize all has ≥1 file to process
+  await ingestFixtureFiles(page, 1)
   await page.keyboard.press('Meta+k')
   await page.getByRole('searchbox', { name: 'Search commands' }).fill('Optimize')
   // Press Enter to execute first (and only) result
