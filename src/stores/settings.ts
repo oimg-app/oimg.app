@@ -60,14 +60,23 @@ export function togglePlugin(id: string): void {
   ))
 }
 
-// Phase 09 — Plan 01: D-02 "Apply to all" — push global defaults onto every FileEntry.settings
-// Lazy import avoids circular dep: settings.ts → files.ts (CIRCULAR ESM GUARD — see line 2)
-export function applyToAll(): void {
-  import('@/stores/files').then(({ filesAtom }) => {
+// Phase 09 — Plan 01: D-02 "Apply to all" — push global defaults onto every FileEntry.settings.
+// Lazy import avoids circular dep: settings.ts → files.ts (CIRCULAR ESM GUARD — see line 2).
+// WR-01: returns the promise so callers can await the mutation before toasting (the lazy import is
+// async, so a synchronous toast could fire before the store actually changes). The copied settings
+// add `progressive: true` (SettingsState has no progressive field, so a JPEG override was being
+// dropped) and deep-copy `plugins` via initFileSettings-style mapping so entries never alias the
+// shared global plugin objects.
+export function applyToAll(): Promise<void> {
+  return import('@/stores/files').then(({ filesAtom }) => {
     const defaults = settingsAtom.get()
     filesAtom.setKey('entries', filesAtom.get().entries.map(e => ({
       ...e,
-      settings: { ...defaults },
+      settings: {
+        ...defaults,
+        progressive: true,
+        plugins: defaults.plugins.map(p => ({ ...p })),
+      },
     })))
   })
 }

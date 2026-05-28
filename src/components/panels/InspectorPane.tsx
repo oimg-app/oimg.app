@@ -17,8 +17,13 @@ export function InspectorPane() {
   const { entries } = useStore(filesAtom)
 
   function handleApplyToAll() {
-    applyToAll()
-    toast.message('Applying settings to ' + entries.length + ' files…')
+    // WR-01: await the (lazily-imported, async) mutation so the toast reflects what actually
+    // happened rather than firing before the store changes. The caption already warns this
+    // overwrites per-file settings; we report completion once the copy has landed.
+    const count = entries.length
+    void applyToAll().then(() => {
+      toast.success('Applied settings to ' + count + ' files')
+    })
   }
 
   return (
