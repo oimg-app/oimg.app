@@ -52,10 +52,16 @@ function toSourceFormat(type: string): EncodeJob['sourceFormat'] | null {
 }
 
 export function useOptimize() {
-  const { entries } = useStore(filesAtom)
+  // useStore subscription kept for components that useOptimize for reactive UI (e.g. progress).
+  // runOptimize reads filesAtom.get() directly to avoid stale-closure bug: when ingest() calls
+  // runOptimize() synchronously after setKey(), the useStore snapshot hasn't re-rendered yet
+  // and would be empty. Direct .get() always reflects the current atom value. (Rule 1 fix)
+  useStore(filesAtom)
 
   async function runOptimize(): Promise<void> {
     const pool = getPool()
+    // Always read the live atom value — not the stale useStore snapshot
+    const { entries } = filesAtom.get()
 
     // Build jobs with real bytes — read File handles where rawBuffer not yet cached (D-04)
     // Pairs: [entryId, job] — kept together so allSettled can map results back to ids

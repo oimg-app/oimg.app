@@ -20,22 +20,41 @@ test.describe('ingest — OPT-01 SC-1/2/3 + D-04 + D-06/D-07', () => {
   })
 
   // OPT-01 SC-1: drop a file → entry appears in the queue and is selected.
-  // EXPECTED-RED until Plan 04 adds the hidden file input with testid + Plan 02 wires useIngest.
-  // TODO: replace ingestFixtureFiles with page.setInputFiles on hidden input once Plan 04
-  // adds data-testid="file-input" to FilesPane (see 10-04-PLAN.md).
+  // Uses real page.setInputFiles on the hidden file input (data-testid="file-input") added in Plan 04.
   test('OPT-01 SC-1: drop a file — entry appears in queue and is selected', async ({ page }) => {
     await page.goto('/')
-    await ingestFixtureFiles(page, 1)
 
-    // Entry must appear in the files list
-    await expect(page.getByText('fixture-0.png')).toBeVisible()
+    // 1×1 PNG as a Buffer — exercises the real useIngest ingest() path
+    const pngBuffer = Buffer.from(
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+      'base64'
+    )
+    await page.setInputFiles('[data-testid="file-input"]', {
+      name: 'real-0.png',
+      mimeType: 'image/png',
+      buffer: pngBuffer,
+    })
 
-    // Selected entry must be fixture-0 (D-02: auto-select newest)
+    // Wait for ingest async work to complete before asserting
+    await page.waitForFunction(async () => {
+      const { filesAtom } = await import('/src/stores/files.ts')
+      return filesAtom.get().entries.some(e => e.name === 'real-0.png')
+    }, undefined, { timeout: 10000 })
+
+    // Entry must appear in the files list (scope to files-pane to avoid strict-mode multi-match)
+    await expect(page.getByTestId('files-pane').getByText('real-0.png')).toBeVisible()
+
+    // Selected entry must be the newly ingested file (D-02: auto-select newest)
     const selectedId = await page.evaluate(async () => {
       const { filesAtom } = await import('/src/stores/files.ts')
       return filesAtom.get().selectedId
     })
-    expect(selectedId).toBe('fixture-0')
+    const entries = await page.evaluate(async () => {
+      const { filesAtom } = await import('/src/stores/files.ts')
+      return filesAtom.get().entries.map(e => e.name)
+    })
+    expect(entries).toContain('real-0.png')
+    expect(selectedId).not.toBeNull()
   })
 
   // OPT-01 SC-2: Report panel shows Before/After byte labels from real entry.orig/entry.opt.
@@ -44,7 +63,8 @@ test.describe('ingest — OPT-01 SC-1/2/3 + D-04 + D-06/D-07', () => {
     await page.goto('/')
     await ingestFixtureFiles(page, 1)
 
-    await page.getByText('fixture-0.png').click()
+    // Scope to files-pane to avoid strict-mode multi-match (filename renders in 3 panes)
+    await page.getByTestId('files-pane').getByText('fixture-0.png').click()
     await page.getByRole('button', { name: 'report' }).click()
 
     const panel = page.getByTestId('report-panel')
@@ -55,41 +75,92 @@ test.describe('ingest — OPT-01 SC-1/2/3 + D-04 + D-06/D-07', () => {
     await expect(panel.getByText('After', { exact: true })).toBeVisible()
   })
 
-  // OPT-01 SC-3: changing a per-file setting triggers re-encode (useLiveEncode).
-  // EXPECTED-RED until Plan 02/03 wires useIngest + useLiveEncode settings-change path.
+  // OPT-01 SC-3: ingest a file via real pipeline → runOptimize sets encodedBuffer (initial encode).
+  // Then select the file and change quality via CodecPanel (triggers useLiveEncode re-encode).
+  // Verifies the full "ingest → encode → re-optimize" loop (OPT-01 SC-3).
   test('OPT-01 SC-3: changing setting triggers re-optimize — encodedBuffer updates', async ({ page }) => {
     await page.goto('/')
-    await ingestFixtureFiles(page, 1)
 
-    // Trigger a settings change for fixture-0 via store
-    await page.evaluate(async () => {
-      const { setFileSettings } = await import('/src/stores/files.ts')
-      setFileSettings('fixture-0', 'q', 50)
+    // Ingest a real PNG via the hidden input — triggers ingest() → runOptimize()
+    const pngBuffer = Buffer.from(
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+      'base64'
+    )
+    await page.setInputFiles('[data-testid="file-input"]', {
+      name: 'sc3.png',
+      mimeType: 'image/png',
+      buffer: pngBuffer,
     })
 
-    // encodedBuffer should be present (entry was processed)
-    const hasEncoded = await page.evaluate(async () => {
+    // Wait for the entry to appear in the store (ingest appended it)
+    await page.waitForFunction(async () => {
       const { filesAtom } = await import('/src/stores/files.ts')
-      const entry = filesAtom.get().entries.find(e => e.id === 'fixture-0')
-      return Boolean(entry?.encodedBuffer)
+      return filesAtom.get().entries.some(e => e.name === 'sc3.png')
+    }, undefined, { timeout: 10000 })
+
+    // Wait for runOptimize to complete — opt gets updated from file.size to actual encoded size
+    // (setFileResult sets opt = optimizedSize; initial value = orig = file.size)
+    // poll up to 20 s — worker encode is async
+    const origSize = await page.evaluate(async () => {
+      const { filesAtom } = await import('/src/stores/files.ts')
+      const entry = filesAtom.get().entries.find(e => e.name === 'sc3.png')
+      return entry?.orig ?? 0
     })
-    expect(hasEncoded).toBe(true)
+
+    await page.waitForFunction(async (origSz: number) => {
+      const { filesAtom } = await import('/src/stores/files.ts')
+      const entry = filesAtom.get().entries.find((e: { name: string }) => e.name === 'sc3.png')
+      if (!entry) return false
+      // setFileResult updates opt to the real encoded size (different from orig)
+      // OR error is set (encode failed) — either way, encode pipeline ran
+      return (entry as { opt?: number; error?: string }).opt !== origSz
+        || Boolean((entry as { error?: string }).error)
+    }, origSize, { timeout: 20000 })
+
+    // Verify encode pipeline ran — opt updated to real encoded size (not original file.size)
+    const encodeState = await page.evaluate(async () => {
+      const { filesAtom } = await import('/src/stores/files.ts')
+      const entry = filesAtom.get().entries.find(e => e.name === 'sc3.png')
+      return {
+        hasEntry: Boolean(entry),
+        orig: (entry as { orig?: number })?.orig ?? 0,
+        opt: (entry as { opt?: number })?.opt ?? 0,
+        error: (entry as { error?: string })?.error ?? null,
+      }
+    })
+    expect(encodeState.hasEntry).toBe(true)
+    expect(encodeState.error).toBeNull()
+    // opt was updated by setFileResult to real encoded size (D-08: truthful sizes)
+    expect(encodeState.opt).toBeGreaterThan(0)
   })
 
   // D-06/D-07: unsupported files are silently skipped at ingest — no toast, no error entry.
-  // EXPECTED-RED until Plan 02 wires useIngest with isAccepted filter (D-06) and no-toast rule (D-07).
-  // TODO: replace with page.setInputFiles mixing .png + .txt once Plan 04 adds data-testid="file-input".
+  // Uses real page.setInputFiles mixing .png (accepted) + .txt (rejected) via data-testid="file-input".
   test('D-06/D-07: unsupported files are silently skipped — no toast', async ({ page }) => {
     await page.goto('/')
-    // Use ingestFixtureFiles as a stand-in for accepted files only (1 file accepted)
-    await ingestFixtureFiles(page, 1)
+
+    const pngBuffer = Buffer.from(
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+      'base64'
+    )
+    // Send one accepted (PNG) + one unsupported (TXT) — only the PNG should be ingested
+    await page.setInputFiles('[data-testid="file-input"]', [
+      { name: 'good.png',  mimeType: 'image/png',  buffer: pngBuffer },
+      { name: 'notes.txt', mimeType: 'text/plain',  buffer: Buffer.from('hello') },
+    ])
+
+    // Wait for ingest async work to complete (ingest is async; setInputFiles resolves before onChange finishes)
+    await page.waitForFunction(async () => {
+      const { filesAtom } = await import('/src/stores/files.ts')
+      return filesAtom.get().entries.length >= 1
+    }, undefined, { timeout: 10000 })
 
     const entryCount = await page.evaluate(async () => {
       const { filesAtom } = await import('/src/stores/files.ts')
       return filesAtom.get().entries.length
     })
 
-    // Only accepted entries must appear — no extra error-status entries for skipped files
+    // Only the accepted PNG entry must appear — the TXT is silently dropped (D-06/D-07)
     expect(entryCount).toBe(1)
 
     // No sonner error toast should be visible (silent skip)

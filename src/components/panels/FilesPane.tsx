@@ -1,4 +1,6 @@
 // Phase 02 — FILES-01 + FILES-02 + FILES-05: FilesPane full body. Source: 02-02-PLAN.md
+// Phase 10 — Plan 04: dropzone + Add files → useIngest; hidden file-input fallback. Source: 10-04-PLAN.md
+import { useState, useRef } from 'react'
 import { useStore } from '@nanostores/react'
 import { Funnel, Plus } from '@phosphor-icons/react'
 import { $filteredFiles, $totals, setSortBy } from '@/stores'
@@ -7,6 +9,7 @@ import { fmtBytes } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { FileRow } from './files/FileRow'
+import { useIngest } from '@/hooks/useIngest'
 
 const SORT_OPTIONS: { label: string; key: SortKey }[] = [
   { label: 'Queue order', key: 'queue order' },
@@ -16,14 +19,47 @@ const SORT_OPTIONS: { label: string; key: SortKey }[] = [
   { label: 'Format',      key: 'format' },
 ]
 
+// D-06 accept string: all supported ext + MIME combos
+const ACCEPT = '.png,.jpg,.jpeg,.webp,.svg,.avif,image/png,image/jpeg,image/webp,image/svg+xml,image/avif'
+
 export function FilesPane() {
   const files = useStore($filteredFiles)
   const totals = useStore($totals)
+  const { ingest, openPicker } = useIngest()
+  const inputRef = useRef<HTMLInputElement>(null)
+  // STORE-08: dragActive is ephemeral UI state — allowed
+  const [dragActive, setDragActive] = useState(false)
+
+  function handleDragOver(e: React.DragEvent) {
+    e.preventDefault()    // Pitfall 3: required — enables drop
+    e.stopPropagation()
+    setDragActive(true)
+  }
+
+  function handleDragLeave(e: React.DragEvent) {
+    // Pitfall 1: only clear when cursor leaves root (not a child element)
+    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+      setDragActive(false)
+    }
+  }
+
+  function handleDrop(e: React.DragEvent) {
+    e.preventDefault()
+    e.stopPropagation()
+    setDragActive(false)
+    ingest(Array.from(e.dataTransfer.files))
+  }
 
   return (
     <div
       data-testid="files-pane"
-      className="h-full flex flex-col border-r border-[var(--line)] bg-[var(--bg-1)]"
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+      className={cn(
+        "h-full flex flex-col border-r border-[var(--line)] bg-[var(--bg-1)]",
+        dragActive && "border-[var(--color-accent)] bg-[var(--bg-2)]"
+      )}
     >
       {/* FILES-01: Pane Header */}
       <div className="h-8 flex items-center justify-between px-3 border-b border-[var(--line)] shrink-0">
@@ -57,10 +93,20 @@ export function FilesPane() {
           <button
             className="w-[22px] h-[22px] grid place-items-center rounded text-[var(--fg-2)] hover:bg-[var(--bg-3)] hover:text-[var(--fg-0)]"
             aria-label="Add files"
-            onClick={() => { /* @TODO Phase 3 — pushToast('Add files') */ }}
+            onClick={() => openPicker(() => inputRef.current?.click())}
           >
             <Plus size={13} />
           </button>
+          {/* Hidden file input — picker fallback target; data-testid used by ingest.spec */}
+          <input
+            ref={inputRef}
+            data-testid="file-input"
+            type="file"
+            multiple
+            accept={ACCEPT}
+            className="hidden"
+            onChange={(e) => e.target.files && ingest(Array.from(e.target.files))}
+          />
         </div>
       </div>
 
