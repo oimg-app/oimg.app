@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { useStore } from '@nanostores/react'
-import { filesAtom, $selectedFile, setFileSettings } from '@/stores/files'
+import { $selectedFile, setFileSettings } from '@/stores/files'
 import {
   settingsAtom,
   CODECS,

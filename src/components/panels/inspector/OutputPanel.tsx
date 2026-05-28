@@ -1,5 +1,5 @@
 // Phase 06, Plan 01 — INSP-07 OutputPanel: snippet sections + copy buttons
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useStore } from '@nanostores/react'
 import { Copy } from '@phosphor-icons/react'
 import { $selectedFile } from '@/stores/files'
@@ -7,6 +7,8 @@ import { pushToast } from '@/stores/runtime'
 import { Button } from '@/components/ui/button'
 import { Section } from './Section'
 import { buildBase64Snippet, buildUrlEncodedSnippet, buildPictureSnippet } from '@/lib/snippets'
+import type { FileEntry } from '@/lib/stub-data'
+import {cn} from "@/lib/utils.ts";
 
 const SECTIONS = [
   {
@@ -28,6 +30,52 @@ const SECTIONS = [
     builder: buildPictureSnippet,
   },
 ] as const
+
+type SnippetProps = {
+  id: string
+  title: string
+  ariaLabel: string
+  file: FileEntry
+  builder: (file: FileEntry) => Promise<string>
+  onCopy: (id: string, text: string) => void
+  isCopied?: boolean
+}
+
+function Snippet({file, id, title, ariaLabel, builder, onCopy, isCopied}: SnippetProps) {
+  const [text, setText] = useState<string>('')
+
+  useEffect(() => {
+    builder(file).then(setText)
+  }, [file])
+
+  if (!text) {
+    return null
+  }
+
+  return (
+      <Section key={id} title={title}>
+            <pre
+                className={cn(
+                    'px-3 py-2 mb-2',
+                    'text-[var(--color-fg-1)] bg-[var(--color-bg-2)]',
+                    'max-h-[300px] overflow-y-auto',
+                    'font-mono text-[12px] rounded-md overflow-x-auto leading-[1.6] whitespace-pre-wrap break-all '
+                )}>
+              {text}
+            </pre>
+        <Button
+            variant="ghost"
+            size="sm"
+            aria-label={ariaLabel}
+            onClick={() => onCopy(id, text)}
+            className="gap-1.5 text-[var(--color-fg-2)] hover:text-[var(--color-accent)]"
+        >
+          <Copy/>
+          {isCopied ? 'Copied!' : 'Copy snippet'}
+        </Button>
+      </Section>
+  )
+}
 
 export function OutputPanel() {
   const file = useStore($selectedFile)
@@ -63,24 +111,19 @@ export function OutputPanel() {
   return (
     <div data-testid="output-panel">
       {SECTIONS.map(({ id, title, ariaLabel, builder }) => {
-        const snippet = builder(file)
         const isCopied = copied === id
+
         return (
-          <Section key={id} title={title}>
-            <pre className="font-mono text-[12px] bg-[var(--color-bg-2)] rounded-md px-3 py-2 overflow-x-auto leading-[1.6] text-[var(--color-fg-1)] whitespace-pre-wrap break-all mb-2">
-              {snippet}
-            </pre>
-            <Button
-              variant="ghost"
-              size="sm"
-              aria-label={ariaLabel}
-              onClick={() => handleCopy(id, snippet)}
-              className="gap-1.5 text-[var(--color-fg-2)] hover:text-[var(--color-accent)]"
-            >
-              <Copy />
-              {isCopied ? 'Copied!' : 'Copy snippet'}
-            </Button>
-          </Section>
+            <Snippet
+                key={id}
+                id={id}
+                title={title}
+                ariaLabel={ariaLabel}
+                file={file}
+                builder={builder}
+                onCopy={handleCopy}
+                isCopied={isCopied}
+            />
         )
       })}
     </div>

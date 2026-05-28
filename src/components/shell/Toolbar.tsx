@@ -184,7 +184,7 @@ export function Toolbar() {
           placeholder="Filter files…"
           value={filterQuery}
           onChange={(e) => setFilter(e.target.value)}
-          className="flex-1 bg-transparent text-xs text-[var(--color-fg-0)] placeholder:text-[var(--color-fg-2)] outline-none"
+          className="flex-1 bg-transparent text-xs text-[var(--color-fg-0)] placeholder:text-[var(--color-fg-2)] outline-none focus-visible:outline-none"
         />
       </div>
 

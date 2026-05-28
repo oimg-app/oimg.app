@@ -10,7 +10,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from '@/components/ui/dropdown-menu'
-import { Eye, Check, CaretDown } from '@phosphor-icons/react'
+import { EyeIcon, CheckIcon, CaretDownIcon } from '@phosphor-icons/react'
 
 const FILE_TAG =
   'font-mono text-[11px] font-semibold bg-[var(--color-bg-2)] text-[var(--color-fg-1)] px-1.5 py-0.5 rounded-[3px] whitespace-nowrap'
@@ -35,7 +35,7 @@ export function CenterHeader() {
             </span>
             {/* type→codec from inspector */}
             <span className={FILE_TAG}>
-              {selectedFile.type.toUpperCase()}→{codec.toUpperCase()}
+              {selectedFile.type.toUpperCase()}→{selectedFile.settings?.codec.toUpperCase() || codec.toUpperCase()}
             </span>
             {/* dim — extended with resize target when resizeOn */}
             <span className={FILE_TAG}>
@@ -43,7 +43,10 @@ export function CenterHeader() {
             </span>
             {/* quality from inspector slider — hidden for SVG */}
             {codec !== 'SVG' && (
-              <span className={FILE_TAG}>q{q}</span>
+                <>
+                  <span className={FILE_TAG}>q{selectedFile?.settings?.q || q}</span>
+                  <span className={FILE_TAG}>e{selectedFile?.settings?.method}</span>
+                </>
             )}
           </>
         )}
@@ -53,7 +56,7 @@ export function CenterHeader() {
       <div className="flex items-center gap-2 shrink-0">
         {selectedFile && (
           <span className="font-mono text-[11px] font-semibold bg-[var(--color-accent-dim)] text-[var(--color-accent)] px-2 py-0.5 rounded-full flex items-center gap-1">
-            <Check size={10} />
+            <CheckIcon size={10} />
             {' Optimized'}
           </span>
         )}
@@ -65,9 +68,9 @@ export function CenterHeader() {
               type="button"
               className="flex items-center gap-1 h-6 px-2 font-mono text-[11px] text-[var(--color-fg-1)] hover:text-[var(--color-fg-0)] hover:bg-[var(--color-bg-2)] rounded transition-colors"
             >
-              <Eye size={12} />
+              <EyeIcon size={12} />
               {zoom === 'fit' ? 'Fit' : `${zoom}%`}
-              <CaretDown size={10} />
+              <CaretDownIcon size={10} />
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent side="bottom" align="end" className="w-32 min-w-0 p-1 bg-[var(--color-bg-1)] text-[var(--color-fg-1)] border border-[var(--color-line)] ring-0 shadow-md">
@@ -78,7 +81,7 @@ export function CenterHeader() {
                 onSelect={() => setZoom(opt)}
               >
                 <span>{typeof opt === 'number' ? `${opt}%` : 'Fit'}</span>
-                {zoom === opt && <Check size={10} />}
+                {zoom === opt && <CheckIcon size={10} />}
               </DropdownMenuItem>
             ))}
           </DropdownMenuContent>
