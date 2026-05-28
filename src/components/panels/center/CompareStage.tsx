@@ -194,6 +194,9 @@ export function CompareStage() {
             className="absolute inset-0 w-full h-full object-contain"
             style={{ clipPath: 'inset(0 calc(100% - var(--split)) 0 0)' }}
             draggable={false}
+            // WR-06: a format-mismatched/undecodable buffer would render a broken image; fall back
+            // to the placeholder div by clearing the src so the (origSrc ? img : div) branch flips.
+            onError={() => setOrigSrc(null)}
           />
         ) : (
           <div
@@ -210,6 +213,9 @@ export function CompareStage() {
             className="absolute inset-0 w-full h-full object-contain"
             style={{ clipPath: 'inset(0 0 0 var(--split))' }}
             draggable={false}
+            // WR-06: e.g. an AVIF fallback returning original bytes of another format would render
+            // broken; clear the src to drop back to the placeholder div rather than a broken image.
+            onError={() => setEncodedSrc(null)}
           />
         ) : (
           <div
