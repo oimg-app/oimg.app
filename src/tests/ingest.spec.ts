@@ -55,6 +55,15 @@ test.describe('ingest — OPT-01 SC-1/2/3 + D-04 + D-06/D-07', () => {
     })
     expect(entries).toContain('real-0.png')
     expect(selectedId).not.toBeNull()
+
+    // WR-01 regression: after the real worker encode completes, status must transition
+    // 'processing' → 'done'. Previously setFileResult never wrote status, leaving the
+    // FileRow dot stuck pulsing — masked by the fixture helper which injects status:'done'.
+    await page.waitForFunction(async () => {
+      const { filesAtom } = await import('/src/stores/files.ts')
+      const entry = filesAtom.get().entries.find(e => e.name === 'real-0.png')
+      return entry?.status === 'done'
+    }, undefined, { timeout: 20000 })
   })
 
   // OPT-01 SC-2: Report panel shows Before/After byte labels from real entry.orig/entry.opt.

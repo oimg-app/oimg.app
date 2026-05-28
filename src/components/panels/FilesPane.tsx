@@ -110,8 +110,21 @@ export function FilesPane() {
         </div>
       </div>
 
-      {/* FILES-02: Dropzone — always visible */}
-      <div className="m-3 p-[14px] border border-dashed border-[var(--line-strong)] rounded-[6px] text-center shrink-0">
+      {/* FILES-02: Dropzone — always visible. WR-01: "click to browse" is now an operable,
+          keyboard-focusable affordance (WCAG-AA) that opens the picker with the input fallback. */}
+      <div
+        role="button"
+        tabIndex={0}
+        aria-label="Drop images to optimize, or click to browse"
+        onClick={() => openPicker(() => inputRef.current?.click())}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault()
+            openPicker(() => inputRef.current?.click())
+          }
+        }}
+        className="m-3 p-[14px] border border-dashed border-[var(--line-strong)] rounded-[6px] text-center shrink-0 cursor-pointer hover:border-[var(--color-accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
+      >
         <span className="text-[13px] font-semibold text-[var(--fg-0)] block mb-[3px]">Drop images to optimize</span>
         <span className="text-[12px] text-[var(--fg-2)] block">or click to browse · max 200 files</span>
         <div className="font-mono text-[10px] tracking-[0.05em] text-[var(--fg-3)] mt-[6px]">SVG · PNG · JPEG · WEBP · AVIF · JXL</div>

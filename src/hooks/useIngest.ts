@@ -18,6 +18,10 @@ const ACCEPTED_MIMES = new Set([
   'image/avif',
 ])
 
+// accept="" attribute value for synthesized/native file inputs — single source derived
+// from the gate sets above (ext globs + MIME types).
+const ACCEPT_ATTR = [...[...ACCEPTED_EXTS].map((e) => `.${e}`), ...ACCEPTED_MIMES].join(',')
+
 function getExt(name: string): string {
   return name.split('.').pop()?.toLowerCase() ?? ''
 }
@@ -140,9 +144,29 @@ export function useIngest() {
         // Pitfall 4: swallow AbortError (user cancelled picker) — re-throw everything else
         if ((err as DOMException).name !== 'AbortError') throw err
       }
+    } else if (fallbackTrigger) {
+      // A component supplied its own hidden <input> (e.g. FilesPane's data-testid="file-input",
+      // which the e2e setInputFiles also targets) — use it.
+      fallbackTrigger()
     } else {
-      // Fallback: component-owned hidden <input> (Plan 04 wires this)
-      fallbackTrigger?.()
+      // WR-05: no showOpenFilePicker (Firefox / some Safari) AND no caller-supplied input —
+      // synthesize a transient <input type="file"> so every entry point (e.g. Toolbar) works
+      // cross-browser instead of silently no-opping.
+      const input = document.createElement('input')
+      input.type = 'file'
+      input.multiple = true
+      input.accept = ACCEPT_ATTR
+      input.style.display = 'none'
+      input.addEventListener(
+        'change',
+        () => {
+          if (input.files && input.files.length) void ingest(Array.from(input.files))
+          input.remove()
+        },
+        { once: true },
+      )
+      document.body.appendChild(input)
+      input.click()
     }
   }
 

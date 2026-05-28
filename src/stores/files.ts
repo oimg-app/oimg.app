@@ -117,14 +117,17 @@ export function setFileSettings<K extends keyof FileSettings>(
   }))
 }
 
-// D-13: record per-file error (or clear it)
+// D-13: record per-file error (or clear it). WR-01: flip status to 'error' when an error is
+// recorded so the FileRow badge reflects it; clearing an error leaves status untouched.
 export function setFileError(id: string, error: string | undefined): void {
-  updateEntry(id, () => ({ error }))
+  updateEntry(id, () => (error ? { error, status: 'error' as const } : { error: undefined }))
 }
 
-// Store encoded result + clear error on success
+// Store encoded result + clear error on success. WR-01: mark 'done' so the processing
+// status dot/shimmer clears once the worker returns real bytes (the test fixtures inject
+// status:'done' directly, which previously masked the missing transition).
 export function setFileResult(id: string, encodedBuffer: ArrayBuffer, optimizedSize: number): void {
-  updateEntry(id, () => ({ encodedBuffer, opt: optimizedSize, error: undefined }))
+  updateEntry(id, () => ({ encodedBuffer, opt: optimizedSize, error: undefined, status: 'done' as const }))
 }
 
 // Cache raw file bytes for live re-encode (D-05)
