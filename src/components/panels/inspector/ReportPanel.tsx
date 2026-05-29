@@ -6,11 +6,11 @@ import { useStore } from '@nanostores/react'
 import { Section } from './Section'
 import { Separator } from '@/components/ui/separator'
 import {
-  Tooltip,
+  Tooltip2,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from '@/components/ui/tooltip'
+} from '@/components/ui/tooltip2'
 import { filesAtom } from '@/stores/files'
 import { fmtBytes, fmtPct } from '@/lib/format'
 
@@ -121,7 +121,7 @@ export function ReportPanel() {
                 savingsPct < 30 ? 'var(--color-warn)' : 'var(--color-accent)'
 
               return (
-                <Tooltip key={entry.id}>
+                <Tooltip2 key={entry.id}>
                   <TooltipTrigger asChild>
                     <div
                       data-testid="report-bar"
@@ -132,7 +132,7 @@ export function ReportPanel() {
                   <TooltipContent>
                     {entry.name} · {fmtPct(entry.orig, entry.opt)}
                   </TooltipContent>
-                </Tooltip>
+                </Tooltip2>
               )
             })}
           </div>
