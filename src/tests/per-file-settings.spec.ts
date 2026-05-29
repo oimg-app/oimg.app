@@ -14,7 +14,7 @@ test.describe('per-file settings — D-01/D-02/D-03', () => {
 
     // Use store actions directly via page.evaluate to test isolation
     const result = await page.evaluate(async () => {
-      const { filesAtom, setFileSettings, setFileError } = await import('/src/stores/files.ts')
+      const { filesAtom, setFileSettings } = await import('/src/stores/files.ts')
       const { initFileSettings } = await import('/src/lib/stub-data.ts')
       const { settingsAtom } = await import('/src/stores/settings.ts')
 

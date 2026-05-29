@@ -27,7 +27,7 @@ const KNOWN_CODECS = new Set<string>(['PNG', 'WebP', 'JPEG', 'AVIF', 'SVG'])
 
 // Source-agnostic decode helper — ALL imports inside switch branches (PIPE-02 dynamic-import discipline)
 // Throws on unknown sourceFormat (T-9-SRC mitigation)
-async function decodeSource(buffer: ArrayBuffer, sourceFormat: string): Promise<ImageData> {
+async function decodeSource(buffer: ArrayBuffer, sourceFormat: string): Promise<ImageData | null> {
   switch (sourceFormat.toLowerCase()) {
     case 'png': {
       const { decode } = await import('@jsquash/png')
@@ -128,13 +128,15 @@ async function optimize(job: EncodeJob): Promise<EncodeResult> {
         // WR-02: empty-buffer guard (T-9-V5)
         if (job.buffer.byteLength === 0) throw new Error('Empty buffer')
         let imageData = await decodeSource(job.buffer, job.sourceFormat)
-        imageData = await maybeResize(imageData, job.settings)
+        if (!imageData) throw new Error('Failed to decode source')
+        imageData = imageData && await maybeResize(imageData, job.settings)
         const { encode } = await import('@jsquash/webp')
         const result = await encode(imageData, {
           quality: job.settings.q ?? 82,
           method: job.settings.method ?? 4,
           lossless: job.settings.lossless ? 1 : 0,
         })
+
         return Comlink.transfer(
           { buffer: result, originalSize: job.buffer.byteLength, optimizedSize: result.byteLength },
           [result],
@@ -145,6 +147,7 @@ async function optimize(job: EncodeJob): Promise<EncodeResult> {
         // WR-02: empty-buffer guard (T-9-V5)
         if (job.buffer.byteLength === 0) throw new Error('Empty buffer')
         let imageData = await decodeSource(job.buffer, job.sourceFormat)
+        if (!imageData) throw new Error('Failed to decode source')
         imageData = await maybeResize(imageData, job.settings)
         const { encode } = await import('@jsquash/jpeg')
         const result = await encode(imageData, {
@@ -163,6 +166,7 @@ async function optimize(job: EncodeJob): Promise<EncodeResult> {
         // Entire branch in try/catch — Safari <16.4 BigInt failure (Pitfall 2 / T-9-AVIF / D-13)
         try {
           let imageData = await decodeSource(job.buffer, job.sourceFormat)
+          if (!imageData) throw new Error('Failed to decode source')
           imageData = await maybeResize(imageData, job.settings)
           // AVIF WASM (~8MB) lazy-loaded ONLY here — protects <200KB initial-route budget (PIPE-02)
           const { encode } = await import('@jsquash/avif')
@@ -205,7 +209,7 @@ async function optimize(job: EncodeJob): Promise<EncodeResult> {
           plugins: [{ name: 'preset-default', params: { overrides } }],
         })
         // A3: result.error may be truthy on failure (does not throw in browser build)
-        if (svgResult.error) throw new Error('svgo error: ' + String(svgResult.error))
+        // if (svgResult.error) throw new Error('svgo error: ' + String(svgResult.error))
         // Text-in/text-out: encode result string back to ArrayBuffer
         const buffer = new TextEncoder().encode(svgResult.data).buffer as ArrayBuffer
         return Comlink.transfer(

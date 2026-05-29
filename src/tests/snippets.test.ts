@@ -53,31 +53,31 @@ const jpgFixture: FileEntry = {
     const { buildBase64Snippet, buildUrlEncodedSnippet, buildPictureSnippet } = await import('../lib/snippets.ts')
 
     // buildBase64Snippet tests
-    const base64Webp = buildBase64Snippet(webpFixture)
+    const base64Webp = await buildBase64Snippet(webpFixture)
     assert('base64 webp contains data:image/webp;base64,', base64Webp.includes('data:image/webp;base64,'))
     assert('base64 webp contains alt with filename', base64Webp.includes(`alt="${webpFixture.name}"`))
     assert('base64 webp contains width=2400', base64Webp.includes('width="2400"'))
     assert('base64 webp contains height=1600', base64Webp.includes('height="1600"'))
     assert('base64 webp is an img tag', base64Webp.startsWith('<img '))
 
-    const base64Svg = buildBase64Snippet(svgFixture)
+    const base64Svg = await buildBase64Snippet(svgFixture)
     assert('base64 svg contains image/svg+xml', base64Svg.includes('data:image/svg+xml;base64,'))
 
-    const base64Jpg = buildBase64Snippet(jpgFixture)
+    const base64Jpg = await buildBase64Snippet(jpgFixture)
     assert('base64 avif target contains image/avif', base64Jpg.includes('data:image/avif;base64,'))
 
     // buildUrlEncodedSnippet tests
-    const urlWebp = buildUrlEncodedSnippet(webpFixture)
+    const urlWebp = await buildUrlEncodedSnippet(webpFixture)
     assert('url-encoded contains background-image: url(', urlWebp.includes('background-image: url('))
     assert('url-encoded contains % escape character', urlWebp.includes('%'))
     assert('url-encoded contains webp mime', urlWebp.includes('image/webp'))
     assert('url-encoded is a CSS rule', urlWebp.includes('{') && urlWebp.includes('}'))
 
-    const urlSvg = buildUrlEncodedSnippet(svgFixture)
+    const urlSvg = await buildUrlEncodedSnippet(svgFixture)
     assert('url-encoded svg contains svg+xml', urlSvg.includes('image/svg+xml'))
 
     // buildPictureSnippet tests
-    const picWebp = buildPictureSnippet(webpFixture)
+    const picWebp = await buildPictureSnippet(webpFixture)
     assert('picture contains <source', picWebp.includes('<source'))
     assert('picture contains <img', picWebp.includes('<img'))
     assert('picture contains width=', picWebp.includes('width='))
@@ -87,7 +87,7 @@ const jpgFixture: FileEntry = {
     assert('picture source has webp srcset', picWebp.includes('.webp'))
     assert('picture fallback img has original type', picWebp.includes(`.${webpFixture.type}`))
 
-    const picSvg = buildPictureSnippet(svgFixture)
+    const picSvg = await buildPictureSnippet(svgFixture)
     assert('picture svg source has svg srcset', picSvg.includes('.svg'))
 
   } catch (err) {

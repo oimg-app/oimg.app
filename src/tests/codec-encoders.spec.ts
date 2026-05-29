@@ -8,23 +8,16 @@ import { test, expect } from '@playwright/test'
 const TINY_PNG_B64 =
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
 
-// Smallest valid 1×1 JPEG (baseline, 631 bytes)
-const TINY_JPEG_B64 =
-  '/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAABAAEDASIAAhEBAxEB/8QAFgABAQEAAAAAAAAAAAAAAAAABgUEA/8QAHxAAAQQCAwEAAAAAAAAAAAAAAQIDBAURITFB/8QAFAEBAAAAAAAAAAAAAAAAAAAAAP/EABQRAQAAAAAAAAAAAAAAAAAAAAD/2gAMAwEAAhEDEQA/AKtqtqmS5bEVqxJFWjduYjbud3OT6lKUpSlKUpSv/9k='
-
-// Smallest valid 1×1 WebP (lossy, 26 bytes)
-const TINY_WEBP_B64 =
-  'UklGRiYAAABXRUJQVlA4IBoAAADQAQCdASoBAAEAAUAmJbACdAEO/g3OAAAA'
+// // Smallest valid 1×1 JPEG (baseline, 631 bytes)
+// const TINY_JPEG_B64 =
+//   '/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAABAAEDASIAAhEBAxEB/8QAFgABAQEAAAAAAAAAAAAAAAAABgUEA/8QAHxAAAQQCAwEAAAAAAAAAAAAAAQIDBAURITFB/8QAFAEBAAAAAAAAAAAAAAAAAAAAAP/EABQRAQAAAAAAAAAAAAAAAAAAAAD/2gAMAwEAAhEDEQA/AKtqtqmS5bEVqxJFWjduYjbud3OT6lKUpSlKUpSv/9k='
+//
+// // Smallest valid 1×1 WebP (lossy, 26 bytes)
+// const TINY_WEBP_B64 =
+//   'UklGRiYAAABXRUJQVlA4IBoAAADQAQCdASoBAAEAAUAmJbACdAEO/g3OAAAA'
 
 // Minimal SVG string for SVG encode tests
 const TINY_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"><rect width="1" height="1" fill="red"/></svg>'
-
-function b64ToArrayBuffer(b64: string): ArrayBuffer {
-  const binary = atob(b64)
-  const bytes = new Uint8Array(binary.length)
-  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i)
-  return bytes.buffer
-}
 
 test.describe('Codec Encoders — ENC-01..06', () => {
   test('PNG via OxiPNG produces output with byteLength > 0 (ENC-01)', async ({ page }) => {
@@ -37,13 +30,13 @@ test.describe('Codec Encoders — ENC-01..06', () => {
       for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i)
       const buffer = bytes.buffer
 
-      const { getPool } = await import('/src/lib/worker-pool.ts')
+      const { getPool } = await import('../lib/worker-pool.ts')
       const pool = getPool()
       const job = {
         codec: 'PNG' as const,
         sourceFormat: 'png' as const,
         buffer,
-        settings: { codec: 'PNG', q: 80, method: 2, lossless: false, resizeOn: false,
+        settings: { codec: 'PNG' as const, q: 80, method: 2, lossless: false, resizeOn: false,
           w: '100', h: '100', alg: 'lanczos3', fit: 'contain', stripMeta: true,
           keepIcc: false, aggressive: false, plugins: [] },
       }
@@ -65,13 +58,13 @@ test.describe('Codec Encoders — ENC-01..06', () => {
       for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i)
       const buffer = bytes.buffer
 
-      const { getPool } = await import('/src/lib/worker-pool.ts')
+      const { getPool } = await import('../lib/worker-pool.ts')
       const pool = getPool()
       const job = {
         codec: 'WebP' as const,
         sourceFormat: 'png' as const,
         buffer,
-        settings: { codec: 'WebP', q: 80, method: 4, lossless: false, resizeOn: false,
+        settings: { codec: 'WebP' as const, q: 80, method: 4, lossless: false, resizeOn: false,
           w: '100', h: '100', alg: 'lanczos3', fit: 'contain', stripMeta: true,
           keepIcc: false, aggressive: false, plugins: [] },
       }
@@ -93,13 +86,13 @@ test.describe('Codec Encoders — ENC-01..06', () => {
       for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i)
       const buffer = bytes.buffer
 
-      const { getPool } = await import('/src/lib/worker-pool.ts')
+      const { getPool } = await import('../lib/worker-pool.ts')
       const pool = getPool()
       const job = {
         codec: 'JPEG' as const,
         sourceFormat: 'png' as const,
         buffer,
-        settings: { codec: 'JPEG', q: 80, method: 4, lossless: false, resizeOn: false,
+        settings: { codec: 'JPEG' as const, q: 80, method: 4, lossless: false, resizeOn: false,
           w: '100', h: '100', alg: 'lanczos3', fit: 'contain', stripMeta: true,
           keepIcc: false, aggressive: false, plugins: [], progressive: true },
       }
@@ -119,13 +112,13 @@ test.describe('Codec Encoders — ENC-01..06', () => {
       for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i)
       const buffer = bytes.buffer
 
-      const { getPool } = await import('/src/lib/worker-pool.ts')
+      const { getPool } = await import('../lib/worker-pool.ts')
       const pool = getPool()
       const job = {
         codec: 'AVIF' as const,
         sourceFormat: 'png' as const,
         buffer,
-        settings: { codec: 'AVIF', q: 60, method: 4, lossless: false, resizeOn: false,
+        settings: { codec: 'AVIF' as const, q: 60, method: 4, lossless: false, resizeOn: false,
           w: '100', h: '100', alg: 'lanczos3', fit: 'contain', stripMeta: true,
           keepIcc: false, aggressive: false, plugins: [] },
       }
@@ -143,13 +136,13 @@ test.describe('Codec Encoders — ENC-01..06', () => {
       const encoder = new TextEncoder()
       const buffer = encoder.encode(svgStr).buffer
 
-      const { getPool } = await import('/src/lib/worker-pool.ts')
+      const { getPool } = await import('../lib/worker-pool.ts')
       const pool = getPool()
       const job = {
         codec: 'SVG' as const,
         sourceFormat: 'svg' as const,
         buffer,
-        settings: { codec: 'SVG', q: 80, method: 4, lossless: false, resizeOn: false,
+        settings: { codec: 'SVG' as const, q: 80, method: 4, lossless: false, resizeOn: false,
           w: '100', h: '100', alg: 'lanczos3', fit: 'contain', stripMeta: true,
           keepIcc: false, aggressive: false, plugins: [] },
       }
@@ -175,7 +168,7 @@ test.describe('Codec Encoders — ENC-01..06', () => {
       const bytes = new Uint8Array(binary.length)
       for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i)
 
-      const { getPool } = await import('/src/lib/worker-pool.ts')
+      const { getPool } = await import('../lib/worker-pool.ts')
       const pool = getPool()
 
       const baseSettings = { codec: 'WebP', method: 4, lossless: false, resizeOn: false,
@@ -207,13 +200,13 @@ test.describe('Codec Encoders — ENC-01..06', () => {
     await page.goto('/')
 
     const rejected = await page.evaluate(async () => {
-      const { getPool } = await import('/src/lib/worker-pool.ts')
+      const { getPool } = await import('../lib/worker-pool.ts')
       const pool = getPool()
       const job = {
         codec: 'WebP' as const,
         sourceFormat: 'png' as const,
         buffer: new ArrayBuffer(0),
-        settings: { codec: 'WebP', q: 80, method: 4, lossless: false, resizeOn: false,
+        settings: { codec: 'WebP' as const, q: 80, method: 4, lossless: false, resizeOn: false,
           w: '100', h: '100', alg: 'lanczos3', fit: 'contain', stripMeta: true,
           keepIcc: false, aggressive: false, plugins: [] },
       }
