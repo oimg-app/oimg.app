@@ -28,7 +28,7 @@ test('Clicking Optimize all flips worker pip to Running (NAV-02 wire)', async ({
   // aria-label is a pure projection of runtimeAtom.running — subscribe and record
   // whether it ever flipped true.
   await page.evaluate(async () => {
-    const { runtimeAtom } = await import('/src/stores/runtime.ts')
+    const { runtimeAtom } = await import('../stores/runtime.ts')
     const w = window as unknown as { __sawRunning?: boolean }
     w.__sawRunning = runtimeAtom.get().running
     runtimeAtom.subscribe((s) => { if (s.running) w.__sawRunning = true })

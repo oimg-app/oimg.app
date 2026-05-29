@@ -14,9 +14,9 @@ test.describe('per-file settings — D-01/D-02/D-03', () => {
 
     // Use store actions directly via page.evaluate to test isolation
     const result = await page.evaluate(async () => {
-      const { filesAtom, setFileSettings } = await import('/src/stores/files.ts')
-      const { initFileSettings } = await import('/src/lib/stub-data.ts')
-      const { settingsAtom } = await import('/src/stores/settings.ts')
+      const { filesAtom, setFileSettings } = await import('../stores/files.ts')
+      const { initFileSettings } = await import('../lib/stub-data.ts')
+      const { settingsAtom } = await import('../stores/settings.ts')
 
       // Initialize two entries with identical default settings
       const defaults = settingsAtom.get()
@@ -28,7 +28,7 @@ test.describe('per-file settings — D-01/D-02/D-03', () => {
       const id2 = entries[1].id
 
       // Give both entries their own settings copy
-      await import('/src/stores/files.ts').then(({ filesAtom: fa }) => {
+      await import('../stores/files.ts').then(({ filesAtom: fa }) => {
         fa.setKey('entries', fa.get().entries.map(e =>
           (e.id === id1 || e.id === id2)
             ? { ...e, settings: initFileSettings({ ...defaults, codec: 'WebP' as const }) }
@@ -62,8 +62,8 @@ test.describe('per-file settings — D-01/D-02/D-03', () => {
     await ingestFixtureFiles(page, 1)
 
     const result = await page.evaluate(async () => {
-      const { filesAtom } = await import('/src/stores/files.ts')
-      const { settingsAtom, applyToAll } = await import('/src/stores/settings.ts')
+      const { filesAtom } = await import('../stores/files.ts')
+      const { settingsAtom, applyToAll } = await import('../stores/settings.ts')
 
       // Change global defaults to a distinctive quality
       settingsAtom.setKey('q', 37)
@@ -95,9 +95,9 @@ test.describe('per-file settings — D-01/D-02/D-03', () => {
 
     // Set up two files with different settings via the store, then observe the inspector UI
     await page.evaluate(async () => {
-      const { filesAtom, setFileSettings } = await import('/src/stores/files.ts')
-      const { initFileSettings } = await import('/src/lib/stub-data.ts')
-      const { settingsAtom } = await import('/src/stores/settings.ts')
+      const { filesAtom, setFileSettings } = await import('../stores/files.ts')
+      const { initFileSettings } = await import('../lib/stub-data.ts')
+      const { settingsAtom } = await import('../stores/settings.ts')
 
       const entries = filesAtom.get().entries
       if (entries.length < 2) return
@@ -124,7 +124,7 @@ test.describe('per-file settings — D-01/D-02/D-03', () => {
 
     // Verify via store that selected file has the correct per-file settings
     const selectedQ = await page.evaluate(async () => {
-      const { filesAtom } = await import('/src/stores/files.ts')
+      const { filesAtom } = await import('../stores/files.ts')
       const state = filesAtom.get()
       const selected = state.entries.find(e => e.id === state.selectedId)
       return selected?.settings?.q ?? null

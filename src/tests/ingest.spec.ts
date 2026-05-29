@@ -13,7 +13,7 @@ test.describe('ingest — OPT-01 SC-1/2/3 + D-04 + D-06/D-07', () => {
   test('D-04: app starts empty — no seeded demo files', async ({ page }) => {
     await page.goto('/')
     const count = await page.evaluate(async () => {
-      const { filesAtom } = await import('/src/stores/files.ts')
+      const { filesAtom } = await import('../stores/files.ts')
       return filesAtom.get().entries.length
     })
     expect(count).toBe(0)
@@ -37,7 +37,7 @@ test.describe('ingest — OPT-01 SC-1/2/3 + D-04 + D-06/D-07', () => {
 
     // Wait for ingest async work to complete before asserting
     await page.waitForFunction(async () => {
-      const { filesAtom } = await import('/src/stores/files.ts')
+      const { filesAtom } = await import('../stores/files.ts')
       return filesAtom.get().entries.some(e => e.name === 'real-0.png')
     }, undefined, { timeout: 10000 })
 
@@ -46,11 +46,11 @@ test.describe('ingest — OPT-01 SC-1/2/3 + D-04 + D-06/D-07', () => {
 
     // Selected entry must be the newly ingested file (D-02: auto-select newest)
     const selectedId = await page.evaluate(async () => {
-      const { filesAtom } = await import('/src/stores/files.ts')
+      const { filesAtom } = await import('../stores/files.ts')
       return filesAtom.get().selectedId
     })
     const entries = await page.evaluate(async () => {
-      const { filesAtom } = await import('/src/stores/files.ts')
+      const { filesAtom } = await import('../stores/files.ts')
       return filesAtom.get().entries.map(e => e.name)
     })
     expect(entries).toContain('real-0.png')
@@ -60,7 +60,7 @@ test.describe('ingest — OPT-01 SC-1/2/3 + D-04 + D-06/D-07', () => {
     // 'processing' → 'done'. Previously setFileResult never wrote status, leaving the
     // FileRow dot stuck pulsing — masked by the fixture helper which injects status:'done'.
     await page.waitForFunction(async () => {
-      const { filesAtom } = await import('/src/stores/files.ts')
+      const { filesAtom } = await import('../stores/files.ts')
       const entry = filesAtom.get().entries.find(e => e.name === 'real-0.png')
       return entry?.status === 'done'
     }, undefined, { timeout: 20000 })
@@ -103,7 +103,7 @@ test.describe('ingest — OPT-01 SC-1/2/3 + D-04 + D-06/D-07', () => {
 
     // Wait for the entry to appear in the store (ingest appended it)
     await page.waitForFunction(async () => {
-      const { filesAtom } = await import('/src/stores/files.ts')
+      const { filesAtom } = await import('../stores/files.ts')
       return filesAtom.get().entries.some(e => e.name === 'sc3.png')
     }, undefined, { timeout: 10000 })
 
@@ -111,13 +111,13 @@ test.describe('ingest — OPT-01 SC-1/2/3 + D-04 + D-06/D-07', () => {
     // (setFileResult sets opt = optimizedSize; initial value = orig = file.size)
     // poll up to 20 s — worker encode is async
     const origSize = await page.evaluate(async () => {
-      const { filesAtom } = await import('/src/stores/files.ts')
+      const { filesAtom } = await import('../stores/files.ts')
       const entry = filesAtom.get().entries.find(e => e.name === 'sc3.png')
       return entry?.orig ?? 0
     })
 
     await page.waitForFunction(async (origSz: number) => {
-      const { filesAtom } = await import('/src/stores/files.ts')
+      const { filesAtom } = await import('../stores/files.ts')
       const entry = filesAtom.get().entries.find((e: { name: string }) => e.name === 'sc3.png')
       if (!entry) return false
       // setFileResult updates opt to the real encoded size (different from orig)
@@ -128,7 +128,7 @@ test.describe('ingest — OPT-01 SC-1/2/3 + D-04 + D-06/D-07', () => {
 
     // Verify encode pipeline ran — opt updated to real encoded size (not original file.size)
     const encodeState = await page.evaluate(async () => {
-      const { filesAtom } = await import('/src/stores/files.ts')
+      const { filesAtom } = await import('../stores/files.ts')
       const entry = filesAtom.get().entries.find(e => e.name === 'sc3.png')
       return {
         hasEntry: Boolean(entry),
@@ -160,12 +160,12 @@ test.describe('ingest — OPT-01 SC-1/2/3 + D-04 + D-06/D-07', () => {
 
     // Wait for ingest async work to complete (ingest is async; setInputFiles resolves before onChange finishes)
     await page.waitForFunction(async () => {
-      const { filesAtom } = await import('/src/stores/files.ts')
+      const { filesAtom } = await import('../stores/files.ts')
       return filesAtom.get().entries.length >= 1
     }, undefined, { timeout: 10000 })
 
     const entryCount = await page.evaluate(async () => {
-      const { filesAtom } = await import('/src/stores/files.ts')
+      const { filesAtom } = await import('../stores/files.ts')
       return filesAtom.get().entries.length
     })
 
