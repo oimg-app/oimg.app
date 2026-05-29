@@ -5,7 +5,7 @@ import { Slider as SliderPrimitive } from "radix-ui"
 
 import { cn } from "@/lib/utils"
 
-function Slider({
+function Slider2({
   className,
   defaultValue,
   value,
@@ -56,4 +56,4 @@ function Slider({
   )
 }
 
-export { Slider }
+export { Slider2 }

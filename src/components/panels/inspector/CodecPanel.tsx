@@ -18,7 +18,7 @@ import {
 import type { Codec } from '@/stores/settings'
 import type { FileSettings } from '@/stores/files'
 import { useLiveEncode } from '@/hooks/useLiveEncode'
-import { Slider } from '@/components/ui/slider'
+import { Slider2 } from '@/components/ui/slider2'
 import { Switch } from '@/components/ui/switch'
 import { Input } from '@/components/ui/input'
 import { Section } from './Section'
@@ -178,7 +178,7 @@ export function CodecPanel() {
                 )}
               </span>
               <div className="grid grid-cols-[1fr_42px] gap-2 items-center">
-                <Slider
+                <Slider2
                   min={0} max={100} step={1}
                   value={[settings.q]}
                   onValueChange={([v]) => handleSetQuality(v)}
@@ -194,7 +194,7 @@ export function CodecPanel() {
             <div className="grid grid-cols-[100px_1fr] gap-2 mb-2 items-center">
               <span className="text-[12px] text-[var(--color-fg-2)]">Effort</span>
               <div className="grid grid-cols-[1fr_42px] gap-2 items-center">
-                <Slider
+                <Slider2
                   min={0} max={6} step={1}
                   value={[settings.method]}
                   onValueChange={([v]) => handleSetMethod(v)}
