@@ -1,7 +1,7 @@
 // Phase 08 — PIPE-04: useOptimize — bridge filesAtom → WorkerPool. Source: 08-02-PLAN.md
 // Phase 09 — Plan 03: Real-bytes dispatch + rawBuffer caching + setFileResult/setFileError (D-04/D-13)
 import { useStore } from '@nanostores/react'
-import { filesAtom, setFileResult, setFileError, setFileRawBuffer } from '@/stores/files'
+import { filesAtom, setFileResult, setFileError, setFileRawBuffer, setFileProcessing } from '@/stores/files'
 import { settingsAtom } from '@/stores/settings'
 import { getPool } from '@/lib/worker-pool'
 import { toast } from 'sonner'
@@ -64,10 +64,14 @@ export function useOptimize() {
     const { entries } = filesAtom.get()
 
     // Build jobs with real bytes — read File handles where rawBuffer not yet cached (D-04)
-    // Pairs: [entryId, job] — kept together so allSettled can map results back to ids
+    // Pairs: [entryId, name, job] — kept together so streaming .then can map results back to ids
     const pairs: Array<[id: string, name: string, job: EncodeJob]> = []
 
     for (const entry of entries) {
+      // Phase 11 — Plan 01 (D-11): skip already-optimized files on Optimize-all. Errored files
+      // (status === 'error') are still retried; only successful 'done' entries are filtered out.
+      if (entry.status === 'done') continue
+
       const codec = toCodec(entry.type)
       if (codec === null) continue
 
@@ -104,22 +108,29 @@ export function useOptimize() {
       pairs.push([entry.id, entry.name, job])
     }
 
-    // allSettled: per-file failure never aborts the batch (D-13 / T-9-FB)
-    const settled = await Promise.allSettled(pairs.map(([, , job]) => pool.run(job)))
-
-    for (let i = 0; i < settled.length; i++) {
-      const [id, name] = pairs[i]
-      const outcome = settled[i]
-      if (outcome.status === 'fulfilled') {
-        const { buffer, optimizedSize } = outcome.value
-        setFileResult(id, buffer, optimizedSize)
-      } else {
-        const reason = String((outcome as PromiseRejectedResult).reason)
-        setFileError(id, reason)
-        // D-13: sonner toast per failure; other files continue (batch always completes)
-        toast.error('Encode failed: ' + name)
-      }
-    }
+    // Phase 11 — Plan 01 (D-03): per-promise streaming write-back. Each pool.run(job).then(...)
+    // fires setFileResult/setFileError AS the worker returns, so FileRow status dots flip
+    // queued → processing → done LIVE during the batch (not all at once after allSettled).
+    //
+    // Pitfall 1 mitigation: all N promises are created in a single .map(...) synchronously,
+    // THEN awaited as Promise.all — NEVER `await pool.run(job)` inside the loop, which would
+    // serialize to concurrency = 1 and defeat WorkerPool._drain()'s bounded cap (min(hwConc, 4)).
+    //
+    // Per-promise rejection is swallowed inside .then(_, err) → setFileError + toast, so
+    // Promise.all never rejects (D-13 / T-9-FB: per-file failure never aborts the batch).
+    const promises = pairs.map(([id, name, job]) => {
+      // Flip to in-flight state BEFORE awaiting the worker — gives the FileRow status dot
+      // its 'processing' phase. Synchronous nanostores setKey, no race with the .then below.
+      setFileProcessing(id)
+      return pool.run(job).then(
+        ({ buffer, optimizedSize }) => setFileResult(id, buffer, optimizedSize),
+        (err) => {
+          setFileError(id, String(err))
+          toast.error('Encode failed: ' + name)
+        },
+      )
+    })
+    await Promise.all(promises)
   }
 
   return { runOptimize }

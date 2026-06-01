@@ -130,6 +130,14 @@ export function setFileResult(id: string, encodedBuffer: ArrayBuffer, optimizedS
   updateEntry(id, () => ({ encodedBuffer, opt: optimizedSize, error: undefined, status: 'done' as const }))
 }
 
+// Phase 11 — Plan 01 (D-03): flip a file to in-flight state when its job is dispatched to
+// the WorkerPool. Streaming write-back depends on the FileRow status field reflecting reality
+// during the batch (queued → processing → done). Goes through the WR-02 updateEntry funnel so
+// it can't interleave with setFileResult/setFileError on the same id.
+export function setFileProcessing(id: string): void {
+  updateEntry(id, () => ({ status: 'processing' as const, error: undefined }))
+}
+
 // Cache raw file bytes for live re-encode (D-05)
 export function setFileRawBuffer(id: string, rawBuffer: ArrayBuffer): void {
   updateEntry(id, () => ({ rawBuffer }))
