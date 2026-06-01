@@ -86,7 +86,16 @@ Shipped as **Executed** — all 22 plans built + summarized; formal phase verifi
   2. User can download a single optimized file to disk (native save picker with file-saver fallback)
   3. User can export the entire optimized batch as one ZIP via jszip
   4. Backpressure holds during a large batch — the pool bounds concurrency and the UI stays responsive throughout
-**Plans**: TBD
+**Plans**: 9 plans (4 waves)
+- [ ] 11-00-PLAN.md — Wave 0: install jszip + file-saver + @types/file-saver, test-only window bridge for SC-4, save-file mocks + 20-file fixture set [OPT-02, EXP-01, EXP-02]
+- [ ] 11-01-PLAN.md — Streaming per-promise write-back in useOptimize.runOptimize + D-11 skip-done filter (live FileRow status transitions) [OPT-02]
+- [ ] 11-02-PLAN.md — StatusBar aggregate X/Y optimized counter + aria-live polite region (D-01) [OPT-02]
+- [ ] 11-03-PLAN.md — src/lib/filename.ts: renameExtension, collisionSuffix, timestampedZipName, mimeFor, sanitizeBaseName (T-11-01) [EXP-01, EXP-02]
+- [ ] 11-04-PLAN.md — saveBlob dispatcher + useExport.exportOne skeleton + Inspector ReportPanel Download button (D-04/D-05/D-07) [EXP-01]
+- [ ] 11-05-PLAN.md — buildZip lib + useExport.exportZip/exportIndividually + Toolbar wiring + EXP-02 full e2e (D-05/D-08/D-09/D-10/D-12) [EXP-02]
+- [ ] 11-06-PLAN.md — FileRow ContextMenu "Save as…" wired to exportOne + per-row disabled gate + WCAG-AA e2e (D-04) [EXP-01]
+- [ ] 11-07-PLAN.md — $hasDone computed atom + Toolbar disable-then-explain (D-13) [OPT-02, EXP-01, EXP-02]
+- [ ] 11-08-PLAN.md — SC-4 backpressure e2e on ≥20-file batch via window.__peakRunning bridge [OPT-02]
 **UI hint**: yes
 
 ### Phase 12: Real Snippets
@@ -114,7 +123,7 @@ Shipped as **Executed** — all 22 plans built + summarized; formal phase verifi
 | 8. Worker Pipeline Foundation | v1.1 | 3/3 | Complete   | 2026-05-26 |
 | 9. Codec Encoders | v1.1 | 4/4 | Complete   | 2026-05-26 |
 | 10. Single-File Optimize Loop | v1.1 | 4/4 | Complete    | 2026-05-28 |
-| 11. Batch Optimize + Export | v1.1 | 0/? | Not started | - |
+| 11. Batch Optimize + Export | v1.1 | 0/9 | Planned | - |
 | 12. Real Snippets | v1.1 | 0/? | Not started | - |
 
 ---
