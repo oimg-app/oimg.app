@@ -19,6 +19,20 @@ if (!isCrossOriginIsolated) {
 // Inject ALL_COMMANDS into ui.ts before first render so $cmdFlat is populated immediately.
 registerCommands(ALL_COMMANDS.flatMap(g => g.items))
 
+// Phase 11 Plan 00 — Test-only runtimeAtom→window bridge for SC-4 backpressure peak latch.
+// Gated by import.meta.env.MODE === 'test' so this branch (and the dynamic store import)
+// is tree-shaken from production builds (CLAUDE.md zero-telemetry constraint).
+if (import.meta.env.MODE === 'test') {
+  void import('@/stores/runtime').then(({ runtimeAtom }) => {
+    runtimeAtom.subscribe((s) => {
+      const w = window as { __runningJobs?: number; __peakRunning?: number }
+      w.__runningJobs = s.runningJobs
+      const prev = w.__peakRunning ?? 0
+      if (s.runningJobs > prev) w.__peakRunning = s.runningJobs
+    })
+  })
+}
+
 const rootEl = document.getElementById('root')
 if (!rootEl) {
   throw new Error('[oimg] #root element not found — check index.html')
