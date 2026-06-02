@@ -4,7 +4,7 @@ import { useStore } from '@nanostores/react'
 import { Plus, Export, CaretDown, MagnifyingGlass, Sun, Moon, GearSix, Lightning } from '@phosphor-icons/react'
 import { uiAtom, setOpen, setView, setTheme, setAutoTarget } from '@/stores/ui'
 import type { View } from '@/stores/ui'
-import { filesAtom, setFilter, addWatchFolder, addFromUrl, exportCopyHtml, exportCopyDataUris, exportManifestJson } from '@/stores/files'
+import { filesAtom, $hasDone, setFilter, addWatchFolder, addFromUrl, exportCopyHtml, exportCopyDataUris, exportManifestJson } from '@/stores/files'
 import { setWorkerCount } from '@/stores/runtime'
 import { useOptimize } from '@/hooks/useOptimize'
 import { useIngest } from '@/hooks/useIngest'
@@ -28,9 +28,12 @@ function ToolbarDivider() {
 export function Toolbar() {
   const { open, view, theme } = useStore(uiAtom)
   const { filterQuery } = useStore(filesAtom)
+  const hasDone = useStore($hasDone)
   const { runOptimize } = useOptimize()
   const { openPicker } = useIngest()
   const { exportZip, exportIndividually } = useExport()
+  // D-13 (Phase 11 Plan 07): disable-then-explain — gate export controls on ≥1 done file.
+  const disabledTitle = !hasDone ? 'Optimize at least one file first' : undefined
 
   return (
     <div
@@ -86,8 +89,11 @@ export function Toolbar() {
       <div className="flex">
         <button
           type="button"
-          className={cn(tbtnClass, 'rounded-r-none border-r-0')}
+          className={cn(tbtnClass, 'rounded-r-none border-r-0', !hasDone && 'opacity-50 cursor-not-allowed')}
           onClick={() => { void exportZip(); setOpen(null) }}
+          disabled={!hasDone}
+          aria-disabled={!hasDone}
+          title={disabledTitle}
         >
           <Export size={12} />
           Export
@@ -107,8 +113,22 @@ export function Toolbar() {
           </PopoverTrigger>
           <PopoverContent className={popoverContentClass} align="start">
             <div className="flex flex-col">
-              <button type="button" className={menuItemClass} onClick={() => { void exportZip(); setOpen(null) }}>All as ZIP</button>
-              <button type="button" className={menuItemClass} onClick={() => { void exportIndividually(); setOpen(null) }}>Save individually</button>
+              <button
+                type="button"
+                className={cn(menuItemClass, !hasDone && 'opacity-50 cursor-not-allowed')}
+                onClick={() => { void exportZip(); setOpen(null) }}
+                disabled={!hasDone}
+                aria-disabled={!hasDone}
+                title={disabledTitle}
+              >All as ZIP</button>
+              <button
+                type="button"
+                className={cn(menuItemClass, !hasDone && 'opacity-50 cursor-not-allowed')}
+                onClick={() => { void exportIndividually(); setOpen(null) }}
+                disabled={!hasDone}
+                aria-disabled={!hasDone}
+                title={disabledTitle}
+              >Save individually</button>
               <button type="button" className={menuItemClass} onClick={() => { exportCopyHtml(); setOpen(null) }}>{'Copy <picture> HTML'}</button>
               <button type="button" className={menuItemClass} onClick={() => { exportCopyDataUris(); setOpen(null) }}>Copy as data URIs</button>
               <button type="button" className={menuItemClass} onClick={() => { exportManifestJson(); setOpen(null) }}>Manifest JSON</button>
