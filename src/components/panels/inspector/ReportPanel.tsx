@@ -3,16 +3,19 @@
 // Data flows from filesAtom (nanostores) — zero direct stub-data imports.
 
 import { useStore } from '@nanostores/react'
+import { DownloadSimple } from '@phosphor-icons/react'
 import { Section } from './Section'
 import { Separator } from '@/components/ui/separator'
+import { Button } from '@/components/ui/button'
 import {
   Tooltip2,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip2'
-import { filesAtom } from '@/stores/files'
+import { filesAtom, $selectedFile } from '@/stores/files'
 import { fmtBytes, fmtPct } from '@/lib/format'
+import { useExport } from '@/hooks/useExport'
 
 // Format label color convention — mirrors FileRow BADGE_CLASS.
 // svg=purple, png=blue, jpg/jpeg=orange, webp=cyan, avif=rose
@@ -27,6 +30,8 @@ const FORMAT_COLOR: Record<string, string> = {
 
 export function ReportPanel() {
   const { entries } = useStore(filesAtom)
+  const selected = useStore($selectedFile)
+  const { exportOne } = useExport()
 
   if (entries.length === 0) {
     return (
@@ -61,6 +66,22 @@ export function ReportPanel() {
 
   return (
     <div data-testid="report-panel" className="flex flex-col gap-4 overflow-y-auto">
+      {/* Phase 11 Plan 04 — D-04/D-07: Inspector Download button for the selected file.
+          Only renders when the selected file has finished optimizing (status === 'done').
+          The onClick body is a single statement per CLAUDE.md hooks/components rule. */}
+      {selected && selected.status === 'done' && (
+        <Button
+          data-testid="inspector-download"
+          onClick={() => { void exportOne(selected) }}
+          aria-label="Download optimized file"
+          className="self-start gap-1.5"
+          variant="ghost"
+          size="sm"
+        >
+          <DownloadSimple size={14} />
+          Download
+        </Button>
+      )}
       {/* Total savings section */}
       <Section title="Total savings">
         {/* 2×2 stats grid */}
