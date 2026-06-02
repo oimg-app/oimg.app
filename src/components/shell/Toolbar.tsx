@@ -4,10 +4,11 @@ import { useStore } from '@nanostores/react'
 import { Plus, Export, CaretDown, MagnifyingGlass, Sun, Moon, GearSix, Lightning } from '@phosphor-icons/react'
 import { uiAtom, setOpen, setView, setTheme, setAutoTarget } from '@/stores/ui'
 import type { View } from '@/stores/ui'
-import { filesAtom, setFilter, addWatchFolder, addFromUrl, exportAsZip, exportIndividually, exportCopyHtml, exportCopyDataUris, exportManifestJson } from '@/stores/files'
+import { filesAtom, setFilter, addWatchFolder, addFromUrl, exportCopyHtml, exportCopyDataUris, exportManifestJson } from '@/stores/files'
 import { setWorkerCount } from '@/stores/runtime'
 import { useOptimize } from '@/hooks/useOptimize'
 import { useIngest } from '@/hooks/useIngest'
+import { useExport } from '@/hooks/useExport'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { cn } from '@/lib/utils'
 
@@ -29,6 +30,7 @@ export function Toolbar() {
   const { filterQuery } = useStore(filesAtom)
   const { runOptimize } = useOptimize()
   const { openPicker } = useIngest()
+  const { exportZip, exportIndividually } = useExport()
 
   return (
     <div
@@ -85,7 +87,7 @@ export function Toolbar() {
         <button
           type="button"
           className={cn(tbtnClass, 'rounded-r-none border-r-0')}
-          onClick={() => { exportAsZip(); setOpen(null) }}
+          onClick={() => { void exportZip(); setOpen(null) }}
         >
           <Export size={12} />
           Export
@@ -105,8 +107,8 @@ export function Toolbar() {
           </PopoverTrigger>
           <PopoverContent className={popoverContentClass} align="start">
             <div className="flex flex-col">
-              <button type="button" className={menuItemClass} onClick={() => { exportAsZip(); setOpen(null) }}>All as ZIP</button>
-              <button type="button" className={menuItemClass} onClick={() => { exportIndividually(); setOpen(null) }}>Save individually</button>
+              <button type="button" className={menuItemClass} onClick={() => { void exportZip(); setOpen(null) }}>All as ZIP</button>
+              <button type="button" className={menuItemClass} onClick={() => { void exportIndividually(); setOpen(null) }}>Save individually</button>
               <button type="button" className={menuItemClass} onClick={() => { exportCopyHtml(); setOpen(null) }}>{'Copy <picture> HTML'}</button>
               <button type="button" className={menuItemClass} onClick={() => { exportCopyDataUris(); setOpen(null) }}>Copy as data URIs</button>
               <button type="button" className={menuItemClass} onClick={() => { exportManifestJson(); setOpen(null) }}>Manifest JSON</button>

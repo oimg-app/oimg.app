@@ -83,9 +83,10 @@ export function addFromDevice(): void {}
 export function addWatchFolder(): void {}
 export function addFromUrl(): void {}
 
-// Export stubs — real handlers wired in v2
-export function exportAsZip(): void {}
-export function exportIndividually(): void {}
+// Export — All as ZIP + Save individually wired through useExport() hook (Phase 11 Plan 05).
+// The empty `exportAsZip` / `exportIndividually` stubs were retired here so Toolbar binds to
+// the hook directly per CLAUDE.md "business logic in hooks, not stores when React lifecycle
+// is needed". The three remaining stubs below are Phase 12 placeholders.
 export function exportCopyHtml(): void {}
 export function exportCopyDataUris(): void {}
 export function exportManifestJson(): void {}
