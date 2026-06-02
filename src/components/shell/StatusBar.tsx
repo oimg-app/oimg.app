@@ -10,6 +10,13 @@ export function StatusBar() {
   const totals = useStore($totals)
   const { entries } = useStore(filesAtom)
 
+  // Phase 11 Plan 02 (OPT-02 / D-01): aggregate X/Y counter derived live from entries.
+  // No new batchProgressAtom — derivation only (per plan constraint).
+  // Empty string when queue is empty (avoids `0/0 optimized` clutter).
+  const done = entries.filter((e) => e.status === 'done').length
+  const total = entries.length
+  const counterText = total > 0 ? `${done}/${total} optimized` : ''
+
   return (
     <div
       data-testid="statusbar"
@@ -26,6 +33,20 @@ export function StatusBar() {
         )}
       />
       <span>{running ? 'Running' : 'Idle'}</span>
+
+      {/* Phase 11 Plan 02 — OPT-02 aggregate counter (D-01). Pitfall 4: outer container
+          already has aria-live="polite"; aria-atomic="true" here ensures the full string
+          is announced as one unit without nesting a second live region. */}
+      <span aria-hidden="true">·</span>
+      <span
+        data-testid="agg-counter"
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        className="font-mono text-[11px]"
+      >
+        {counterText}
+      </span>
 
       <span aria-hidden="true">·</span>
       <span className="font-mono text-[11px] font-semibold">SVGO {svgoVersion}</span>
