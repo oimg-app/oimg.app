@@ -62,6 +62,9 @@ export const $totals = computed(filesAtom, (s) => {
   return { orig, opt, saved, pct }
 })
 
+/** D-13 (Phase 11 Plan 07): any file in the queue has status='done' — gates export controls. */
+export const $hasDone = computed(filesAtom, (s) => s.entries.some((e) => e.status === 'done'))
+
 export function selectFile(id: string): void {
   filesAtom.setKey('selectedId', id)
 }
