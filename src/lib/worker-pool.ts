@@ -8,6 +8,7 @@ interface PendingJob {
   job: EncodeJob
   resolve: (r: EncodeResult) => void
   reject: (e: unknown) => void
+  onDispatch?: () => void
 }
 
 export class WorkerPool {
@@ -32,9 +33,15 @@ export class WorkerPool {
     }
   }
 
-  run(job: EncodeJob): Promise<EncodeResult> {
+  /**
+   * Phase 11 — Plan 01: `onDispatch` fires when this job actually leaves the queue and
+   * starts running on a worker (not when it's enqueued). Used by useOptimize to flip
+   * FileRow status from 'queued' → 'processing' at the right moment so the queue UI
+   * reflects reality (D-03). Optional — existing callers that don't pass it are unaffected.
+   */
+  run(job: EncodeJob, onDispatch?: () => void): Promise<EncodeResult> {
     return new Promise((resolve, reject) => {
-      this.queue.push({ job, resolve, reject })
+      this.queue.push({ job, resolve, reject, onDispatch })
       this.onCountChange(this._active, this.queue.length)
       this._drain()
     })
@@ -46,6 +53,9 @@ export class WorkerPool {
       const pending = this.queue.shift()!
       this._active++
       this.onCountChange(this._active, this.queue.length)
+      // Fire dispatch hook BEFORE awaiting the worker so the store flip lands in the same
+      // microtask as the actual transition into running state.
+      pending.onDispatch?.()
       worker.optimize(Comlink.transfer(pending.job, [pending.job.buffer])).then(
         (result) => { pending.resolve(result); this._release(worker) },
         (err) => { pending.reject(err); this._release(worker) },

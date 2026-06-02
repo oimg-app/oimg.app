@@ -12,8 +12,18 @@ import type { Page } from '@playwright/test'
  */
 export async function ingestFixtureFiles(page: Page, count = 1): Promise<void> {
   await page.evaluate(async (n: number) => {
-    const { filesAtom, setFileRawBuffer } = await import('../../stores/files.ts')
-    const { defaultFileSettings } = await import('../../lib/stub-data.ts')
+    // Browser-side: page.evaluate runs in the page context; relative imports resolve from
+    // page.url() (the app root '/'), so we use absolute /src/... paths per MEMORY note
+    // "/src/... page.evaluate imports are an accepted Vite pattern". The /src/* form is
+    // how Vite serves source modules during dev (see http://localhost:5174/src/...).
+    // Use a computed specifier so TS doesn't try to statically resolve the dev-server URL
+    // (the bundler resolver doesn't know about /src/* — that's a Vite dev-only contract).
+    const filesUrl = '/src/stores/files.ts'
+    const stubUrl = '/src/lib/stub-data.ts'
+    const filesMod = (await import(/* @vite-ignore */ filesUrl)) as typeof import('../../stores/files')
+    const { filesAtom, setFileRawBuffer } = filesMod
+    const stubMod = (await import(/* @vite-ignore */ stubUrl)) as typeof import('../../lib/stub-data')
+    const { defaultFileSettings } = stubMod
 
     // Reuse the same 1×1 PNG base64 string as TINY_PNG_B64 in stub-data.ts (line 135-136)
     const TINY_PNG_B64 =

@@ -3,6 +3,21 @@
 import { test, expect } from '@playwright/test'
 import { ingestFixtureFiles } from './fixtures/ingest-helper'
 
+/**
+ * Phase 11 — Plan 01 (D-11): ingestFixtureFiles seeds entries with status:'done'. Phase 11
+ * D-11 makes runOptimize SKIP already-done entries, so backpressure tests that click
+ * Optimize all must first flip status to 'queued' so the pool actually receives jobs.
+ */
+async function resetAllToQueued(page: import('@playwright/test').Page): Promise<void> {
+  await page.evaluate(async () => {
+    const filesUrl = '/src/stores/files.ts'
+    const mod = (await import(/* @vite-ignore */ filesUrl)) as typeof import('../stores/files')
+    const { filesAtom } = mod
+    const { entries } = filesAtom.get()
+    filesAtom.setKey('entries', entries.map((e) => ({ ...e, status: 'queued' as const })))
+  })
+}
+
 test.describe('BackpressureIndicator — SHELL-02', () => {
   test('is hidden on initial load', async ({ page }) => {
     await page.goto('/')
@@ -15,6 +30,8 @@ test.describe('BackpressureIndicator — SHELL-02', () => {
     await page.goto('/')
     // D-05: inject a fixture file so Optimize all has ≥1 file to process
     await ingestFixtureFiles(page, 1)
+    // Phase 11 D-11: flip to 'queued' so the file isn't skipped as already-done.
+    await resetAllToQueued(page)
     // Toolbar's primary action calls startRun (runtimeAtom.running = true)
     await page.getByRole('button', { name: 'Optimize all' }).click()
     // StatusBar also uses role="status"; scope to the indicator via testid.
@@ -32,6 +49,8 @@ test.describe('BackpressureIndicator — SHELL-02', () => {
     await page.goto('/')
     // D-05: inject a fixture file so Optimize all has ≥1 file to process
     await ingestFixtureFiles(page, 1)
+    // Phase 11 D-11: flip to 'queued' so the file isn't skipped as already-done.
+    await resetAllToQueued(page)
     // Click Optimize all — this triggers startRun which sets running = true
     // (derived from runningJobs > 0 once Plan 03 lands).
     await page.getByRole('button', { name: 'Optimize all' }).click()

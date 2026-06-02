@@ -118,18 +118,19 @@ export function useOptimize() {
     //
     // Per-promise rejection is swallowed inside .then(_, err) → setFileError + toast, so
     // Promise.all never rejects (D-13 / T-9-FB: per-file failure never aborts the batch).
-    const promises = pairs.map(([id, name, job]) => {
-      // Flip to in-flight state BEFORE awaiting the worker — gives the FileRow status dot
-      // its 'processing' phase. Synchronous nanostores setKey, no race with the .then below.
-      setFileProcessing(id)
-      return pool.run(job).then(
+    const promises = pairs.map(([id, name, job]) =>
+      // onDispatch fires inside WorkerPool._drain when this job actually starts running
+      // on a worker (not when it's enqueued) — so queued entries stay 'queued' until the
+      // pool's cap (min(hwConc, 4)) lets them through, matching the bounded-concurrency
+      // model the FileRow status dot is meant to surface.
+      pool.run(job, () => setFileProcessing(id)).then(
         ({ buffer, optimizedSize }) => setFileResult(id, buffer, optimizedSize),
         (err) => {
           setFileError(id, String(err))
           toast.error('Encode failed: ' + name)
         },
-      )
-    })
+      ),
+    )
     await Promise.all(promises)
   }
 
