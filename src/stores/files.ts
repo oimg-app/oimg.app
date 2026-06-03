@@ -82,8 +82,9 @@ export function setSortBy(s: SortKey): void {
 }
 
 // Add-file stubs — real handlers wired in v2
+// Quick 260603-s2x: addWatchFolder retired — Toolbar now calls useWatchFolder().startWatching
+// (same retirement precedent as Phase 11 exportAsZip / Phase 12 snippet stubs).
 export function addFromDevice(): void {}
-export function addWatchFolder(): void {}
 export function addFromUrl(): void {}
 
 // Phase 11 — Plan 05: All as ZIP + Save individually wired through useExport() hook.
