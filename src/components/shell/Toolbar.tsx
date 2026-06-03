@@ -4,12 +4,13 @@ import { useStore } from '@nanostores/react'
 import { Plus, Export, CaretDown, MagnifyingGlass, Sun, Moon, GearSix, Lightning } from '@phosphor-icons/react'
 import { uiAtom, setOpen, setView, setTheme, setAutoTarget } from '@/stores/ui'
 import type { View } from '@/stores/ui'
-import { filesAtom, $hasDone, setFilter, addWatchFolder, addFromUrl } from '@/stores/files'
+import { filesAtom, $hasDone, setFilter, addFromUrl } from '@/stores/files'
 import { setWorkerCount } from '@/stores/runtime'
 import { useOptimize } from '@/hooks/useOptimize'
 import { useIngest } from '@/hooks/useIngest'
 import { useExport } from '@/hooks/useExport'
 import { useSnippets } from '@/hooks/useSnippets'
+import { useWatchFolder } from '@/hooks/useWatchFolder'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { cn } from '@/lib/utils'
 
@@ -34,6 +35,7 @@ export function Toolbar() {
   const { openPicker } = useIngest()
   const { exportZip, exportIndividually } = useExport()
   const { copyPictureBulk, copyDataUrisBulk, copyManifestJson } = useSnippets()
+  const { startWatching } = useWatchFolder()
   // D-13 (Phase 11 Plan 07): disable-then-explain — gate export controls on ≥1 done file.
   const disabledTitle = !hasDone ? 'Optimize at least one file first' : undefined
 
@@ -70,7 +72,7 @@ export function Toolbar() {
           <PopoverContent className={popoverContentClass} align="start">
             <div className="flex flex-col">
               <button type="button" className={menuItemClass} onClick={() => { openPicker(); setOpen(null) }}>From device</button>
-              <button type="button" className={menuItemClass} onClick={() => { addWatchFolder(); setOpen(null) }}>Watch folder</button>
+              <button type="button" className={menuItemClass} onClick={() => { void startWatching(); setOpen(null) }}>Watch folder</button>
               <button type="button" className={menuItemClass} onClick={() => { addFromUrl(); setOpen(null) }}>From URL or paste</button>
             </div>
           </PopoverContent>
