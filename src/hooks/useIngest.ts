@@ -26,7 +26,9 @@ function getExt(name: string): string {
   return name.split('.').pop()?.toLowerCase() ?? ''
 }
 
-function isAccepted(file: File): boolean {
+// Quick 260603-s2x: exported so useWatchFolder can filter directory entries
+// without duplicating the extension table. Existing internal usage unchanged.
+export function isAccepted(file: File): boolean {
   const ext = getExt(file.name)
   return ACCEPTED_EXTS.has(ext) || ACCEPTED_MIMES.has(file.type)
 }
