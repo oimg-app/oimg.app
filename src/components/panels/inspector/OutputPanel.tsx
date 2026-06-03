@@ -36,7 +36,8 @@ type SnippetProps = {
   title: string
   ariaLabel: string
   file: FileEntry
-  builder: (file: FileEntry) => Promise<string>
+  // Phase 12 Plan 02 D-03: buildPictureSnippet is now sync (no buffer access); base64/url-encoded stay async.
+  builder: (file: FileEntry) => Promise<string> | string
   onCopy: (id: string, text: string) => void
   isCopied?: boolean
 }
@@ -45,7 +46,7 @@ function Snippet({file, id, title, ariaLabel, builder, onCopy, isCopied}: Snippe
   const [text, setText] = useState<string>('')
 
   useEffect(() => {
-    builder(file).then(setText)
+    Promise.resolve(builder(file)).then(setText)
   }, [file])
 
   if (!text) {

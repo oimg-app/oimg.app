@@ -1,14 +1,8 @@
 // Phase 06, Plan 01 — INSP-07 snippet builders
+// Phase 12, Plan 02 — D-01/D-02/D-03/D-04 + T-12-02 attr-escape + chunked base64 (V8 safety)
 // Pure string builders — no DOM, no clipboard, no store reads.
 import type { FileEntry } from '@/lib/stub-data'
-
-/** Map output target to MIME type suffix */
-function extFor(target: string): string {
-  const t = target.toLowerCase()
-  if (t === 'svg') return 'svg+xml'
-  if (t === 'jpg') return 'jpeg'
-  return t
-}
+import { renameExtension } from '@/lib/filename'
 
 /** Parse width and height from dim string like '2400×1600' (U+00D7 multiply sign) */
 function parseDim(dim: string): { w: string; h: string } {
@@ -16,77 +10,123 @@ function parseDim(dim: string): { w: string; h: string } {
   return { w: parts[0]?.trim() ?? '', h: parts[1]?.trim() ?? '' }
 }
 
-/** Stub base64 payload — fixed placeholder, no real encoding (zero-server constraint) */
-// const BASE64_STUB = 'STUBSTUBSTUBSTUBSTUBSTUBSTUBSTUBSTUBSTUB'
-
-async function getBase64(file: Blob) {
-  const reader = new FileReader();
-
-  return new Promise((resolve, reject) => {
-    reader.onload = (e) => {
-      const base64 = e.target?.result as string;
-
-      resolve(base64)
-    };
-
-    reader.onerror = (e) => {
-      reject(e)
-    };
-
-    reader.readAsDataURL(file);
-  })
+/** Map output target to canonical image/* MIME type. */
+function mimeForTarget(target: string): string {
+  const t = target.toLowerCase()
+  if (t === 'svg') return 'image/svg+xml'
+  if (t === 'jpg' || t === 'jpeg') return 'image/jpeg'
+  return `image/${t}`
 }
 
 /**
- * buildBase64Snippet — returns an <img> tag with a data URI base64 src.
- * The base64 payload is a fixed stub placeholder.
+ * D-02: chunked base64 — `String.fromCharCode(...new Uint8Array(huge))` blows V8 call
+ * stack at ~125KB. 32KB (0x8000) window is the standard browser-safe slice size.
+ */
+function bufferToBase64(buf: ArrayBuffer): string {
+  const bytes = new Uint8Array(buf)
+  const CHUNK = 0x8000 // 32KB
+  let binary = ''
+  for (let i = 0; i < bytes.length; i += CHUNK) {
+    const slice = bytes.subarray(i, i + CHUNK)
+    binary += String.fromCharCode.apply(null, slice as unknown as number[])
+  }
+  return btoa(binary)
+}
+
+/**
+ * D-01: Yoksel-style minimal-encoding for SVG data URIs.
+ * Reference: https://yoksel.github.io/url-encoder
+ * `encodeURIComponent` over-escapes; restore spaces, =, :, / for shorter, paste-friendly URIs.
+ * T-12-CTL: strip ASCII control chars (NULL..US, DEL) before encoding — keeps CSS valid.
+ */
+function buildSvgDataUri(buf: ArrayBuffer): string {
+  // Sanitize control chars first (T-12-CTL — keeps the snippet valid CSS).
+  const svgText = new TextDecoder('utf-8').decode(buf).replace(/[\x00-\x1F]/g, '')
+  const encoded = encodeURIComponent(svgText)
+    .replace(/'/g, '%27')   // ' must stay encoded for url("…") quoting safety
+    .replace(/"/g, '%22')   // " ditto
+    .replace(/%20/g, ' ')   // back-unescape spaces (Yoksel minimal-encoding)
+    .replace(/%3D/g, '=')
+    .replace(/%3A/g, ':')
+    .replace(/%2F/g, '/')
+  return `data:image/svg+xml;charset=utf-8,${encoded}`
+}
+
+/**
+ * T-12-02: minimal HTML-attr escape for filenames containing &, ", <, >, '.
+ * Order matters — `&` MUST be replaced first or it double-escapes the others.
+ */
+function escapeAttr(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/'/g, '&#39;')
+}
+
+/**
+ * D-01 dispatcher: SVG → URL-encoded UTF-8 data URI; raster → chunked-32KB base64 data URI.
+ * Throws when the entry has no encoded bytes (not yet optimized).
+ */
+export async function buildDataUri(file: FileEntry): Promise<string> {
+  if (!file.encodedBuffer) {
+    throw new Error('buildDataUri: file.encodedBuffer is undefined')
+  }
+  if (file.target.toLowerCase() === 'svg') {
+    return buildSvgDataUri(file.encodedBuffer)
+  }
+  const b64 = bufferToBase64(file.encodedBuffer)
+  return `data:${mimeForTarget(file.target)};base64,${b64}`
+}
+
+/**
+ * buildBase64Snippet — `<img>` with a data URI src. SVG dispatch is handled by buildDataUri;
+ * T-12-02 mitigation escapes filename in `alt`. D-04: width/height omitted when dim is empty.
  */
 export async function buildBase64Snippet(file: FileEntry): Promise<string> {
-  const ext = extFor(file.target)
   const { w, h } = parseDim(file.dim)
   const widthAttr = w ? ` width="${w}"` : ''
   const heightAttr = h ? ` height="${h}"` : ''
-
-  if (!file.encodedBuffer) {
-    throw new Error('buildBase64Snippet: file.rawBuffer is undefined')
-  }
-
-  const base64 = await getBase64(new File([file.encodedBuffer], file.name, {type: `image/${ext}`}))
-
-  return `<img src="${base64}" alt="${file.name}"${widthAttr}${heightAttr}>`
+  const uri = await buildDataUri(file)
+  return `<img src="${uri}" alt="${escapeAttr(file.name)}"${widthAttr}${heightAttr}>`
 }
 
 /**
- * buildUrlEncodedSnippet — returns a CSS rule with a url-encoded data URI background-image.
- * The data payload is a URL-encoded stub placeholder.
+ * buildUrlEncodedSnippet — CSS `background-image: url("data:…")`. SVG goes through the
+ * Yoksel-style URL-encoded path; raster falls back to chunked base64 (D-01).
  */
-export async function buildUrlEncodedSnippet(file: FileEntry) {
-  const ext = extFor(file.target)
-
-  if (!file.encodedBuffer) {
-    throw new Error('buildBase64Snippet: file.rawBuffer is undefined')
-  }
-
-  const base64 = await getBase64(new File([file.encodedBuffer], file.name, {type: `image/${ext}`}))
-
-  return `background-image: url("${base64}");`
+export async function buildUrlEncodedSnippet(file: FileEntry): Promise<string> {
+  const uri = await buildDataUri(file)
+  return `background-image: url("${uri}");`
 }
 
 /**
- * buildPictureSnippet — returns a multi-line <picture> element with a <source> for the
- * target format and a fallback <img> in the original format.
+ * D-03/D-04: per-file `<picture>` snippet (synchronous — no buffer access needed).
+ * - target === 'svg'                → bare `<img src="renamed.svg" …>`
+ * - target === source format        → bare `<img src="original.ext" …>` (no redundant <source>)
+ * - else                            → 4-line `<picture>` with `<source srcset>` + fallback `<img>`
+ * T-12-02: escapeAttr applied to every attribute interpolation.
+ * D-04: width/height omitted when dim is empty/unparseable.
  */
-export async function buildPictureSnippet(file: FileEntry) {
-  const ext = extFor(file.target)
+export function buildPictureSnippet(file: FileEntry): string {
   const { w, h } = parseDim(file.dim)
   const widthAttr = w ? ` width="${w}"` : ''
   const heightAttr = h ? ` height="${h}"` : ''
-  const baseName = file.name.replace(/\.[^.]+$/, '')
+  const alt = escapeAttr(file.name)
+  const targetName = renameExtension(file.name, file.target)
 
+  // D-03: SVG → bare <img>; raster target === source → bare <img>; else <picture>.
+  if (file.target.toLowerCase() === 'svg') {
+    return `<img src="${escapeAttr(targetName)}" alt="${alt}"${widthAttr}${heightAttr}>`
+  }
+  if (file.target.toLowerCase() === file.type.toLowerCase()) {
+    return `<img src="${escapeAttr(file.name)}" alt="${alt}"${widthAttr}${heightAttr}>`
+  }
   return [
     '<picture>',
-    `  <source srcset="${baseName}.${file.target}" type="image/${ext}">`,
-    `  <img src="${baseName}.${file.type}" alt="${file.name}"${widthAttr}${heightAttr}>`,
+    `  <source srcset="${escapeAttr(targetName)}" type="${mimeForTarget(file.target)}">`,
+    `  <img src="${escapeAttr(file.name)}" alt="${alt}"${widthAttr}${heightAttr}>`,
     '</picture>',
   ].join('\n')
 }
