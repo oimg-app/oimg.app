@@ -1,14 +1,18 @@
 // Phase 06, Plan 01 — INSP-07 OutputPanel: snippet sections + copy buttons
+// Phase 12, Plan 03 — D-05 effect-dep fix (re-render on encodedBuffer mutation),
+//                     D-06 per-status presentation (queued/processing/error/done),
+//                     D-07 derive-live (no atom),
+//                     D-15 reroute copy through copyToClipboard chokepoint.
 import { useState, useEffect } from 'react'
 import { useStore } from '@nanostores/react'
 import { Copy } from '@phosphor-icons/react'
 import { $selectedFile } from '@/stores/files'
-import { pushToast } from '@/stores/runtime'
 import { Button } from '@/components/ui/button'
 import { Section } from './Section'
 import { buildBase64Snippet, buildUrlEncodedSnippet, buildPictureSnippet } from '@/lib/snippets'
+import { copyToClipboard } from '@/lib/clipboard'
 import type { FileEntry } from '@/lib/stub-data'
-import {cn} from "@/lib/utils.ts";
+import { cn } from '@/lib/utils.ts'
 
 const SECTIONS = [
   {
@@ -38,43 +42,103 @@ type SnippetProps = {
   file: FileEntry
   // Phase 12 Plan 02 D-03: buildPictureSnippet is now sync (no buffer access); base64/url-encoded stay async.
   builder: (file: FileEntry) => Promise<string> | string
-  onCopy: (id: string, text: string) => void
+  onCopy: (id: string, text: string, label: string) => void
   isCopied?: boolean
 }
 
-function Snippet({file, id, title, ariaLabel, builder, onCopy, isCopied}: SnippetProps) {
+// D-06: per-status presentation. Order matters:
+//   queued     → empty placeholder
+//   error      → message in --color-err
+//   processing OR encodedBuffer missing → skeleton with animate-pulse (covers re-encode race)
+//   done + encodedBuffer present → real <pre> snippet
+function Snippet({ file, id, title, ariaLabel, builder, onCopy, isCopied }: SnippetProps) {
   const [text, setText] = useState<string>('')
 
   useEffect(() => {
-    Promise.resolve(builder(file)).then(setText)
-  }, [file])
+    let cancelled = false
+    // Only build when bytes are available + file is done (D-06). Guard against
+    // setState-after-unmount when file id swaps mid-build.
+    if (file.status === 'done' && file.encodedBuffer != null) {
+      Promise.resolve(builder(file)).then((t) => {
+        if (!cancelled) setText(t)
+      })
+    } else {
+      // Clear stale text so a previous done-file's snippet does not flash during
+      // a target swap / re-encode (T-12-RACE).
+      setText('')
+    }
+    return () => {
+      cancelled = true
+    }
+    // D-05: re-run when bytes change (live-encode push) or target swap.
+  }, [file?.id, file?.encodedBuffer, file?.target, file?.status, builder])
 
-  if (!text) {
-    return null
+  const status = file.status
+  const hasBytes = file.encodedBuffer != null
+  const canCopy = status === 'done' && hasBytes && text.length > 0
+
+  const disabledTitle =
+    status === 'queued'
+      ? 'Optimize this file first'
+      : status === 'processing'
+      ? 'Encoding in progress'
+      : status === 'error'
+      ? 'Encoding failed'
+      : !hasBytes
+      ? 'Encoding in progress'
+      : undefined
+
+  let body: React.ReactNode
+  if (status === 'queued') {
+    body = (
+      <p className="text-[12px] text-[var(--color-fg-3)]">Optimize this file first</p>
+    )
+  } else if (status === 'error') {
+    body = (
+      <p className="text-[12px] text-[var(--color-err)]">
+        {file.error ?? 'Encoding failed'}
+      </p>
+    )
+  } else if (status === 'processing' || !hasBytes) {
+    body = (
+      <div
+        className="h-[60px] rounded-md bg-[var(--color-bg-2)] animate-pulse mb-2"
+        aria-label="Encoding in progress"
+      />
+    )
+  } else {
+    // done + bytes — render the real snippet text.
+    body = (
+      <pre
+        className={cn(
+          'px-3 py-2 mb-2',
+          'text-[var(--color-fg-1)] bg-[var(--color-bg-2)]',
+          'max-h-[300px] overflow-y-auto',
+          'font-mono text-[12px] rounded-md overflow-x-auto leading-[1.6] whitespace-pre-wrap break-all '
+        )}
+      >
+        {text}
+      </pre>
+    )
   }
 
   return (
-      <Section key={id} title={title}>
-            <pre
-                className={cn(
-                    'px-3 py-2 mb-2',
-                    'text-[var(--color-fg-1)] bg-[var(--color-bg-2)]',
-                    'max-h-[300px] overflow-y-auto',
-                    'font-mono text-[12px] rounded-md overflow-x-auto leading-[1.6] whitespace-pre-wrap break-all '
-                )}>
-              {text}
-            </pre>
-        <Button
-            variant="ghost"
-            size="sm"
-            aria-label={ariaLabel}
-            onClick={() => onCopy(id, text)}
-            className="gap-1.5 text-[var(--color-fg-2)] hover:text-[var(--color-accent)]"
-        >
-          <Copy/>
-          {isCopied ? 'Copied!' : 'Copy snippet'}
-        </Button>
-      </Section>
+    <Section key={id} title={title}>
+      {body}
+      <Button
+        variant="ghost"
+        size="sm"
+        aria-label={ariaLabel}
+        onClick={() => onCopy(id, text, title)}
+        disabled={!canCopy}
+        aria-disabled={!canCopy}
+        title={disabledTitle}
+        className="gap-1.5 text-[var(--color-fg-2)] hover:text-[var(--color-accent)]"
+      >
+        <Copy />
+        {isCopied ? 'Copied!' : 'Copy snippet'}
+      </Button>
+    </Section>
   )
 }
 
@@ -99,13 +163,13 @@ export function OutputPanel() {
     )
   }
 
-  async function handleCopy(sectionId: string, text: string) {
-    try {
-      await navigator.clipboard.writeText(text)
+  // D-15: route every copy through the chokepoint. On failure the chokepoint
+  // already raises a toast (D-14) — do NOT double-toast here.
+  async function handleCopy(sectionId: string, text: string, label: string) {
+    const { ok } = await copyToClipboard(text, 'snippet', label)
+    if (ok) {
       setCopied(sectionId)
       setTimeout(() => setCopied(null), 1500)
-    } catch {
-      pushToast('Clipboard unavailable — check browser permissions')
     }
   }
 
@@ -115,16 +179,16 @@ export function OutputPanel() {
         const isCopied = copied === id
 
         return (
-            <Snippet
-                key={id}
-                id={id}
-                title={title}
-                ariaLabel={ariaLabel}
-                file={file}
-                builder={builder}
-                onCopy={handleCopy}
-                isCopied={isCopied}
-            />
+          <Snippet
+            key={id}
+            id={id}
+            title={title}
+            ariaLabel={ariaLabel}
+            file={file}
+            builder={builder}
+            onCopy={handleCopy}
+            isCopied={isCopied}
+          />
         )
       })}
     </div>
