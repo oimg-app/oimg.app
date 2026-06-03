@@ -5,6 +5,7 @@ import { $selectedFile } from '@/stores/files'
 import { settingsAtom } from '@/stores/settings'
 import { runtimeAtom } from '@/stores/runtime'
 import { fmtBytes, fmtPct } from '@/lib/format'
+import {estimateDownloadTime} from "@/lib/estimate-download.ts";
 
 interface DeltaCardProps {
   label: string
@@ -39,6 +40,16 @@ function DeltaCard({ label, value, sub, accent, shimmer }: DeltaCardProps) {
   )
 }
 
+function msToSec(ms: number, fractionDigits = 2) {
+    if (ms < 1000) return `${ms} ms`;
+
+    const seconds = ms / 1000;
+
+    const sec = parseFloat(seconds.toFixed(fractionDigits));
+
+    return `${sec} sec`;
+}
+
 export function DeltaStrip() {
   const selectedFile = useStore($selectedFile)
   const globalSettings = useStore(settingsAtom)
@@ -70,7 +81,9 @@ export function DeltaStrip() {
       ? <>{fmtBytes(orig)} <span className="text-[var(--color-fg-3)]">(fallback)</span></>
       : fmtBytes(opt)
 
-  const savedValue = isEncoding ? '···' : (saved !== null ? `−${fmtBytes(saved)}` : '—')
+  const savedValue = isEncoding ? '···' : (saved !== null ? `−${fmtBytes(saved)}` : '—');
+
+  const decodeTime = estimateDownloadTime(selectedFile?.encodedBuffer ?? null);
 
   return (
     <div className="h-[72px] shrink-0 border-t border-[var(--color-line)] bg-[var(--color-bg-1)] flex">
@@ -104,7 +117,7 @@ export function DeltaStrip() {
       />
       <DeltaCard
         label="DECODE"
-        value="38ms"
+        value={msToSec(decodeTime["4G"])}
         sub="est. on 4G"
       />
     </div>
