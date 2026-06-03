@@ -86,13 +86,12 @@ export function addFromDevice(): void {}
 export function addWatchFolder(): void {}
 export function addFromUrl(): void {}
 
-// Export — All as ZIP + Save individually wired through useExport() hook (Phase 11 Plan 05).
-// The empty `exportAsZip` / `exportIndividually` stubs were retired here so Toolbar binds to
-// the hook directly per CLAUDE.md "business logic in hooks, not stores when React lifecycle
-// is needed". The three remaining stubs below are Phase 12 placeholders.
-export function exportCopyHtml(): void {}
-export function exportCopyDataUris(): void {}
-export function exportManifestJson(): void {}
+// Phase 11 — Plan 05: All as ZIP + Save individually wired through useExport() hook.
+// Phase 12 — Plan 04 (D-09/D-10/D-11): Copy <picture> HTML / Copy as data URIs /
+// Manifest JSON wired through useSnippets() hook. Same precedent as the Phase 11
+// retirement: Toolbar binds the hook directly; the empty stubs are deleted to prevent
+// regression imports per CLAUDE.md "business logic in hooks, not stores when React
+// lifecycle is needed".
 
 // Phase 09 — Plan 01: per-file settings + buffer/error actions (D-01/D-03/D-13)
 

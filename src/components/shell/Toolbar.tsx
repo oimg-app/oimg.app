@@ -4,11 +4,12 @@ import { useStore } from '@nanostores/react'
 import { Plus, Export, CaretDown, MagnifyingGlass, Sun, Moon, GearSix, Lightning } from '@phosphor-icons/react'
 import { uiAtom, setOpen, setView, setTheme, setAutoTarget } from '@/stores/ui'
 import type { View } from '@/stores/ui'
-import { filesAtom, $hasDone, setFilter, addWatchFolder, addFromUrl, exportCopyHtml, exportCopyDataUris, exportManifestJson } from '@/stores/files'
+import { filesAtom, $hasDone, setFilter, addWatchFolder, addFromUrl } from '@/stores/files'
 import { setWorkerCount } from '@/stores/runtime'
 import { useOptimize } from '@/hooks/useOptimize'
 import { useIngest } from '@/hooks/useIngest'
 import { useExport } from '@/hooks/useExport'
+import { useSnippets } from '@/hooks/useSnippets'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { cn } from '@/lib/utils'
 
@@ -32,6 +33,7 @@ export function Toolbar() {
   const { runOptimize } = useOptimize()
   const { openPicker } = useIngest()
   const { exportZip, exportIndividually } = useExport()
+  const { copyPictureBulk, copyDataUrisBulk, copyManifestJson } = useSnippets()
   // D-13 (Phase 11 Plan 07): disable-then-explain — gate export controls on ≥1 done file.
   const disabledTitle = !hasDone ? 'Optimize at least one file first' : undefined
 
@@ -129,9 +131,30 @@ export function Toolbar() {
                 aria-disabled={!hasDone}
                 title={disabledTitle}
               >Save individually</button>
-              <button type="button" className={menuItemClass} onClick={() => { exportCopyHtml(); setOpen(null) }}>{'Copy <picture> HTML'}</button>
-              <button type="button" className={menuItemClass} onClick={() => { exportCopyDataUris(); setOpen(null) }}>Copy as data URIs</button>
-              <button type="button" className={menuItemClass} onClick={() => { exportManifestJson(); setOpen(null) }}>Manifest JSON</button>
+              <button
+                type="button"
+                className={cn(menuItemClass, !hasDone && 'opacity-50 cursor-not-allowed')}
+                onClick={() => { void copyPictureBulk(); setOpen(null) }}
+                disabled={!hasDone}
+                aria-disabled={!hasDone}
+                title={disabledTitle}
+              >{'Copy <picture> HTML'}</button>
+              <button
+                type="button"
+                className={cn(menuItemClass, !hasDone && 'opacity-50 cursor-not-allowed')}
+                onClick={() => { void copyDataUrisBulk(); setOpen(null) }}
+                disabled={!hasDone}
+                aria-disabled={!hasDone}
+                title={disabledTitle}
+              >Copy as data URIs</button>
+              <button
+                type="button"
+                className={cn(menuItemClass, !hasDone && 'opacity-50 cursor-not-allowed')}
+                onClick={() => { void copyManifestJson(); setOpen(null) }}
+                disabled={!hasDone}
+                aria-disabled={!hasDone}
+                title={disabledTitle}
+              >Manifest JSON</button>
             </div>
           </PopoverContent>
         </Popover>
