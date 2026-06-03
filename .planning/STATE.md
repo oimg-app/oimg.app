@@ -102,9 +102,15 @@ Progress: [██████████] 100%
 
 ## Session Continuity
 
-**Last session:** 2026-06-03T12:36:11Z
-**Stopped At:** Completed Phase 12 Plan 05 (last plan in Phase 12)
-**To resume:** Run `/gsd:verify-phase 12` to validate Phase 12 (SNIP-01 across all 5 surfaces).
+**Last session:** 2026-06-03T20:00:00Z
+**Stopped At:** Completed quick task 260603-s2x — Watch folder (showDirectoryPicker + FileSystemObserver)
+**To resume:** Milestone v1.1 is code-complete. Next: `/gsd:complete-milestone v1.1` to archive + prepare v1.2, or `/gsd:audit-milestone v1.1` to cross-check shipped scope against original intent.
+
+## Quick Tasks Completed
+
+| ID | Slug | Date | Tasks | Status |
+|----|------|------|-------|--------|
+| 260603-s2x | watch-folder | 2026-06-03 | 8 | ✅ complete (3 e2e + 6 unit green; T-WF-01..04 mitigated) |
 
 ---
 
