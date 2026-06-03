@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Real Optimization Pipeline
 status: executing
-last_updated: "2026-06-03T11:48:01.515Z"
-last_activity: 2026-06-03 -- Phase 12 planning complete
+last_updated: "2026-06-03T12:36:11Z"
+last_activity: 2026-06-03 -- Phase 12 Plan 05 complete (FileRow Copy <picture> + Copy data-URI)
 progress:
   total_phases: 5
   completed_phases: 4
   total_plans: 25
-  completed_plans: 20
-  percent: 80
+  completed_plans: 25
+  percent: 100
 ---
 
 # STATE: oimg.app — v1.1 Real Optimization Pipeline
@@ -30,10 +30,10 @@ progress:
 
 ## Current Position
 
-Phase: 11 — COMPLETE
-Plan: 11-05 complete (Wave 2 — JSZip wrapper + Toolbar All-as-ZIP + exportIndividually bulk save)
-Status: Ready to execute
-Last activity: 2026-06-03 -- Phase 12 planning complete
+Phase: 12 — Plan 05 complete (last plan)
+Plan: 12-05 complete (Wave 2 — FileRow ContextMenu Copy <picture> + Copy data-URI siblings)
+Status: Phase 12 implementation complete; awaiting `/gsd:verify-phase` 12
+Last activity: 2026-06-03 -- Phase 12 Plan 05 complete (FileRow Copy <picture> + Copy data-URI)
 Progress: [██████████] 100%
 
 ## Performance Metrics
@@ -54,6 +54,7 @@ Progress: [██████████] 100%
 | Phase 09-codec-encoders P03 | 20m | 2 tasks | 3 files |
 | Phase 10-single-file-optimize-loop P02 | 10m | 2 tasks | 2 files |
 | Phase 11-batch-optimize-export P05 | ~13m | 4 tasks | 6 files |
+| Phase 12-real-snippets P05 | ~15m | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -76,6 +77,8 @@ Progress: [██████████] 100%
 - [Phase ?]: useOptimize stale-closure fix: read filesAtom.get() at call time
 - [Phase 11-05]: buildZip uses streamFiles:true + DEFLATE level:1 (codec outputs already compressed); sanitizeBaseName(renameExtension) composed before zip.file (T-11-01); empty input throws NO_EXPORTABLE_FILES
 - [Phase 11-05]: Rule-2 auto-add — mounted sonner Toaster in App.tsx (was missing app-wide; blocked D-12 toast contract)
+- [Phase 12-05]: FileRow ContextMenu Copy <picture> + Copy data-URI siblings wired via useSnippets per-file methods; D-13 disable-then-explain triple matches Phase 11 Save as… analog; label standardized to 'Copy data-URI' (hyphenated)
+- [Phase 12-05]: Rule-3 env repair — installed @esbuild/darwin-arm64 platform binary (npm-cli/4828 family, same precedent as scripts/ensure-rollup-binding.mjs); --no-save --ignore-scripts --cpu=arm64 flags; no package.json/lockfile change
 
 ### Conventions (carried from v1.0)
 
@@ -98,8 +101,9 @@ Progress: [██████████] 100%
 
 ## Session Continuity
 
-**Last session:** 2026-06-01T11:12:36.587Z
-**To resume:** Run `/gsd-plan-phase 8` to plan the Worker Pipeline Foundation phase.
+**Last session:** 2026-06-03T12:36:11Z
+**Stopped At:** Completed Phase 12 Plan 05 (last plan in Phase 12)
+**To resume:** Run `/gsd:verify-phase 12` to validate Phase 12 (SNIP-01 across all 5 surfaces).
 
 ---
 
