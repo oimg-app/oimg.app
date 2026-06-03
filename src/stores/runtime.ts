@@ -1,6 +1,7 @@
 // Phase 03 — STORE-04: runtimeAtom + startRun/stopRun/pushToast/dismissToast. Source: 03-01-PLAN.md
 // Phase 09 — Plan 03: encodingFileId + setEncodingFile for DeltaStrip in-flight shimmer (UI-SPEC §4)
-import { map } from 'nanostores'
+// Quick 260603-s2x: watchedFolderAtom — active "Watch folder" state (handle + observer).
+import { atom, map } from 'nanostores'
 
 export interface Toast {
   id: string
@@ -66,3 +67,15 @@ export function setJobCounts(running: number, queued: number): void {
 export function setEncodingFile(id: string | null): void {
   runtimeAtom.setKey('encodingFileId', id)
 }
+
+// Quick 260603-s2x: "Watch folder" active state — directory handle + (optional) observer.
+// T-WF-03: observer ref stored here so stopWatching() can disconnect before a new pick.
+// Future "Stop watching" UI affordance reads this atom; out of scope for this task.
+// FileSystemObserver is not yet in lib.dom.d.ts (Chrome 132+ behind flag); typed loosely.
+export interface WatchedFolderState {
+  name: string
+  handle: FileSystemDirectoryHandle
+  observer: { disconnect: () => void } | null
+}
+
+export const watchedFolderAtom = atom<WatchedFolderState | null>(null)
