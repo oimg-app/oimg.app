@@ -29,6 +29,7 @@ import {
 } from '@/stores'
 import type { FileEntry } from '@/stores/files'
 import { useExport } from '@/hooks/useExport'
+import { useSnippets } from '@/hooks/useSnippets'
 
 // PITFALL-05: key on 'jpg' not 'jpeg' (type field in FileEntry uses 'jpg')
 const BADGE_CLASS: Record<string, string> = {
@@ -43,6 +44,7 @@ export function FileRow({ file }: { file: FileEntry }) {
   const { rowMenu } = useStore(uiAtom)
   const { selectedId } = useStore(filesAtom)
   const { exportOne } = useExport()
+  const { copyPictureOne, copyDataUriOne } = useSnippets()
   // PITFALL-01: Attach ref to ContextMenuTrigger directly — it accepts ref.
   // Do NOT use asChild + plain div + forwardRef (ref won't merge).
   const rowRef = useRef<HTMLElement>(null)
@@ -143,11 +145,19 @@ export function FileRow({ file }: { file: FileEntry }) {
           <DownloadSimple size={14} />
           Save as…
         </ContextMenuItem>
-        <ContextMenuItem onSelect={() => { /* @TODO Phase 3 — pushToast('Copy data URI') */ }}>
+        <ContextMenuItem
+          disabled={file.status !== 'done'}
+          title={file.status !== 'done' ? 'Optimize this file first' : undefined}
+          onSelect={() => { void copyDataUriOne(file) }}
+        >
           <Copy size={14} />
-          Copy data URI
+          Copy data-URI
         </ContextMenuItem>
-        <ContextMenuItem onSelect={() => { /* @TODO Phase 3 — pushToast('Copy <picture>') */ }}>
+        <ContextMenuItem
+          disabled={file.status !== 'done'}
+          title={file.status !== 'done' ? 'Optimize this file first' : undefined}
+          onSelect={() => { void copyPictureOne(file) }}
+        >
           <Code size={14} />
           {'Copy <picture>'}
         </ContextMenuItem>
