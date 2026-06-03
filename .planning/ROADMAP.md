@@ -106,7 +106,12 @@ Shipped as **Executed** — all 22 plans built + summarized; formal phase verifi
   1. Base64 data-URI, URL-encoded, and `<picture>` snippets are generated from the selected file's real encoded bytes (not stub placeholders)
   2. Copying a snippet yields a valid, paste-ready string that renders the optimized image when used in a page
   3. Selecting a different file or re-optimizing refreshes the snippets to match the current output
-**Plans**: TBD
+**Plans**: 5 plans (2 waves)
+- [ ] 12-01-PLAN.md — clipboard chokepoint (copyToClipboard) + Wave 0 mocks helper + unit test [SNIP-01, D-14/D-15]
+- [ ] 12-02-PLAN.md — snippet builders refactor: buildDataUri dispatcher + chunked base64 + Yoksel SVG URL-encoded + escapeAttr + D-03/D-04 picture shape [SNIP-01, D-01/D-02/D-03/D-04, T-12-01/T-12-02]
+- [ ] 12-03-PLAN.md — OutputPanel live refresh (D-05 dep array) + D-06 per-status states + D-15 chokepoint routing [SNIP-01, D-05/D-06/D-07/D-15]
+- [ ] 12-04-PLAN.md — useSnippets hook + Toolbar bulk wiring (Copy <picture> / Copy data URIs / Manifest JSON) + dead stub deletion [SNIP-01, D-08/D-09/D-10/D-11]
+- [ ] 12-05-PLAN.md — FileRow ContextMenu Copy <picture> + Copy data-URI siblings to Save as… [SNIP-01, D-12/D-13]
 **UI hint**: yes
 
 ## Progress
@@ -124,7 +129,7 @@ Shipped as **Executed** — all 22 plans built + summarized; formal phase verifi
 | 9. Codec Encoders | v1.1 | 4/4 | Complete   | 2026-05-26 |
 | 10. Single-File Optimize Loop | v1.1 | 4/4 | Complete    | 2026-05-28 |
 | 11. Batch Optimize + Export | v1.1 | 0/9 | Planned | - |
-| 12. Real Snippets | v1.1 | 0/? | Not started | - |
+| 12. Real Snippets | v1.1 | 0/5 | Planned | - |
 
 ---
 
