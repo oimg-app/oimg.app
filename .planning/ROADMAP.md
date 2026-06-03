@@ -28,7 +28,7 @@ Shipped as **Executed** — all 22 plans built + summarized; formal phase verifi
 - [x] **Phase 9: Codec Encoders** — PNG/WebP/JPEG/AVIF/SVG adapters wired so inspector settings drive real encode output (completed 2026-05-26)
 - [x] **Phase 10: Single-File Optimize Loop** — Drop one file → real optimized output with accurate before/after sizes in the Report (completed 2026-05-28)
 - [x] **Phase 11: Batch Optimize + Export** — Optimize-all through the pool with live progress, single-file download, and batch ZIP export (completed 2026-06-02)
-- [ ] **Phase 12: Real Snippets** — Output panel snippets reflect the selected file's actual encoded bytes
+- [x] **Phase 12: Real Snippets** — Output panel snippets reflect the selected file's actual encoded bytes (completed 2026-06-03; 4 paste-into-browser checks documented in 12-VERIFICATION.md)
 
 ## Phase Details
 
