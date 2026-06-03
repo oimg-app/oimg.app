@@ -21,6 +21,7 @@ export function CenterHeader() {
   const { zoom } = useStore(uiAtom)
   const selectedFile = useStore($selectedFile)
   const { codec, q, resizeOn, w, h } = useStore(settingsAtom)
+  const quality = selectedFile?.settings?.q ?? q
 
   return (
     <header className="flex items-center justify-between h-9 px-3 border-b border-[var(--color-line)] bg-[var(--color-bg-1)] shrink-0">
@@ -44,7 +45,7 @@ export function CenterHeader() {
             {/* quality from inspector slider — hidden for SVG */}
             {codec !== 'SVG' && (
                 <>
-                  <span className={FILE_TAG}>q{selectedFile?.settings?.q || q}</span>
+                  <span className={FILE_TAG}>q{quality}</span>
                   <span className={FILE_TAG}>e{selectedFile?.settings?.method}</span>
                 </>
             )}

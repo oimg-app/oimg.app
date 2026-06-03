@@ -111,12 +111,15 @@ async function optimize(job: EncodeJob): Promise<EncodeResult> {
       case 'PNG': {
         // WR-02: empty-buffer guard before any await import (T-9-V5)
         if (job.buffer.byteLength === 0) throw new Error('Empty buffer')
+        let imageData = await decodeSource(job.buffer, job.sourceFormat)
+        if (!imageData) throw new Error('Failed to decode source')
+        imageData = imageData && await maybeResize(imageData, job.settings)
         // OxiPNG optimise accepts ArrayBuffer directly for PNG→PNG; no decode needed
         const { optimise } = await import('@jsquash/oxipng')
         // WR-05: clamp effort→level to OxiPNG's valid 0–6 range. `as number` + `?? 2` only caught
         // null/undefined, not NaN or out-of-range; Number(...) || 2 also rescues NaN.
         const level = Math.min(6, Math.max(0, Number(job.settings.method) || 2))  // map effort→level (Pitfall 4)
-        const result = await optimise(job.buffer, { level, interlace: false, optimiseAlpha: true })
+        const result = await optimise(imageData, { level, interlace: false, optimiseAlpha: true })
         // WR-03: zero-copy return via Comlink.transfer
         return Comlink.transfer(
           { buffer: result, originalSize: job.buffer.byteLength, optimizedSize: result.byteLength },
@@ -132,8 +135,8 @@ async function optimize(job: EncodeJob): Promise<EncodeResult> {
         imageData = imageData && await maybeResize(imageData, job.settings)
         const { encode } = await import('@jsquash/webp')
         const result = await encode(imageData, {
-          quality: job.settings.q ?? 82,
-          method: job.settings.method ?? 4,
+          quality: job.settings.q,
+          method: job.settings.method,
           lossless: job.settings.lossless ? 1 : 0,
         })
 

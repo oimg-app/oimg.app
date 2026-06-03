@@ -246,7 +246,7 @@ export function CompareStage() {
         {/* split label right */}
         <div className="absolute bottom-3 right-3 flex items-center gap-1.5 px-2 py-1 rounded-[4px] font-mono text-[11px] font-semibold text-[var(--color-fg-0)] bg-[var(--color-bg-0)]/70 backdrop-blur-sm pointer-events-none">
           <span className="w-2 h-2 rounded-full bg-[var(--color-accent)] shrink-0" />
-          {selectedFile?.target.toUpperCase() ?? '—'} · {fmtBytes(selectedFile?.opt ?? null)}
+          {selectedFile?.settings?.codec.toUpperCase() ?? '—'} · {fmtBytes(selectedFile?.opt ?? null)}
         </div>
       </div>
     </div>

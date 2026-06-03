@@ -235,7 +235,7 @@ export function CodecPanel() {
           {/* INSP-04 — Resize */}
           <Section title="Resize">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-[12px] text-[var(--color-fg-2)]">Resize on export</span>
+              <span className="text-[12px] text-[var(--color-fg-2)]">Resize</span>
               <Switch checked={settings.resizeOn} onCheckedChange={handleSetResizeOn} />
             </div>
             {settings.resizeOn && (

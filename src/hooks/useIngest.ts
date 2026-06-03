@@ -62,7 +62,7 @@ async function fileToEntry(file: File): Promise<FileEntry> {
     orig: file.size,       // D-08: truthful File.size at ingest
     opt: file.size,        // pending — setFileResult overwrites on encode completion
     status: 'processing',  // D-10: DeltaStrip shimmer visible during pending window
-    target: type,
+    target: '',
     dim,
     q: 82,
     createdAt: Date.now(), // Pitfall 2: required for queue-order sort (D-04)
