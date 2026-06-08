@@ -76,6 +76,10 @@ export interface FileSettings {
   aggressive: boolean
   plugins: SvgoPlugin[]
   progressive?: boolean  // JPEG only — default true (Pitfall 6)
+
+  colorsOn: boolean
+  colors: number
+  dithering: number
 }
 
 // D-01: shallow-copy helper — call when adding entries to assign per-file defaults without aliasing.
@@ -117,6 +121,7 @@ export function defaultFileSettings(type: string, q: number | null): FileSetting
     method: 4,
     lossless: false,
     resizeOn: false,
+    colorsOn: false,
     w: '1600',
     h: 'auto',
     alg: 'lanczos3',
@@ -126,6 +131,8 @@ export function defaultFileSettings(type: string, q: number | null): FileSetting
     aggressive: false,
     plugins: SVGO_PLUGINS.map((p) => ({ ...p })),
     progressive: true,
+    colors: 256,
+    dithering: 1,
   }
 }
 
@@ -199,37 +206,3 @@ export const STUB_FILES: FileEntry[] = STUB_FILES_SEED.map((e) => ({
 export const CODECS = ['SVG', 'PNG', 'WebP', 'JPEG', 'AVIF'] as const
 export const RESIZE_ALGS = ['lanczos3', 'mitchell', 'catrom', 'triangle'] as const
 export const FIT_MODES = ['cover', 'contain', 'fill'] as const
-
-/**
- * ICON-01: lucide→phosphor name map. Phase 2+ components import phosphor icons by these names
- * directly (no wrapper); this map is the canonical reference. Components must NOT import this
- * module directly (STORE-08) — it lives here so requirement coverage is centralized.
- */
-export const ICON_MAP = {
-  Play: 'PlayCircle',
-  Pause: 'PauseCircle',
-  Upload: 'UploadSimple',
-  Download: 'DownloadSimple',
-  Layers: 'Stack',
-  Filter: 'Funnel',
-  More: 'DotsThreeVertical',
-  Zap: 'Lightning',
-  BarChart: 'ChartBar',
-  Grid: 'SquaresFour',
-  Lock: 'LockSimple',
-  Eye: 'Eye',
-  File: 'File',
-  Image: 'Image',
-  Code: 'Code',
-  Check: 'Check',
-  X: 'X',
-  ChevronRight: 'CaretRight',
-  ChevronDown: 'CaretDown',
-  Trash: 'Trash',
-  Search: 'MagnifyingGlass',
-  Settings: 'GearSix',
-  Copy: 'Copy',
-  Sun: 'Sun',
-  Moon: 'Moon',
-  Plus: 'Plus',
-} as const

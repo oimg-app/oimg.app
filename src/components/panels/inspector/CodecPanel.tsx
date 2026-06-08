@@ -13,7 +13,7 @@ import {
   setResizeOn,
   setResizeDimensions,
   setFit,
-  setAlg,
+  setAlg, setColors, setDithering, setColorsOn,
 } from '@/stores/settings'
 import type { Codec } from '@/stores/settings'
 import type { FileSettings } from '@/stores/files'
@@ -97,6 +97,33 @@ export function CodecPanel() {
       trigger(selectedFile.id)
     } else {
       setResizeOn(v)
+    }
+  }
+
+  function handleSetColors(v: number) {
+    if (selectedFile) {
+      setFileSettings(selectedFile.id, 'colors', v)
+      trigger(selectedFile.id)
+    } else {
+      setColors(v)
+    }
+  }
+
+  function handleSetColorsOn(v: boolean) {
+    if (selectedFile) {
+      setFileSettings(selectedFile.id, 'colorsOn', v)
+      trigger(selectedFile.id)
+    } else {
+      setColorsOn(v)
+    }
+  }
+
+  function handleSetDithering(v: number) {
+    if (selectedFile) {
+      setFileSettings(selectedFile.id, 'dithering', v)
+      trigger(selectedFile.id)
+    } else {
+      setDithering(v)
     }
   }
 
@@ -265,6 +292,47 @@ export function CodecPanel() {
                   <SegControl options={RESIZE_ALGS} value={settings.alg} onChange={handleSetAlg} aria-label="Algorithm" />
                 </div>
               </div>
+            )}
+          </Section>
+          {/* Colors */}
+          <Section title="Reduce palette">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[12px] text-[var(--color-fg-2)]">Reduce palette</span>
+              <Switch checked={settings.colorsOn} onCheckedChange={handleSetColorsOn} />
+            </div>
+            {settings.colorsOn && (
+                <div className="space-y-2">
+                  <div className="grid grid-cols-[100px_1fr] gap-2 mb-2 items-center">
+                    <span className="text-[12px] text-[var(--color-fg-2)]">Colors</span>
+                    <div className="grid grid-cols-[1fr_42px] gap-2 items-center">
+                      <Slider2
+                          min={1} max={256} step={1}
+                          value={[settings.colors]}
+                          onValueChange={([v]) => handleSetColors(v)}
+                          className="w-full"
+                      />
+                      <span
+                          className="text-right font-mono text-[12px] font-semibold text-[var(--color-fg-0)] tabular-nums">
+                  {settings.colors}
+                </span>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-[100px_1fr] gap-2 mb-2 items-center">
+                    <span className="text-[12px] text-[var(--color-fg-2)]">Dithering</span>
+                    <div className="grid grid-cols-[1fr_42px] gap-2 items-center">
+                      <Slider2
+                          min={0} max={1} step={0.001}
+                          value={[settings.dithering]}
+                          onValueChange={([v]) => handleSetDithering(v)}
+                          className="w-full"
+                      />
+                      <span
+                          className="text-right font-mono text-[12px] font-semibold text-[var(--color-fg-0)] tabular-nums">
+                  {settings.dithering}
+                </span>
+                    </div>
+                  </div>
+                </div>
             )}
           </Section>
 

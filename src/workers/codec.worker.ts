@@ -1,8 +1,8 @@
 // Phase 08 — PIPE-01/02: Comlink codec worker — dynamic codec imports. Source: 08-02-PLAN.md
 // Phase 09 — Plan 02: Real jSquash + svgo adapters (ENC-01..05). WR-02/WR-03 fold-in.
 import * as Comlink from 'comlink'
-import type { FileSettings } from '@/lib/stub-data'
-import { SVGO_PLUGINS } from '@/lib/stub-data'
+import type {FileSettings} from '@/lib/stub-data'
+import {SVGO_PLUGINS} from '@/lib/stub-data'
 
 // Dev guard: warn if crossOriginIsolated is false (OxiPNG MT will be disabled)
 if (import.meta.env.DEV && !crossOriginIsolated) {
@@ -89,6 +89,22 @@ async function maybeResize(imageData: ImageData, settings: FileSettings): Promis
   })
 }
 
+async function maybeReduceColors(imageData: ImageData, settings: FileSettings): Promise<ImageData> {
+  if (!settings.colorsOn) return imageData
+
+  const { quantize } = await import('@squoosh-kit/imagequant')
+
+  try {
+    const res = await quantize(imageData,{ numColors: settings.colors, dither: settings.dithering })
+
+    return new ImageData(res.data as ImageDataArray, res.width, res.height)
+  } catch (err) {
+    console.error({ err })
+  }
+
+  return imageData
+}
+
 async function optimize(job: EncodeJob): Promise<EncodeResult> {
   // Validate codec against known enum before dispatch — never index with raw value (T-9-ENUM)
   if (!KNOWN_CODECS.has(String(job.codec))) {
@@ -114,6 +130,8 @@ async function optimize(job: EncodeJob): Promise<EncodeResult> {
         let imageData = await decodeSource(job.buffer, job.sourceFormat)
         if (!imageData) throw new Error('Failed to decode source')
         imageData = imageData && await maybeResize(imageData, job.settings)
+        imageData = imageData && await maybeReduceColors(imageData, job.settings)
+
         // OxiPNG optimise accepts ArrayBuffer directly for PNG→PNG; no decode needed
         const { optimise } = await import('@jsquash/oxipng')
         // WR-05: clamp effort→level to OxiPNG's valid 0–6 range. `as number` + `?? 2` only caught
@@ -133,6 +151,8 @@ async function optimize(job: EncodeJob): Promise<EncodeResult> {
         let imageData = await decodeSource(job.buffer, job.sourceFormat)
         if (!imageData) throw new Error('Failed to decode source')
         imageData = imageData && await maybeResize(imageData, job.settings)
+        imageData = imageData && await maybeReduceColors(imageData, job.settings)
+
         const { encode } = await import('@jsquash/webp')
         const result = await encode(imageData, {
           quality: job.settings.q,
@@ -152,6 +172,8 @@ async function optimize(job: EncodeJob): Promise<EncodeResult> {
         let imageData = await decodeSource(job.buffer, job.sourceFormat)
         if (!imageData) throw new Error('Failed to decode source')
         imageData = await maybeResize(imageData, job.settings)
+        imageData = imageData && await maybeReduceColors(imageData, job.settings)
+
         const { encode } = await import('@jsquash/jpeg')
         const result = await encode(imageData, {
           quality: job.settings.q ?? 75,
@@ -171,6 +193,8 @@ async function optimize(job: EncodeJob): Promise<EncodeResult> {
           let imageData = await decodeSource(job.buffer, job.sourceFormat)
           if (!imageData) throw new Error('Failed to decode source')
           imageData = await maybeResize(imageData, job.settings)
+          imageData = imageData && await maybeReduceColors(imageData, job.settings)
+
           // AVIF WASM (~8MB) lazy-loaded ONLY here — protects <200KB initial-route budget (PIPE-02)
           const { encode } = await import('@jsquash/avif')
           const result = await encode(imageData, {

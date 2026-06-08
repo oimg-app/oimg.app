@@ -23,6 +23,9 @@ interface SettingsState {
   keepIcc: boolean
   aggressive: boolean
   plugins: SvgoPlugin[]
+  colorsOn: boolean
+  colors: number
+  dithering: number
 }
 
 export const settingsAtom = map<SettingsState>({
@@ -39,6 +42,9 @@ export const settingsAtom = map<SettingsState>({
   keepIcc: false,
   aggressive: false,
   plugins: SVGO_PLUGINS,
+  colorsOn: false,
+  colors: 256,
+  dithering: 1,
 })
 
 export function setCodec(c: Codec): void { settingsAtom.setKey('codec', c) }
@@ -46,6 +52,9 @@ export function setQuality(q: number): void { settingsAtom.setKey('q', q) }
 export function setMethod(m: number): void { settingsAtom.setKey('method', m) }
 export function setLossless(v: boolean): void { settingsAtom.setKey('lossless', v) }
 export function setResizeOn(v: boolean): void { settingsAtom.setKey('resizeOn', v) }
+export function setColors(v: number): void { settingsAtom.setKey('colors', v) }
+export function setColorsOn(v: boolean): void { settingsAtom.setKey('colorsOn', v) }
+export function setDithering(v: number): void { settingsAtom.setKey('colors', v) }
 export function setResizeDimensions(w: string, h: string): void {
   settingsAtom.set({ ...settingsAtom.get(), w, h })
 }
