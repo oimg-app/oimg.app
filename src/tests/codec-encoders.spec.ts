@@ -38,7 +38,7 @@ test.describe('Codec Encoders — ENC-01..06', () => {
         buffer,
         settings: { codec: 'PNG' as const, q: 80, method: 2, lossless: false, resizeOn: false,
           w: '100', h: '100', alg: 'lanczos3', fit: 'contain', stripMeta: true,
-          keepIcc: false, aggressive: false, plugins: [] },
+          keepIcc: false, aggressive: false, plugins: [], colorsOn: false, colors: 256, dithering: 1 },
       }
       const res = await pool.run(job)
       return { byteLength: res.buffer.byteLength, optimizedSize: res.optimizedSize, originalSize: res.originalSize }
@@ -66,7 +66,7 @@ test.describe('Codec Encoders — ENC-01..06', () => {
         buffer,
         settings: { codec: 'WebP' as const, q: 80, method: 4, lossless: false, resizeOn: false,
           w: '100', h: '100', alg: 'lanczos3', fit: 'contain', stripMeta: true,
-          keepIcc: false, aggressive: false, plugins: [] },
+          keepIcc: false, aggressive: false, plugins: [], colorsOn: false, colors: 256, dithering: 1 },
       }
       const res = await pool.run(job)
       return { byteLength: res.buffer.byteLength }
@@ -94,7 +94,7 @@ test.describe('Codec Encoders — ENC-01..06', () => {
         buffer,
         settings: { codec: 'JPEG' as const, q: 80, method: 4, lossless: false, resizeOn: false,
           w: '100', h: '100', alg: 'lanczos3', fit: 'contain', stripMeta: true,
-          keepIcc: false, aggressive: false, plugins: [], progressive: true },
+          keepIcc: false, aggressive: false, plugins: [], colorsOn: false, colors: 256, dithering: 1, progressive: true },
       }
       const res = await pool.run(job)
       return { byteLength: res.buffer.byteLength }
@@ -120,7 +120,7 @@ test.describe('Codec Encoders — ENC-01..06', () => {
         buffer,
         settings: { codec: 'AVIF' as const, q: 60, method: 4, lossless: false, resizeOn: false,
           w: '100', h: '100', alg: 'lanczos3', fit: 'contain', stripMeta: true,
-          keepIcc: false, aggressive: false, plugins: [] },
+          keepIcc: false, aggressive: false, plugins: [], colorsOn: false, colors: 256, dithering: 1 },
       }
       const res = await pool.run(job)
       return { byteLength: res.buffer.byteLength }
@@ -144,7 +144,7 @@ test.describe('Codec Encoders — ENC-01..06', () => {
         buffer,
         settings: { codec: 'SVG' as const, q: 80, method: 4, lossless: false, resizeOn: false,
           w: '100', h: '100', alg: 'lanczos3', fit: 'contain', stripMeta: true,
-          keepIcc: false, aggressive: false, plugins: [] },
+          keepIcc: false, aggressive: false, plugins: [], colorsOn: false, colors: 256, dithering: 1 },
       }
       const res = await pool.run(job)
       // SVG result is returned as buffer containing UTF-8 text
@@ -173,7 +173,7 @@ test.describe('Codec Encoders — ENC-01..06', () => {
 
       const baseSettings = { codec: 'WebP', method: 4, lossless: false, resizeOn: false,
         w: '100', h: '100', alg: 'lanczos3', fit: 'contain', stripMeta: true,
-        keepIcc: false, aggressive: false, plugins: [] }
+        keepIcc: false, aggressive: false, plugins: [], colorsOn: false, colors: 256, dithering: 1 }
 
       const jobHigh = {
         codec: 'WebP' as const,
@@ -208,7 +208,7 @@ test.describe('Codec Encoders — ENC-01..06', () => {
         buffer: new ArrayBuffer(0),
         settings: { codec: 'WebP' as const, q: 80, method: 4, lossless: false, resizeOn: false,
           w: '100', h: '100', alg: 'lanczos3', fit: 'contain', stripMeta: true,
-          keepIcc: false, aggressive: false, plugins: [] },
+          keepIcc: false, aggressive: false, plugins: [], colorsOn: false, colors: 256, dithering: 1 },
       }
       try {
         await pool.run(job)

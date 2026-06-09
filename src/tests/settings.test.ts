@@ -24,6 +24,9 @@ try {
     stripMeta: true,
     keepIcc: false,
     aggressive: false,
+    colorsOn: false,
+    colors: 256,
+    dithering: 1,
   }
 
   // ── Defaults ──────────────────────────────────────────────────────────────

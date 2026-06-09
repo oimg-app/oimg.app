@@ -89,6 +89,7 @@ test.describe('OutputPanel — D-05 live refresh + D-06 per-status + D-15 chokep
 
     // Live mutation — swap bytes in-place. Mirrors useLiveEncode push path.
     await page.evaluate(async () => {
+      // @ts-expect-error — `/src/...` is a Vite dev-server runtime path, not a TS-resolvable module specifier
       const filesMod = (await import(/* @vite-ignore */ '/src/stores/files.ts')) as typeof import('../stores/files')
       const { filesAtom } = filesMod
       const newBuf = new Uint8Array([89, 89, 89]).buffer
