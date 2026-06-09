@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="320" viewBox="-6 -6 118 124">
+  <defs>
+    <linearGradient id="face" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="oklch(88% .15 145)" />
+      <stop offset="55%" stop-color="oklch(80% .17 145)" />
+      <stop offset="100%" stop-color="oklch(72% .16 145)" />
+    </linearGradient>
+    <filter id="soft" x="-40%" y="-40%" width="180%" height="180%">
+      <feDropShadow dx="0" dy="7" stdDeviation="6" flood-color="oklch(55% .14 145)" flood-opacity="0.45" />
+    </filter>
+  </defs>
+  <g transform="translate(7,7)"><polygon points="0,0 100,0 100,62 62,100 0,100" fill="oklch(50% .12 145)" /></g>
+  <g transform="translate(4,4)"><polygon points="0,0 100,0 100,62 62,100 0,100" fill="oklch(62% .15 145)" /></g>
+  <g filter="url(#soft)">
+    <polygon points="0,0 100,0 100,62 62,100 0,100" fill="url(#face)" />
+    <polyline points="0,1 99,1" fill="none" stroke="oklch(92% .12 145)" stroke-width="1.6" stroke-linecap="round" />
+    <polyline points="1,0 1,99" fill="none" stroke="oklch(90% .12 145)" stroke-width="1.6" stroke-linecap="round" />
+    <polyline points="100,62 62,100" fill="none" stroke="oklch(68% .16 145)" stroke-width="2" stroke-linecap="round" />
+  </g>
+</svg>
