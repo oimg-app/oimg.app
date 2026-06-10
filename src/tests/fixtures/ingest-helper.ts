@@ -18,11 +18,11 @@ export async function ingestFixtureFiles(page: Page, count = 1): Promise<void> {
     // how Vite serves source modules during dev (see http://localhost:5174/src/...).
     // Use a computed specifier so TS doesn't try to statically resolve the dev-server URL
     // (the bundler resolver doesn't know about /src/* — that's a Vite dev-only contract).
-    const filesUrl = '/src/stores/files.ts'
-    const stubUrl = '/src/lib/stub-data.ts'
-    const filesMod = (await import(/* @vite-ignore */ filesUrl)) as typeof import('../../stores/files')
+
+
+    const filesMod = (await import('../../stores/files'))
     const { filesAtom, setFileRawBuffer } = filesMod
-    const stubMod = (await import(/* @vite-ignore */ stubUrl)) as typeof import('../../lib/stub-data')
+    const stubMod = (await import('../../lib/stub-data'))
     const { defaultFileSettings } = stubMod
 
     // Reuse the same 1×1 PNG base64 string as TINY_PNG_B64 in stub-data.ts (line 135-136)

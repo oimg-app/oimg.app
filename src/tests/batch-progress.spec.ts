@@ -13,8 +13,8 @@ async function resetAllToQueued(page: import('@playwright/test').Page): Promise<
   await page.evaluate(async () => {
     // Absolute /src/... path per MEMORY note; computed specifier so TS skips static
     // resolution (the dev-server URL contract isn't known to the bundler resolver).
-    const filesUrl = '/src/stores/files.ts'
-    const mod = (await import(/* @vite-ignore */ filesUrl)) as typeof import('../stores/files')
+    
+    const mod = (await import('../stores/files'))
     const { filesAtom } = mod
     const { entries } = filesAtom.get()
     filesAtom.setKey(

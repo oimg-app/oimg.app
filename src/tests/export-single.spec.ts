@@ -26,10 +26,10 @@ import { installSaveFileMocks } from './setup/save-file-mocks'
 async function injectDoneFile(page: Page, id = 'fixture-0', name = 'fixture-0.png'): Promise<void> {
   await page.evaluate(
     async ({ id, name }) => {
-      const filesUrl = '/src/stores/files.ts'
-      const stubUrl = '/src/lib/stub-data.ts'
-      const filesMod = (await import(/* @vite-ignore */ filesUrl)) as typeof import('../stores/files')
-      const stubMod = (await import(/* @vite-ignore */ stubUrl)) as typeof import('../lib/stub-data')
+      
+      
+      const filesMod = (await import('../stores/files'))
+      const stubMod = (await import('../lib/stub-data'))
       const { filesAtom } = filesMod
       const { defaultFileSettings } = stubMod
 

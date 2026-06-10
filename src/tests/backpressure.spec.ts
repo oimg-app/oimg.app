@@ -10,8 +10,8 @@ import { ingestFixtureFiles } from './fixtures/ingest-helper'
  */
 async function resetAllToQueued(page: import('@playwright/test').Page): Promise<void> {
   await page.evaluate(async () => {
-    const filesUrl = '/src/stores/files.ts'
-    const mod = (await import(/* @vite-ignore */ filesUrl)) as typeof import('../stores/files')
+    
+    const mod = (await import('../stores/files'))
     const { filesAtom } = mod
     const { entries } = filesAtom.get()
     filesAtom.setKey('entries', entries.map((e) => ({ ...e, status: 'queued' as const })))

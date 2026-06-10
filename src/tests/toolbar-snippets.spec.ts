@@ -37,10 +37,10 @@ interface InjectSpec {
 async function injectEntries(page: Page, specs: InjectSpec[]): Promise<void> {
   await page.evaluate(
     async ({ specs, TINY_WEBP_B64 }) => {
-      const filesUrl = '/src/stores/files.ts'
-      const stubUrl = '/src/lib/stub-data.ts'
-      const filesMod = (await import(/* @vite-ignore */ filesUrl)) as typeof import('../stores/files')
-      const stubMod = (await import(/* @vite-ignore */ stubUrl)) as typeof import('../lib/stub-data')
+      
+      
+      const filesMod = (await import('../stores/files'))
+      const stubMod = (await import('../lib/stub-data'))
       const { filesAtom } = filesMod
       const { defaultFileSettings } = stubMod
 

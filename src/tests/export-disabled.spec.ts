@@ -21,8 +21,8 @@ import { ingestFixtureFiles } from './fixtures/ingest-helper'
  */
 async function resetAllToQueued(page: Page): Promise<void> {
   await page.evaluate(async () => {
-    const filesUrl = '/src/stores/files.ts'
-    const mod = (await import(/* @vite-ignore */ filesUrl)) as typeof import('../stores/files')
+    
+    const mod = (await import('../stores/files'))
     const { filesAtom } = mod
     const { entries } = filesAtom.get()
     filesAtom.setKey('entries', entries.map((e) => ({ ...e, status: 'queued' as const })))
@@ -36,8 +36,8 @@ async function resetAllToQueued(page: Page): Promise<void> {
 async function waitForHasDone(page: Page, expected: boolean): Promise<void> {
   await page.waitForFunction(
     async (want) => {
-      const filesUrl = '/src/stores/files.ts'
-      const mod = (await import(/* @vite-ignore */ filesUrl)) as typeof import('../stores/files')
+      
+      const mod = (await import('../stores/files'))
       return mod.filesAtom.get().entries.some((e) => e.status === 'done') === want
     },
     expected,
@@ -92,8 +92,8 @@ test.describe('D-13 — Export disable-then-explain', () => {
     // Close popover by pressing Escape, then flip entry to done.
     await page.keyboard.press('Escape')
     await page.evaluate(async () => {
-      const filesUrl = '/src/stores/files.ts'
-      const mod = (await import(/* @vite-ignore */ filesUrl)) as typeof import('../stores/files')
+      
+      const mod = (await import('../stores/files'))
       const { filesAtom } = mod
       const { entries } = filesAtom.get()
       filesAtom.setKey('entries', entries.map((e) => ({ ...e, status: 'done' as const })))
