@@ -29,12 +29,8 @@ interface InjectSpec {
 async function injectEntries(page: Page, specs: InjectSpec[]): Promise<void> {
   await page.evaluate(
     async ({ specs }) => {
-      const filesUrl = '/src/stores/files.ts'
-      const stubUrl = '/src/lib/stub-data.ts'
-      const filesMod = (await import(/* @vite-ignore */ filesUrl)) as typeof import('../stores/files')
-      const stubMod = (await import(/* @vite-ignore */ stubUrl)) as typeof import('../lib/stub-data')
-      const { filesAtom } = filesMod
-      const { defaultFileSettings } = stubMod
+      const { filesAtom } = (await import('../stores/files'))
+      const { defaultFileSettings } = (await import('../lib/stub-data'))
 
       const entries = specs.map((s, i) => {
         const byteArr = new Uint8Array(s.bytes ?? [1, 2, 3])
