@@ -2,8 +2,10 @@
 // Phase 10 — Plan 04: dropzone + Add files → useIngest; hidden file-input fallback. Source: 10-04-PLAN.md
 import { useState, useRef } from 'react'
 import { useStore } from '@nanostores/react'
-import { Funnel, Plus } from '@phosphor-icons/react'
-import { $filteredFiles, $totals, setSortBy } from '@/stores'
+import { Funnel, Plus, XCircle } from '@phosphor-icons/react'
+import { toast } from 'sonner'
+import { $filteredFiles, $totals, setSortBy, $queueEmpty, clearFiles } from '@/stores'
+import { runtimeAtom } from '@/stores/runtime'
 import type { SortKey } from '@/stores/files'
 import { fmtBytes } from '@/lib/format'
 import { cn } from '@/lib/utils'
@@ -26,10 +28,24 @@ const ACCEPT = '.png,.jpg,.jpeg,.webp,.svg,.avif,.heic,.heif,image/png,image/jpe
 export function FilesPane() {
   const files = useStore($filteredFiles)
   const totals = useStore($totals)
+  const queueEmpty = useStore($queueEmpty)
   const { ingest, openPicker } = useIngest()
   const inputRef = useRef<HTMLInputElement>(null)
   // STORE-08: dragActive is ephemeral UI state — allowed
   const [dragActive, setDragActive] = useState(false)
+
+  // Phase 13 — CLR-01 / D-15 / T-13-03: mirror Plan 05 Toolbar handler shape for affordance parity.
+  // runtimeAtom.get() snapshot read inside handler (NOT useStore) — avoids re-renders on job-count delta.
+  function handleClearAll() {
+    const { runningJobs } = runtimeAtom.get()
+    if (runningJobs > 0) {
+      toast.warning(`Cancel ${runningJobs} in-flight jobs?`, {
+        action: { label: 'Clear anyway', onClick: () => clearFiles() },
+      })
+      return
+    }
+    clearFiles()
+  }
 
   function handleDragOver(e: React.DragEvent) {
     e.preventDefault()    // Pitfall 3: required — enables drop
@@ -68,6 +84,21 @@ export function FilesPane() {
           Queue · {files.length} files
         </span>
         <div className="flex items-center gap-1">
+          {/* Phase 13 — CLR-01 / D-15: × icon with disable-then-explain triple + T-13-03 confirmation toast.
+              Placed LEFT of the Sort funnel — destructive action visually separated from Add. */}
+          <button
+            className={cn(
+              "w-[22px] h-[22px] grid place-items-center rounded text-[var(--fg-2)] hover:bg-[var(--bg-3)] hover:text-[var(--fg-0)]",
+              queueEmpty && 'opacity-50 cursor-not-allowed'
+            )}
+            aria-label="Clear all files"
+            title={queueEmpty ? 'No files to clear' : 'Clear all files'}
+            onClick={() => handleClearAll()}
+            disabled={queueEmpty}
+            aria-disabled={queueEmpty}
+          >
+            <XCircle size={13} />
+          </button>
           <Popover>
             <PopoverTrigger asChild>
               <button
