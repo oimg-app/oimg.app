@@ -17,6 +17,7 @@ import {
   filesAtom,
   $hasDone,
   $queueEmpty,
+  $selectedFile,
   setFilter,
   addFromUrl,
   clearFiles,
@@ -33,6 +34,13 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+} from "@/components/ui/tabs";
+import { copyToClipboard } from "@/lib/clipboard";
 import { cn } from "@/lib/utils";
 
 const tbtnClass =
@@ -56,8 +64,11 @@ function ToolbarDivider() {
 export function Toolbar() {
   const { open, view, theme } = useStore(uiAtom);
   const { filterQuery } = useStore(filesAtom);
+  const selectedFile = useStore($selectedFile);
   const hasDone = useStore($hasDone);
   const queueEmpty = useStore($queueEmpty);
+  // Phase 13 — D-11: subscribe to runtimeAtom for versions + caps render in Diagnostics tab.
+  const { versions, caps } = useStore(runtimeAtom);
   const clearDisabledTitle = queueEmpty ? "No files to clear" : undefined;
   // Phase 13 — D-14 / T-13-03: warning-toast confirmation when work is in flight.
   // Read runtimeAtom.get() inside the handler (NOT useStore) — avoids Toolbar re-renders
@@ -172,7 +183,7 @@ export function Toolbar() {
             !hasDone && "opacity-50 cursor-not-allowed",
           )}
           onClick={() => {
-            void exportZip();
+            selectedFile && exportOne(selectedFile);
             setOpen(null);
           }}
           disabled={!hasDone}
@@ -418,37 +429,85 @@ export function Toolbar() {
           </button>
         </PopoverTrigger>
         <PopoverContent className={popoverContentClass} align="end">
-          <div className="flex flex-col">
-            <button
-              type="button"
-              className={menuItemClass}
-              onClick={() => {
-                setWorkerCount(4);
-                setOpen(null);
-              }}
-            >
-              Workers: 4 (auto)
-            </button>
-            {/* Phase 13 — D-14 / CLR-01: Clear all menu item with disable-then-explain triple.
-                Mirrors Export button shape (lines 96-100 + 122-126). Plan 07 will wrap this
-                content in Radix Tabs (General + Diagnostics). */}
-            <button
-              type="button"
-              className={cn(
-                menuItemClass,
-                queueEmpty && "opacity-50 cursor-not-allowed",
-              )}
-              onClick={() => {
-                handleClearAll();
-                setOpen(null);
-              }}
-              disabled={queueEmpty}
-              aria-disabled={queueEmpty}
-              title={clearDisabledTitle}
-            >
-              Clear all
-            </button>
-          </div>
+          {/* Phase 13 — D-10 / D-11 / D-12: Settings popover content is a Radix Tabs surface
+              with two tabs (General + Diagnostics). General tab keeps Plan 05's Workers +
+              Clear all verbatim. Diagnostics tab renders versions + caps <dl> + a
+              Copy diagnostics button routed through the Phase 12 copyToClipboard chokepoint. */}
+          <Tabs defaultValue="general" className="w-[280px]">
+            <TabsList variant="line" className="w-full">
+              <TabsTrigger value="general">General</TabsTrigger>
+              <TabsTrigger value="diagnostics">Diagnostics</TabsTrigger>
+            </TabsList>
+            <TabsContent value="general" className="p-2">
+              <button
+                type="button"
+                className={menuItemClass}
+                onClick={() => {
+                  setWorkerCount(4);
+                  setOpen(null);
+                }}
+              >
+                Workers: 4 (auto)
+              </button>
+              {/* Phase 13 — D-14 / CLR-01: Clear all menu item with disable-then-explain triple.
+                  Mirrors Export button shape (lines 96-100 + 122-126). */}
+              <button
+                type="button"
+                className={cn(
+                  menuItemClass,
+                  queueEmpty && "opacity-50 cursor-not-allowed",
+                )}
+                onClick={() => {
+                  handleClearAll();
+                  setOpen(null);
+                }}
+                disabled={queueEmpty}
+                aria-disabled={queueEmpty}
+                title={clearDisabledTitle}
+              >
+                Clear all
+              </button>
+            </TabsContent>
+            <TabsContent value="diagnostics" className="p-2">
+              {/* Phase 13 — D-11: Read-only diagnostic surface. T-13-04 mitigation:
+                  no dangerouslySetInnerHTML — React's default escaping handles all values. */}
+              <dl className="grid grid-cols-2 gap-x-2 gap-y-0.5 font-mono text-[10px]">
+                <dt>svgo</dt>
+                <dd>{versions.svgo}</dd>
+                <dt>jsquash webp</dt>
+                <dd>{versions.jsquash.webp}</dd>
+                <dt>jsquash jpeg</dt>
+                <dd>{versions.jsquash.jpeg}</dd>
+                <dt>jsquash avif</dt>
+                <dd>{versions.jsquash.avif}</dd>
+                <dt>jsquash oxipng</dt>
+                <dd>{versions.jsquash.oxipng}</dd>
+                <dt>SIMD</dt>
+                <dd>{caps.simd ? "yes" : "no"}</dd>
+                <dt>WASM threads</dt>
+                <dd>{caps.threads ? "yes" : "no"}</dd>
+                <dt>COOP/COEP</dt>
+                <dd>{caps.crossOriginIsolated ? "isolated" : "no"}</dd>
+                <dt>CPUs</dt>
+                <dd>{caps.hardwareConcurrency}</dd>
+              </dl>
+              {/* Phase 13 — D-11 / T-13-01: routes through Phase 12 chokepoint;
+                  CopyKind 'manifest' reuses the bug-report convenience kind. */}
+              <button
+                type="button"
+                className={cn(menuItemClass, "mt-2")}
+                onClick={() =>
+                  void copyToClipboard(
+                    JSON.stringify({ versions, caps }, null, 2),
+                    "manifest",
+                    "Diagnostics",
+                  )
+                }
+              >
+                Copy diagnostics
+              </button>
+            </TabsContent>
+          </Tabs>
         </PopoverContent>
       </Popover>
     </div>
