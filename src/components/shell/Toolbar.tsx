@@ -1,59 +1,86 @@
 // Phase 03 — NAV-02 (full NAV-02: split buttons, segmented control, filter, theme toggle, settings). Source: 03-02-PLAN.md
 // Phase 10 — Plan 04: Add files + From device → openPicker via useIngest. Source: 10-04-PLAN.md
-import { useStore } from '@nanostores/react'
-import { Plus, Export, CaretDown, MagnifyingGlass, Sun, Moon, GearSix, Lightning } from '@phosphor-icons/react'
-import { uiAtom, setOpen, setView, setTheme, setAutoTarget } from '@/stores/ui'
-import type { View } from '@/stores/ui'
-import { filesAtom, $hasDone, $queueEmpty, setFilter, addFromUrl, clearFiles } from '@/stores/files'
-import { runtimeAtom, setWorkerCount } from '@/stores/runtime'
-import { toast } from 'sonner'
-import { useOptimize } from '@/hooks/useOptimize'
-import { useIngest } from '@/hooks/useIngest'
-import { useExport } from '@/hooks/useExport'
-import { useSnippets } from '@/hooks/useSnippets'
-import { useWatchFolder } from '@/hooks/useWatchFolder'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { cn } from '@/lib/utils'
+import { useStore } from "@nanostores/react";
+import {
+  Plus,
+  Export,
+  CaretDown,
+  MagnifyingGlass,
+  Sun,
+  Moon,
+  GearSix,
+  Lightning,
+} from "@phosphor-icons/react";
+import { uiAtom, setOpen, setView, setTheme, setAutoTarget } from "@/stores/ui";
+import type { View } from "@/stores/ui";
+import {
+  filesAtom,
+  $hasDone,
+  $queueEmpty,
+  setFilter,
+  addFromUrl,
+  clearFiles,
+} from "@/stores/files";
+import { runtimeAtom, setWorkerCount } from "@/stores/runtime";
+import { toast } from "sonner";
+import { useOptimize } from "@/hooks/useOptimize";
+import { useIngest } from "@/hooks/useIngest";
+import { useExport } from "@/hooks/useExport";
+import { useSnippets } from "@/hooks/useSnippets";
+import { useWatchFolder } from "@/hooks/useWatchFolder";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 
 const tbtnClass =
-  'h-7 px-3 text-xs text-[var(--color-fg-0)] bg-[var(--color-bg-2)] border border-[var(--color-line)] rounded-[5px] hover:bg-[var(--color-bg-3)] hover:border-[var(--color-line-strong)] flex items-center gap-1'
+  "h-7 px-3 text-xs text-[var(--color-fg-0)] bg-[var(--color-bg-2)] border border-[var(--color-line)] rounded-[5px] hover:bg-[var(--color-bg-3)] hover:border-[var(--color-line-strong)] flex items-center gap-1";
 
 const menuItemClass =
-  'w-full px-3 py-1.5 text-left text-xs text-[var(--color-fg-0)] hover:bg-[var(--color-bg-3)] rounded'
+  "w-full px-3 py-1.5 text-left text-xs text-[var(--color-fg-0)] hover:bg-[var(--color-bg-3)] rounded";
 
 const popoverContentClass =
-  'w-auto p-2 bg-[var(--color-bg-2)] border-[var(--color-line)] rounded-[6px]'
+  "w-auto p-2 bg-[var(--color-bg-2)] border-[var(--color-line)] rounded-[6px]";
 
 function ToolbarDivider() {
-  return <div aria-hidden="true" className="w-px h-[18px] bg-[var(--color-line)] mx-1" />
+  return (
+    <div
+      aria-hidden="true"
+      className="w-px h-[18px] bg-[var(--color-line)] mx-1"
+    />
+  );
 }
 
 export function Toolbar() {
-  const { open, view, theme } = useStore(uiAtom)
-  const { filterQuery } = useStore(filesAtom)
-  const hasDone = useStore($hasDone)
-  const queueEmpty = useStore($queueEmpty)
-  const clearDisabledTitle = queueEmpty ? 'No files to clear' : undefined
+  const { open, view, theme } = useStore(uiAtom);
+  const { filterQuery } = useStore(filesAtom);
+  const hasDone = useStore($hasDone);
+  const queueEmpty = useStore($queueEmpty);
+  const clearDisabledTitle = queueEmpty ? "No files to clear" : undefined;
   // Phase 13 — D-14 / T-13-03: warning-toast confirmation when work is in flight.
   // Read runtimeAtom.get() inside the handler (NOT useStore) — avoids Toolbar re-renders
   // on every job-count change. PATTERNS lines 467-482 verbatim shape.
   const handleClearAll = () => {
-    const { runningJobs } = runtimeAtom.get()
+    const { runningJobs } = runtimeAtom.get();
     if (runningJobs > 0) {
       toast.warning(`Cancel ${runningJobs} in-flight jobs?`, {
-        action: { label: 'Clear anyway', onClick: () => clearFiles() },
-      })
-      return
+        action: { label: "Clear anyway", onClick: () => clearFiles() },
+      });
+      return;
     }
-    clearFiles()
-  }
-  const { runOptimize } = useOptimize()
-  const { openPicker } = useIngest()
-  const { exportZip, exportIndividually } = useExport()
-  const { copyPictureBulk, copyDataUrisBulk, copyManifestJson } = useSnippets()
-  const { startWatching } = useWatchFolder()
+    clearFiles();
+  };
+  const { runOptimize } = useOptimize();
+  const { openPicker } = useIngest();
+  const { exportZip, exportOne, exportIndividually } = useExport();
+  const { copyPictureBulk, copyDataUrisBulk, copyManifestJson } = useSnippets();
+  const { startWatching } = useWatchFolder();
   // D-13 (Phase 11 Plan 07): disable-then-explain — gate export controls on ≥1 done file.
-  const disabledTitle = !hasDone ? 'Optimize at least one file first' : undefined
+  const disabledTitle = !hasDone
+    ? "Optimize at least one file first"
+    : undefined;
 
   return (
     <div
@@ -66,30 +93,60 @@ export function Toolbar() {
       <div className="flex">
         <button
           type="button"
-          className={cn(tbtnClass, 'rounded-r-none border-r-0')}
-          onClick={() => { openPicker(); setOpen(null) }}
+          className={cn(tbtnClass, "rounded-r-none border-r-0")}
+          onClick={() => {
+            openPicker();
+            setOpen(null);
+          }}
         >
           <Plus size={12} />
           Add files
         </button>
         <Popover
-          open={open === 'tb-add'}
-          onOpenChange={(o) => setOpen(o ? 'tb-add' : null)}
+          open={open === "tb-add"}
+          onOpenChange={(o) => setOpen(o ? "tb-add" : null)}
         >
           <PopoverTrigger asChild>
             <button
               type="button"
               aria-label="Add files options"
-              className={cn(tbtnClass, 'rounded-l-none px-1.5')}
+              className={cn(tbtnClass, "rounded-l-none px-1.5")}
             >
               <CaretDown size={11} />
             </button>
           </PopoverTrigger>
           <PopoverContent className={popoverContentClass} align="start">
             <div className="flex flex-col">
-              <button type="button" className={menuItemClass} onClick={() => { openPicker(); setOpen(null) }}>From device</button>
-              <button type="button" className={menuItemClass} onClick={() => { void startWatching(); setOpen(null) }}>Watch folder</button>
-              <button type="button" className={menuItemClass} onClick={() => { addFromUrl(); setOpen(null) }}>From URL or paste</button>
+              <button
+                type="button"
+                className={menuItemClass}
+                onClick={() => {
+                  openPicker();
+                  setOpen(null);
+                }}
+              >
+                From device
+              </button>
+              <button
+                type="button"
+                className={menuItemClass}
+                onClick={() => {
+                  void startWatching();
+                  setOpen(null);
+                }}
+              >
+                Watch folder
+              </button>
+              <button
+                type="button"
+                className={menuItemClass}
+                onClick={() => {
+                  addFromUrl();
+                  setOpen(null);
+                }}
+              >
+                From URL or paste
+              </button>
             </div>
           </PopoverContent>
         </Popover>
@@ -109,8 +166,15 @@ export function Toolbar() {
       <div className="flex">
         <button
           type="button"
-          className={cn(tbtnClass, 'rounded-r-none border-r-0', !hasDone && 'opacity-50 cursor-not-allowed')}
-          onClick={() => { void exportZip(); setOpen(null) }}
+          className={cn(
+            tbtnClass,
+            "rounded-r-none border-r-0",
+            !hasDone && "opacity-50 cursor-not-allowed",
+          )}
+          onClick={() => {
+            void exportZip();
+            setOpen(null);
+          }}
           disabled={!hasDone}
           aria-disabled={!hasDone}
           title={disabledTitle}
@@ -119,14 +183,14 @@ export function Toolbar() {
           Export
         </button>
         <Popover
-          open={open === 'tb-export'}
-          onOpenChange={(o) => setOpen(o ? 'tb-export' : null)}
+          open={open === "tb-export"}
+          onOpenChange={(o) => setOpen(o ? "tb-export" : null)}
         >
           <PopoverTrigger asChild>
             <button
               type="button"
               aria-label="Export options"
-              className={cn(tbtnClass, 'rounded-l-none px-1.5')}
+              className={cn(tbtnClass, "rounded-l-none px-1.5")}
             >
               <CaretDown size={11} />
             </button>
@@ -135,44 +199,84 @@ export function Toolbar() {
             <div className="flex flex-col">
               <button
                 type="button"
-                className={cn(menuItemClass, !hasDone && 'opacity-50 cursor-not-allowed')}
-                onClick={() => { void exportZip(); setOpen(null) }}
+                className={cn(
+                  menuItemClass,
+                  !hasDone && "opacity-50 cursor-not-allowed",
+                )}
+                onClick={() => {
+                  void exportZip();
+                  setOpen(null);
+                }}
                 disabled={!hasDone}
                 aria-disabled={!hasDone}
                 title={disabledTitle}
-              >All as ZIP</button>
+              >
+                All as ZIP
+              </button>
               <button
                 type="button"
-                className={cn(menuItemClass, !hasDone && 'opacity-50 cursor-not-allowed')}
-                onClick={() => { void exportIndividually(); setOpen(null) }}
+                className={cn(
+                  menuItemClass,
+                  !hasDone && "opacity-50 cursor-not-allowed",
+                )}
+                onClick={() => {
+                  void exportIndividually();
+                  setOpen(null);
+                }}
                 disabled={!hasDone}
                 aria-disabled={!hasDone}
                 title={disabledTitle}
-              >Save individually</button>
+              >
+                Save individually
+              </button>
               <button
                 type="button"
-                className={cn(menuItemClass, !hasDone && 'opacity-50 cursor-not-allowed')}
-                onClick={() => { void copyPictureBulk(); setOpen(null) }}
+                className={cn(
+                  menuItemClass,
+                  !hasDone && "opacity-50 cursor-not-allowed",
+                )}
+                onClick={() => {
+                  void copyPictureBulk();
+                  setOpen(null);
+                }}
                 disabled={!hasDone}
                 aria-disabled={!hasDone}
                 title={disabledTitle}
-              >{'Copy <picture> HTML'}</button>
+              >
+                {"Copy <picture> HTML"}
+              </button>
               <button
                 type="button"
-                className={cn(menuItemClass, !hasDone && 'opacity-50 cursor-not-allowed')}
-                onClick={() => { void copyDataUrisBulk(); setOpen(null) }}
+                className={cn(
+                  menuItemClass,
+                  !hasDone && "opacity-50 cursor-not-allowed",
+                )}
+                onClick={() => {
+                  void copyDataUrisBulk();
+                  setOpen(null);
+                }}
                 disabled={!hasDone}
                 aria-disabled={!hasDone}
                 title={disabledTitle}
-              >Copy as data URIs</button>
+              >
+                Copy as data URIs
+              </button>
               <button
                 type="button"
-                className={cn(menuItemClass, !hasDone && 'opacity-50 cursor-not-allowed')}
-                onClick={() => { void copyManifestJson(); setOpen(null) }}
+                className={cn(
+                  menuItemClass,
+                  !hasDone && "opacity-50 cursor-not-allowed",
+                )}
+                onClick={() => {
+                  void copyManifestJson();
+                  setOpen(null);
+                }}
                 disabled={!hasDone}
                 aria-disabled={!hasDone}
                 title={disabledTitle}
-              >Manifest JSON</button>
+              >
+                Manifest JSON
+              </button>
             </div>
           </PopoverContent>
         </Popover>
@@ -182,8 +286,12 @@ export function Toolbar() {
       <ToolbarDivider />
 
       {/* 5. Segmented control: Batch / Compare / Report */}
-      <div role="group" aria-label="Switch view" className="flex h-7 bg-[var(--color-bg-2)] border border-[var(--color-line)] rounded-[5px]">
-        {(['Batch', 'Compare', 'Report'] as View[]).map((v, i) => (
+      <div
+        role="group"
+        aria-label="Switch view"
+        className="flex h-7 bg-[var(--color-bg-2)] border border-[var(--color-line)] rounded-[5px]"
+      >
+        {(["Batch", "Compare", "Report"] as View[]).map((v, i) => (
           <button
             key={v}
             type="button"
@@ -191,11 +299,11 @@ export function Toolbar() {
             aria-checked={view === v}
             onClick={() => setView(v)}
             className={cn(
-              'px-3 text-xs rounded-[4px]',
-              i > 0 && 'border-l border-[var(--color-line)]',
+              "px-3 text-xs rounded-[4px]",
+              i > 0 && "border-l border-[var(--color-line)]",
               view === v
-                ? 'bg-[var(--color-bg-3)] text-[var(--color-fg-0)]'
-                : 'text-[var(--color-fg-1)]'
+                ? "bg-[var(--color-bg-3)] text-[var(--color-fg-0)]"
+                : "text-[var(--color-fg-1)]",
             )}
           >
             {v}
@@ -207,29 +315,59 @@ export function Toolbar() {
       <div className="flex">
         <button
           type="button"
-          className={cn(tbtnClass, 'rounded-r-none border-r-0')}
-          onClick={() => { setAutoTarget(1.4); setOpen(null) }}
+          className={cn(tbtnClass, "rounded-r-none border-r-0")}
+          onClick={() => {
+            setAutoTarget(1.4);
+            setOpen(null);
+          }}
         >
           Auto
         </button>
         <Popover
-          open={open === 'tb-auto'}
-          onOpenChange={(o) => setOpen(o ? 'tb-auto' : null)}
+          open={open === "tb-auto"}
+          onOpenChange={(o) => setOpen(o ? "tb-auto" : null)}
         >
           <PopoverTrigger asChild>
             <button
               type="button"
               aria-label="Auto mode options"
-              className={cn(tbtnClass, 'rounded-l-none px-1.5')}
+              className={cn(tbtnClass, "rounded-l-none px-1.5")}
             >
               <CaretDown size={11} />
             </button>
           </PopoverTrigger>
           <PopoverContent className={popoverContentClass} align="start">
             <div className="flex flex-col">
-              <button type="button" className={menuItemClass} onClick={() => { setAutoTarget(1.4); setOpen(null) }}>1.4 balanced</button>
-              <button type="button" className={menuItemClass} onClick={() => { setAutoTarget(1.0); setOpen(null) }}>1.0 high quality</button>
-              <button type="button" className={menuItemClass} onClick={() => { setAutoTarget(2.0); setOpen(null) }}>2.0 aggressive</button>
+              <button
+                type="button"
+                className={menuItemClass}
+                onClick={() => {
+                  setAutoTarget(1.4);
+                  setOpen(null);
+                }}
+              >
+                1.4 balanced
+              </button>
+              <button
+                type="button"
+                className={menuItemClass}
+                onClick={() => {
+                  setAutoTarget(1.0);
+                  setOpen(null);
+                }}
+              >
+                1.0 high quality
+              </button>
+              <button
+                type="button"
+                className={menuItemClass}
+                onClick={() => {
+                  setAutoTarget(2.0);
+                  setOpen(null);
+                }}
+              >
+                2.0 aggressive
+              </button>
             </div>
           </PopoverContent>
         </Popover>
@@ -240,7 +378,10 @@ export function Toolbar() {
 
       {/* 8. Filter input */}
       <div className="flex items-center h-7 min-w-[220px] bg-[var(--color-bg-2)] border border-[var(--color-line)] rounded-[5px] px-2 gap-2 focus-within:border-[var(--color-accent)]">
-        <MagnifyingGlass size={12} className="text-[var(--color-fg-2)] shrink-0" />
+        <MagnifyingGlass
+          size={12}
+          className="text-[var(--color-fg-2)] shrink-0"
+        />
         <input
           type="search"
           aria-label="Filter files"
@@ -256,16 +397,16 @@ export function Toolbar() {
       <button
         type="button"
         aria-label="Toggle theme"
-        onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+        onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
         className="h-7 w-7 grid place-items-center rounded-[5px] text-[var(--color-fg-1)] hover:bg-[var(--color-bg-2)] hover:text-[var(--color-fg-0)]"
       >
-        {theme === 'dark' ? <Sun size={13} /> : <Moon size={13} />}
+        {theme === "dark" ? <Sun size={13} /> : <Moon size={13} />}
       </button>
 
       {/* 10. Settings ghost button + Popover */}
       <Popover
-        open={open === 'tb-settings'}
-        onOpenChange={(o) => setOpen(o ? 'tb-settings' : null)}
+        open={open === "tb-settings"}
+        onOpenChange={(o) => setOpen(o ? "tb-settings" : null)}
       >
         <PopoverTrigger asChild>
           <button
@@ -278,21 +419,38 @@ export function Toolbar() {
         </PopoverTrigger>
         <PopoverContent className={popoverContentClass} align="end">
           <div className="flex flex-col">
-            <button type="button" className={menuItemClass} onClick={() => { setWorkerCount(4); setOpen(null) }}>Workers: 4 (auto)</button>
+            <button
+              type="button"
+              className={menuItemClass}
+              onClick={() => {
+                setWorkerCount(4);
+                setOpen(null);
+              }}
+            >
+              Workers: 4 (auto)
+            </button>
             {/* Phase 13 — D-14 / CLR-01: Clear all menu item with disable-then-explain triple.
                 Mirrors Export button shape (lines 96-100 + 122-126). Plan 07 will wrap this
                 content in Radix Tabs (General + Diagnostics). */}
             <button
               type="button"
-              className={cn(menuItemClass, queueEmpty && 'opacity-50 cursor-not-allowed')}
-              onClick={() => { handleClearAll(); setOpen(null) }}
+              className={cn(
+                menuItemClass,
+                queueEmpty && "opacity-50 cursor-not-allowed",
+              )}
+              onClick={() => {
+                handleClearAll();
+                setOpen(null);
+              }}
               disabled={queueEmpty}
               aria-disabled={queueEmpty}
               title={clearDisabledTitle}
-            >Clear all</button>
+            >
+              Clear all
+            </button>
           </div>
         </PopoverContent>
       </Popover>
     </div>
-  )
+  );
 }
