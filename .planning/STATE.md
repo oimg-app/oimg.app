@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Polish, Diagnostics, PWA + Quality Metrics
-status: active
-stopped_at: Scoped via /gsd:new-milestone — REQUIREMENTS.md + ROADMAP.md written
-last_updated: "2026-06-10T00:00:00.000Z"
-last_activity: 2026-06-10 -- v1.2 milestone scoped (5 phases, 15 requirements)
+status: executing
+stopped_at: Completed quick task 260603-s2x — Watch folder (showDirectoryPicker + FileSystemObserver)
+last_updated: "2026-06-10T13:04:56.245Z"
+last_activity: 2026-06-10 -- Phase 13 planning complete
 progress:
   total_phases: 5
   completed_phases: 0
-  total_plans: 0
+  total_plans: 8
   completed_plans: 0
   percent: 0
 ---
@@ -33,8 +33,8 @@ progress:
 
 Phase: 12 — COMPLETE
 Plan: 12-05 complete (Wave 2 — FileRow ContextMenu Copy <picture> + Copy data-URI siblings)
-Status: Phase 12 complete
-Last activity: 2026-06-03 -- Phase 12 marked complete
+Status: Ready to execute
+Last activity: 2026-06-10 -- Phase 13 planning complete
 Progress: [██████████] 100%
 
 ## Performance Metrics

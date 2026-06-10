@@ -18,8 +18,6 @@ export async function ingestFixtureFiles(page: Page, count = 1): Promise<void> {
     // how Vite serves source modules during dev (see http://localhost:5174/src/...).
     // Use a computed specifier so TS doesn't try to statically resolve the dev-server URL
     // (the bundler resolver doesn't know about /src/* — that's a Vite dev-only contract).
-
-
     const filesMod = (await import('../../stores/files'))
     const { filesAtom, setFileRawBuffer } = filesMod
     const stubMod = (await import('../../lib/stub-data'))
