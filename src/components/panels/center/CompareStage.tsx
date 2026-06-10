@@ -62,7 +62,8 @@ export function CompareStage() {
   const fromScroll = useRef(false) // scroll originated the zoom change — skip effect reset
 
   const isFit = zoom === 'fit'
-  const isSvg = selectedFile?.type === 'svg'
+  const isSvg = selectedFile?.type === 'svg'                       // SOURCE is SVG → original layer is an iframe
+  const isSvgOutput = selectedFile?.settings?.codec === 'SVG'      // OUTPUT codec is SVG → encoded layer is an iframe (else <img>)
   const isHeic = selectedFile?.type === 'heic'
 
   const aspectRatio = parseDimRatio(selectedFile?.dim ?? '4×3')
@@ -95,6 +96,9 @@ export function CompareStage() {
       setOrigSrc(null)
       return
     }
+    // Only the HEIC source path runs here — otherwise this effect would clobber the
+    // origSrc set by the SVG/raster effect above (e.g. overwrite the SVG data URI).
+    if (!isHeic) return
 
     if (isHeic) {
       heicDataArr(selectedFile.rawBuffer).then(decoded => {
@@ -126,8 +130,9 @@ export function CompareStage() {
       setEncodedSrc(null)
       return
     }
-    // SVG → data URI (rendered in a sandboxed iframe); raster → revocable object URL
-    if (isSvg) {
+    // Encoded layer keys on the OUTPUT codec, not the source: SVG output → data URI
+    // (sandboxed iframe); any raster codec (PNG/WebP/JPEG/AVIF) → revocable object URL (<img>).
+    if (isSvgOutput) {
       setEncodedSrc(svgDataUri(selectedFile.encodedBuffer))
       return
     }
@@ -135,7 +140,7 @@ export function CompareStage() {
     const url = URL.createObjectURL(blob)
     setEncodedSrc(url)
     return () => URL.revokeObjectURL(url)
-  }, [selectedFile?.encodedBuffer, isSvg])
+  }, [selectedFile?.encodedBuffer, isSvgOutput])
 
   // Zoom dropdown → reset pan + snap scale. Skip when scroll set the zoom (no-op guard).
   useEffect(() => {
@@ -274,9 +279,9 @@ export function CompareStage() {
           />
         )}
 
-        {/* layer-opt — real encoded image via object URL (SVG via sandboxed iframe) */}
+        {/* layer-opt — encoded image; SVG output via sandboxed iframe, raster output via <img> */}
         {encodedSrc ? (
-          isSvg ? (
+          isSvgOutput ? (
             <iframe
               src={encodedSrc}
               title="Optimized SVG"
