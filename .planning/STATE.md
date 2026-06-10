@@ -102,15 +102,16 @@ Progress: [██████████] 100%
 
 ## Session Continuity
 
-**Last session:** 2026-06-03T20:00:00Z
-**Stopped At:** Completed quick task 260603-s2x — Watch folder (showDirectoryPicker + FileSystemObserver)
-**To resume:** Milestone v1.1 is code-complete. Next: `/gsd:complete-milestone v1.1` to archive + prepare v1.2, or `/gsd:audit-milestone v1.1` to cross-check shipped scope against original intent.
+**Last session:** 2026-06-10
+**Stopped At:** Completed quick task 260610-lby — HEIC/HEIF decode-only input support via heic-decode
+**To resume:** HEIC code-complete + typecheck-clean. Manual check pending: `npm run dev`, drop a real `.heic`, confirm decode→JPEG export and NO inspector HEIC tab (see 260610-lby-SUMMARY.md §Manual verification). Milestone v1.2 (Phases 13–17) is the active track.
 
 ## Quick Tasks Completed
 
 | ID | Slug | Date | Tasks | Status |
 |----|------|------|-------|--------|
 | 260603-s2x | watch-folder | 2026-06-03 | 8 | ✅ complete (3 e2e + 6 unit green; T-WF-01..04 mitigated) |
+| 260610-lby | add-heic-extension-support | 2026-06-10 | 2 (+1 type fix) | ⚠️ code-complete (heic.test 6/6 green, tsc clean after c7f4994 type-decl fix) — Task 3 needs human verify with a real .heic file |
 
 ---
 
