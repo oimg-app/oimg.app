@@ -10,11 +10,13 @@ function assert(name: string, cond: boolean) {
 
 try {
   const mod = await import('../lib/stub-data.ts')
+  const settings = await import('../lib/settings.ts')
+  const consts = await import('../lib/constants.ts')
   assert('STUB_FILES has 12 entries', mod.STUB_FILES.length === 12)
-  assert('SVGO_PLUGINS has 22 entries', mod.SVGO_PLUGINS.length === 22)
-  assert('CODECS has 5 entries', mod.CODECS.length === 5)
-  assert('RESIZE_ALGS has 4 entries', mod.RESIZE_ALGS.length === 4)
-  assert('FIT_MODES has 3 entries', mod.FIT_MODES.length === 3)
+  assert('SVGO_PLUGINS has 22 entries', settings.SVGO_PLUGINS.length === 22)
+  assert('CODECS has 5 entries', consts.CODECS.length === 5)
+  assert('RESIZE_ALGS has 4 entries', consts.RESIZE_ALGS.length === 4)
+  assert('FIT_MODES has 3 entries', consts.FIT_MODES.length === 3)
   assert('first file has required fields', 'id' in mod.STUB_FILES[0] && 'orig' in mod.STUB_FILES[0])
 } catch (err) {
   // Wave 0 stub state: module not yet written — treat as expected

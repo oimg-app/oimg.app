@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button'
 import { Section } from './Section'
 import { buildBase64Snippet, buildUrlEncodedSnippet, buildPictureSnippet } from '@/lib/snippets'
 import { copyToClipboard } from '@/lib/clipboard'
-import type { FileEntry } from '@/lib/stub-data'
+import type { FileEntry } from '@/lib/settings'
 import { cn } from '@/lib/utils.ts'
 
 const SECTIONS = [

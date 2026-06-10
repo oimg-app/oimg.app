@@ -41,9 +41,9 @@ import type { EncodeJob } from '@/workers/codec.worker'
 **useIngest imports pattern** (copy shape, adjust imports):
 ```typescript
 import { filesAtom, setFileRawBuffer, selectFile } from '@/stores/files'
-import { defaultFileSettings } from '@/lib/stub-data'
+import { defaultFileSettings } from '@/lib/settings'
 import { useOptimize } from '@/hooks/useOptimize'
-import type { FileEntry } from '@/lib/stub-data'
+import type { FileEntry } from '@/lib/settings'
 ```
 
 **Core format-gate pattern** (`src/hooks/useOptimize.ts` lines 64–74 — `toCodec`/`toSourceFormat` guards):

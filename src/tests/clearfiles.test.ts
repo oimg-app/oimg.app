@@ -5,7 +5,7 @@
 //        src/tests/clearfiles.test.ts
 
 import { readFile } from 'node:fs/promises'
-import type { FileEntry, FileSettings } from '../lib/stub-data.ts'
+import type { FileEntry, FileSettings } from '../lib/settings'
 
 let passed = 0
 let failed = 0

@@ -1,8 +1,8 @@
 // Phase 08 — PIPE-01/02: Comlink codec worker — dynamic codec imports. Source: 08-02-PLAN.md
 // Phase 09 — Plan 02: Real jSquash + svgo adapters (ENC-01..05). WR-02/WR-03 fold-in.
 import * as Comlink from 'comlink'
-import type {FileSettings} from '@/lib/stub-data'
-import {SVGO_PLUGINS} from '@/lib/stub-data'
+import type {FileSettings} from '@/lib/settings'
+import {SVGO_PLUGINS} from '@/lib/settings'
 
 // Dev guard: warn if crossOriginIsolated is false (OxiPNG MT will be disabled)
 if (import.meta.env.DEV && !crossOriginIsolated) {
@@ -54,8 +54,9 @@ async function decodeSource(buffer: ArrayBuffer, sourceFormat: string): Promise<
       try {
         // heic-decode ships a browser-compatible ESM build; bare specifier resolves via package exports.
         // If this fails to bundle (esbuild flattens WASM URL), see vite.config.ts optimizeDeps.exclude.
-        const heicDecode = (await import('heic-decode')).default
-        const decoded = await heicDecode({ buffer })
+        const { heicDecode } = (await import('@/lib/heic/decode'))
+        const decoded = await heicDecode(buffer)
+
         return new ImageData(new Uint8ClampedArray(decoded.data), decoded.width, decoded.height)
       } catch (err) {
         // Mirror the AVIF Safari try/catch pattern: rethrow descriptive error so useOptimize/useLiveEncode

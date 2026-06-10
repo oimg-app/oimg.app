@@ -26,10 +26,10 @@ import { installSaveFileMocks } from './setup/save-file-mocks'
 async function injectDoneFile(page: Page, id = 'fixture-0', name = 'fixture-0.png'): Promise<void> {
   await page.evaluate(
     async ({ id, name }) => {
-      
-      
+
+
       const filesMod = (await import('../stores/files'))
-      const stubMod = (await import('../lib/stub-data'))
+      const stubMod = (await import('../lib/settings'))
       const { filesAtom } = filesMod
       const { defaultFileSettings } = stubMod
 

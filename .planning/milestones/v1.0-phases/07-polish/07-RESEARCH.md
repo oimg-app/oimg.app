@@ -213,7 +213,7 @@ The global rule is simpler and ensures nothing is missed. Shadcn components over
 
 Before:
 ```tsx
-import type { FileEntry } from '@/lib/stub-data'
+import type { FileEntry } from '@/lib/settings'
 ```
 
 After:

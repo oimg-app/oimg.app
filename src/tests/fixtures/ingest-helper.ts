@@ -20,7 +20,7 @@ export async function ingestFixtureFiles(page: Page, count = 1): Promise<void> {
     // (the bundler resolver doesn't know about /src/* — that's a Vite dev-only contract).
     const filesMod = (await import('../../stores/files'))
     const { filesAtom, setFileRawBuffer } = filesMod
-    const stubMod = (await import('../../lib/stub-data'))
+    const stubMod = (await import('../../lib/settings'))
     const { defaultFileSettings } = stubMod
 
     // Reuse the same 1×1 PNG base64 string as TINY_PNG_B64 in stub-data.ts (line 135-136)

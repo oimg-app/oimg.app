@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { useStore } from '@nanostores/react'
-import { $selectedFile, setFileSettings } from '@/stores/files'
+import {$selectedFile, setFileSettings, setFileTarget} from '@/stores/files'
 import {
   settingsAtom,
   CODECS,
@@ -13,7 +13,10 @@ import {
   setResizeOn,
   setResizeDimensions,
   setFit,
-  setAlg, setColors, setDithering, setColorsOn,
+  setAlg,
+  setColors,
+  setDithering,
+  setColorsOn,
 } from '@/stores/settings'
 import type { Codec } from '@/stores/settings'
 import type { FileSettings } from '@/stores/files'
@@ -47,6 +50,7 @@ export function CodecPanel() {
   const isPng = settings.codec === 'PNG'
   const isJpeg = settings.codec === 'JPEG'
 
+  console.log({ selectedFile, globalSettings, isJpeg })
   // Auto-switch away from SVG codec when a non-SVG file is selected
   useEffect(() => {
     if (!isSvgFile && settingsAtom.get().codec === 'SVG') {
@@ -58,6 +62,8 @@ export function CodecPanel() {
   function handleSetCodec(v: Codec) {
     if (selectedFile) {
       setFileSettings(selectedFile.id, 'codec', v)
+      setFileTarget(selectedFile.id,  v)
+
       trigger(selectedFile.id)
     } else {
       setCodec(v)

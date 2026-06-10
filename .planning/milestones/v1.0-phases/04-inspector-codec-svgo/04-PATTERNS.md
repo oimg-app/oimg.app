@@ -31,8 +31,8 @@
 // Phase 04 — STORE-02: settingsAtom. Source: 04-XX-PLAN.md
 // CIRCULAR ESM GUARD: settings.ts MUST NOT import ui.ts, files.ts, or runtime.ts
 import { map } from 'nanostores'
-import type { SvgoPlugin } from '@/lib/stub-data'
-import { SVGO_PLUGINS } from '@/lib/stub-data'
+import type { SvgoPlugin } from '@/lib/settings'
+import { SVGO_PLUGINS } from '@/lib/settings'
 ```
 
 **Atom declaration pattern** (from `src/stores/ui.ts` lines 24–35):
@@ -67,8 +67,8 @@ export function togglePlugin(id: string): void {
 
 **Constants re-export pattern** (keeps STORE-08: components import from stores, not stub-data):
 ```typescript
-export { CODECS, RESIZE_ALGS, FIT_MODES } from '@/lib/stub-data'
-export type { Codec, SvgoPlugin } from '@/lib/stub-data'
+export { CODECS, RESIZE_ALGS, FIT_MODES } from '@/lib/constants'
+export type { Codec, SvgoPlugin } from '@/lib/settings'
 ```
 
 ---

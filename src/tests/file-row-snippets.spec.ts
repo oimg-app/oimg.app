@@ -39,10 +39,10 @@ interface InjectSpec {
 async function injectEntries(page: Page, specs: InjectSpec[]): Promise<void> {
   await page.evaluate(
     async ({ specs, TINY_WEBP_B64 }) => {
-      
-      
+
+
       const filesMod = (await import('../stores/files'))
-      const stubMod = (await import('../lib/stub-data'))
+      const stubMod = (await import('../lib/settings'))
       const { filesAtom } = filesMod
       const { defaultFileSettings } = stubMod
 

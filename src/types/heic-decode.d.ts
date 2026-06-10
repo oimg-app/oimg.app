@@ -19,3 +19,34 @@ declare module 'heic-decode' {
   /** Decode every image in a multi-image HEIC (unused here, declared for completeness). */
   export function all(input: HeicDecodeInput): Promise<Array<{ width: number; height: number; decode: () => Promise<HeicDecodeResult> }>>
 }
+
+declare module 'libheif-js/libheif-wasm/libheif-bundle.mjs' {
+  interface HeifDecoder {
+    new(): Decoder
+  }
+
+  interface WasmDecoder {
+    delete(): void
+  }
+
+  interface Decoder {
+    decoder: WasmDecoder
+    decode(input: ArrayBuffer): Array<HeifImage>
+  }
+
+  type DisplayCallback = ({ data }: { data: Uint8ClampedArray, width: number, height: number }) => void
+
+  export interface HeifImage {
+    get_width(): number
+    get_height(): number
+    free(): void
+    display(input: { data: Uint8ClampedArray, width: number, height: number }, cb: DisplayCallback)
+  }
+
+  export interface LibHeifModule {
+    HeifDecoder: HeifDecoder
+    ready: Promise<boolean>
+  }
+
+  export default function module(): LibHeifModule
+}

@@ -30,7 +30,8 @@ try {
 
 try {
   // --- stub-data: HEIC routes to JPEG; CODECS stays 5; no HEIC output tab ---
-  const { defaultFileSettings, CODECS } = await import('../lib/stub-data.ts')
+  const { CODECS } = await import('../lib/constants')
+  const { defaultFileSettings } = await import('../lib/settings')
 
   assert('defaultFileSettings heic → codec JPEG', defaultFileSettings('heic', null).codec === 'JPEG')
   assert('defaultFileSettings heif → codec JPEG', defaultFileSettings('heif', null).codec === 'JPEG')

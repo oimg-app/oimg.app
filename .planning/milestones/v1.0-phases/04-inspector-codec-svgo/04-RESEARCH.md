@@ -157,8 +157,8 @@ src/
 // Source: src/stores/ui.ts (project convention)
 // Phase 04 — STORE-02: settingsAtom
 import { map } from 'nanostores'
-import type { SvgoPlugin } from '@/lib/stub-data'
-import { SVGO_PLUGINS } from '@/lib/stub-data'
+import type { SvgoPlugin } from '@/lib/settings'
+import { SVGO_PLUGINS } from '@/lib/settings'
 
 export type Codec = 'SVG' | 'PNG' | 'WebP' | 'JPEG' | 'AVIF'
 

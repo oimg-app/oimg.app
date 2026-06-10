@@ -34,7 +34,7 @@ Apply as:
 **Imports pattern** (model from `src/lib/stub-data.ts` lines 1–8 + nanostores API):
 ```typescript
 import { map, computed } from 'nanostores'
-import type { FileEntry, SortKey } from '@/lib/stub-data'
+import type { FileEntry, SortKey } from '@/lib/settings'
 import { STUB_FILES } from '@/lib/stub-data'
 ```
 
@@ -192,7 +192,7 @@ import { cn } from '@/lib/utils'
 import { fmtBytes, fmtPct } from '@/lib/format'
 import { uiAtom, setRowMenu } from '@/stores/ui'
 import { selectFile, removeFile } from '@/stores/files'
-import type { FileEntry } from '@/lib/stub-data'
+import type { FileEntry } from '@/lib/settings'
 ```
 
 **Format badge color map pattern** (RESEARCH.md Pattern 6):

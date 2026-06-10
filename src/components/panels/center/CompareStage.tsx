@@ -1,10 +1,10 @@
 // Phase 05 — CENTER-03: CompareStage compare view with CSS --split var
 // Phase 09 — Plan 04: real original/encoded <img> via object URLs (T-9-URL: revoke on cleanup)
-import { useEffect, useRef, useState } from 'react'
-import { useStore } from '@nanostores/react'
-import { uiAtom, setSplit, setZoom } from '@/stores/ui'
-import { $selectedFile } from '@/stores/files'
-import { fmtBytes } from '@/lib/format'
+import {useEffect, useRef, useState} from 'react'
+import {useStore} from '@nanostores/react'
+import {setSplit, setZoom, uiAtom} from '@/stores/ui'
+import {$selectedFile} from '@/stores/files'
+import {fmtBytes} from '@/lib/format'
 
 const CHECKER_BG: React.CSSProperties = {
   background: [
@@ -32,6 +32,12 @@ function svgDataUri(buf: ArrayBuffer): string {
   return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(text)
 }
 
+async function heicDataArr(buf: ArrayBuffer) {
+  const { heicDecode } = (await import('@/lib/heic/decode'))
+
+  return await heicDecode(buf)
+}
+
 const MIN_SCALE = 0.05
 const MAX_SCALE = 8
 const WHEEL_FACTOR = 0.001
@@ -57,6 +63,8 @@ export function CompareStage() {
 
   const isFit = zoom === 'fit'
   const isSvg = selectedFile?.type === 'svg'
+  const isHeic = selectedFile?.type === 'heic'
+
   const aspectRatio = parseDimRatio(selectedFile?.dim ?? '4×3')
 
   function applyTransform() {
@@ -81,6 +89,36 @@ export function CompareStage() {
     setOrigSrc(url)
     return () => URL.revokeObjectURL(url)
   }, [selectedFile?.rawBuffer, isSvg])
+
+  useEffect(() => {
+    if (!selectedFile?.rawBuffer) {
+      setOrigSrc(null)
+      return
+    }
+
+    if (isHeic) {
+      heicDataArr(selectedFile.rawBuffer).then(decoded => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+
+        if (!ctx) {
+          return null
+        }
+
+        const imageData = new ImageData(new Uint8ClampedArray(decoded.data), decoded.width, decoded.height)
+        canvas.width = imageData.width;
+        canvas.height = imageData.height;
+
+        ctx.putImageData(imageData, 0, 0);
+
+        setOrigSrc(canvas.toDataURL())
+      })
+    }
+    const blob = new Blob([selectedFile.rawBuffer])
+    const url = URL.createObjectURL(blob)
+    setOrigSrc(url)
+    return () => URL.revokeObjectURL(url)
+  }, [selectedFile?.rawBuffer, isHeic])
 
   // Build object URL for encoded layer — revoke on cleanup (T-9-URL)
   useEffect(() => {

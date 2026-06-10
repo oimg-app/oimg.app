@@ -2,12 +2,12 @@
 // CIRCULAR ESM GUARD: settings.ts MUST NOT import ui.ts, files.ts, or runtime.ts
 import { map } from 'nanostores'
 // Use relative path so Node --experimental-strip-types can resolve the value import
-import type { SvgoPlugin, Codec } from '../lib/stub-data.ts'
-import { SVGO_PLUGINS } from '../lib/stub-data.ts'
+import type { SvgoPlugin, Codec } from '../lib/settings'
+import { SVGO_PLUGINS } from '../lib/settings'
 
 // Re-export via @/ alias for Vite/TypeScript builds (STORE-08: components import from stores)
-export type { Codec, SvgoPlugin } from '../lib/stub-data.ts'
-export { CODECS, RESIZE_ALGS, FIT_MODES } from '../lib/stub-data.ts'
+export type { Codec, SvgoPlugin } from '../lib/settings'
+export { CODECS, RESIZE_ALGS, FIT_MODES } from '../lib/constants'
 
 interface SettingsState {
   codec: Codec

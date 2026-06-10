@@ -15,7 +15,7 @@ test.describe('per-file settings — D-01/D-02/D-03', () => {
     // Use store actions directly via page.evaluate to test isolation
     const result = await page.evaluate(async () => {
       const { filesAtom, setFileSettings } = await import('../stores/files.ts')
-      const { initFileSettings } = await import('../lib/stub-data.ts')
+      const { initFileSettings } = await import('../lib/settings.ts')
       const { settingsAtom } = await import('../stores/settings.ts')
 
       // Initialize two entries with identical default settings
@@ -96,7 +96,7 @@ test.describe('per-file settings — D-01/D-02/D-03', () => {
     // Set up two files with different settings via the store, then observe the inspector UI
     await page.evaluate(async () => {
       const { filesAtom, setFileSettings } = await import('../stores/files.ts')
-      const { initFileSettings } = await import('../lib/stub-data.ts')
+      const { initFileSettings } = await import('../lib/settings.ts')
       const { settingsAtom } = await import('../stores/settings.ts')
 
       const entries = filesAtom.get().entries

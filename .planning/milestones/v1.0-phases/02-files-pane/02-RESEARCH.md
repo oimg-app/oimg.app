@@ -123,7 +123,7 @@ src/
 ```typescript
 // Source: nanostores 1.3.0 API (VERIFIED via node -e require test)
 import { map, computed } from 'nanostores'
-import type { FileEntry, SortKey } from '@/lib/stub-data'
+import type { FileEntry, SortKey } from '@/lib/settings'
 import { STUB_FILES } from '@/lib/stub-data'
 
 interface FilesState {

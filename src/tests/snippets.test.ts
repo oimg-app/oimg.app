@@ -10,7 +10,7 @@ function assert(name: string, cond: boolean) {
   else { failed++; console.error(`FAIL: ${name}`) }
 }
 
-import type { FileEntry } from '../lib/stub-data.ts'
+import type { FileEntry } from '../lib/settings'
 
 // Polyfill btoa for node (matches the chunked-base64 browser path).
 if (typeof (globalThis as { btoa?: unknown }).btoa !== 'function') {

@@ -109,7 +109,7 @@ result = result.slice().sort((a, b) => (orderMap.get(a.id) ?? 0) - (orderMap.get
 **Fix:** Re-export `FileEntry` from `@/stores` or a dedicated `@/types` barrel so components never import from `@/lib/stub-data`:
 ```typescript
 // src/stores/index.ts — add:
-export type { FileEntry, SortKey, FileStatus } from '@/lib/stub-data'
+export type { FileEntry, SortKey, FileStatus } from '@/lib/settings'
 
 // FileRow.tsx — change:
 import type { FileEntry } from '@/stores'  // no longer touches stub-data
