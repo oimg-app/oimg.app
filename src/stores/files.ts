@@ -65,12 +65,24 @@ export const $totals = computed(filesAtom, (s) => {
 /** D-13 (Phase 11 Plan 07): any file in the queue has status='done' — gates export controls. */
 export const $hasDone = computed(filesAtom, (s) => s.entries.some((e) => e.status === 'done'))
 
+// Phase 13 — CLR-01 driver. Analog: $hasDone (line 66) + $totals (line 57).
+export const $queueEmpty = computed(filesAtom, (s) => s.entries.length === 0)
+
 export function selectFile(id: string): void {
   filesAtom.setKey('selectedId', id)
 }
 
 export function removeFile(id: string): void {
   filesAtom.setKey('entries', filesAtom.get().entries.filter((f) => f.id !== id))
+}
+
+// Phase 13 — CLR-01 / D-13: drop entries + selectedId in one transaction. Does NOT touch
+// runtimeAtom (workers may still be in flight; the queue is a UI-side concept). The Phase 11
+// D-13 disable-then-explain pattern from FilesPane header (× icon) + Toolbar Settings
+// (Clear all) gates the call site. Analog: removeFile (line 72).
+export function clearFiles(): void {
+  filesAtom.setKey('entries', [])
+  filesAtom.setKey('selectedId', null)
 }
 
 export function setFilter(q: string): void {
