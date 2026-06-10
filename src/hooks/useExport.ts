@@ -26,6 +26,7 @@ import {
   sanitizeBaseName,
   timestampedZipName,
 } from "@/lib/filename";
+import { isSvgToRaster, svgRasterExport } from "@/lib/svg-export";
 
 const NOTHING_TO_EXPORT = "Nothing to export — optimize files first";
 
@@ -44,6 +45,18 @@ export function useExport() {
   useStore(filesAtom);
 
   async function exportOne(entry: FileEntry): Promise<void> {
+    // SVG → selected raster codec: rasterize on the main thread (the codec worker can't decode
+    // SVG, so encodedBuffer is still SVG bytes). Save the raster output, not the SVG.
+    if (isSvgToRaster(entry)) {
+      try {
+        const { blob, ext, mime } = await svgRasterExport(entry);
+        await saveBlob(blob, renameExtension(entry.name, ext), { ext, mime });
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : "SVG export failed");
+      }
+      return;
+    }
+
     // Defense-in-depth: caller (D-13 disable / D-04 ContextMenu disabled prop) is
     // responsible for not invoking this until the file is done. Guard anyway.
     if (!entry.encodedBuffer) return;
@@ -64,9 +77,23 @@ export function useExport() {
       return;
     }
 
+    // Pre-rasterize SVG → raster-codec entries so the ZIP carries the raster bytes (+ correct
+    // extension via target) instead of the SVG. On rasterize failure, keep the entry as-is.
+    const prepared = await Promise.all(
+      entries.map(async (e) => {
+        if (!isSvgToRaster(e)) return e;
+        try {
+          const { blob, ext } = await svgRasterExport(e);
+          return { ...e, target: ext, encodedBuffer: await blob.arrayBuffer() };
+        } catch {
+          return e;
+        }
+      }),
+    );
+
     let blob: Blob;
     try {
-      blob = await buildZip(entries);
+      blob = await buildZip(prepared);
     } catch (err) {
       if (err instanceof Error && err.message === "NO_EXPORTABLE_FILES") {
         toast.error(NOTHING_TO_EXPORT);
@@ -97,16 +124,30 @@ export function useExport() {
 
     const used = new Set<string>();
     for (const e of exportable) {
+      // SVG → selected raster codec: rasterize to the raster blob + ext; raster failure falls
+      // back to the original encoded bytes/extension below.
+      let ext = e.target;
+      let mime = mimeFor(e.target);
+      let blob = new Blob([e.encodedBuffer!], { type: mime });
+      if (isSvgToRaster(e)) {
+        try {
+          const r = await svgRasterExport(e);
+          ext = r.ext;
+          mime = r.mime;
+          blob = r.blob;
+        } catch {
+          /* keep the original encoded SVG bytes */
+        }
+      }
+
       // T-11-01: sanitize after extension swap; D-10: collision suffix per call.
-      const candidate = sanitizeBaseName(renameExtension(e.name, e.target));
+      const candidate = sanitizeBaseName(renameExtension(e.name, ext));
       const name = collisionSuffix(candidate, used);
       used.add(name);
 
-      const mime = mimeFor(e.target);
-      const blob = new Blob([e.encodedBuffer!], { type: mime });
       // D-06: bulk path uses fallback delivery only — NEVER showSaveFilePicker
       // per file (a 50-file batch would surface 50 native dialogs).
-      await saveBlob(blob, name, { forceFallback: true, ext: e.target, mime });
+      await saveBlob(blob, name, { forceFallback: true, ext, mime });
       // Pitfall 5: Safari race + Chromium anti-multi-download throttle. 80ms
       // is the smallest reliable inter-call delay across both engines.
       await new Promise((resolve) => setTimeout(resolve, 80));
