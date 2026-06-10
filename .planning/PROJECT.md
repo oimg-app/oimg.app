@@ -20,18 +20,38 @@ v1.1 reconnected the full jSquash + svgo codec pipeline behind the v1.0 UI: boun
 
 See [milestones/v1.1-ROADMAP.md](milestones/v1.1-ROADMAP.md) for the full ship report.
 
-## Next Milestone Goals — v1.2 (proposed)
+## Current Milestone: v1.2 Polish, Diagnostics, PWA + Quality Metrics
 
-Active milestone slot is open. Leading candidates from the v1.1 deferred set + audit tech-debt:
+**Goal:** Round out the v1.1 pipeline with the remaining ingest channel, queue hygiene, real perceptual quality measurement, real diagnostics surfacing, and turn oimg.app into a true installable PWA with cached-codecs offline support.
 
-- **VAR-01 / VAR-02** — Generate 1×/2×/3× density variants via `@jsquash/resize`; surface them in `<picture>`/`srcset` snippets. Most-requested deferred from v1.1.
-- **PERS-01** — Named setting presets persisted via `idb-keyval`. Long-deferred from v1.0; complements the "settings once" UX.
-- **Tech debt cleanup** — retire `addFromDevice` empty stub; flip Phase 11/12 VALIDATION.md `nyquist_compliant: true` after sign-off; reduce Vite double-import inefficiency on `stores/files.ts` + `stores/runtime.ts`.
-- **Watch folder follow-ups** — "Stop watching" UI affordance, IndexedDB handle persistence across reloads, recursive directory traversal, multi-folder support.
-- **Phase 12 follow-ups** — multi-format `<picture>` fallback chain (`<source type=avif><source type=webp><img>`), snippet customization toggles (alt-text override, lazy-loading, JSX vs HTML), inline SVG snippet, manifest JSON inside the ZIP.
-- **Phase 12 paste-into-browser dogfood** — 4 manual checks captured in `12-VERIFICATION.md.human_verification[]`.
+**Target features:**
+- **From URL / paste ingest** — Toolbar "From URL or paste" wires `addFromUrl` stub to a clipboard-paste handler (image bytes or image URL) with honest CORS-failure messaging
+- **Clear queue** — `clearFiles()` action surfaced via Toolbar overflow menu + FilesPane header X icon, disable-then-explain when empty
+- **Real SSIM perceptual metric** — `ssim.js`-based comparator runs in the codec worker post-encode for the selected file; banded display (green/yellow/red)
+- **Real Butteraugli metric (hand-built wasm)** — Emscripten build of Google libjxl's butteraugli comparator, lazy-loaded, runs alongside SSIM
+- **Real diagnostic values** — `versionsAtom` populated at build time via Vite `define`: svgo + per-codec jSquash versions; runtime capability detection: SIMD, threads, `crossOriginIsolated`, `hardwareConcurrency`
+- **Settings popover + Diagnostics tab** — extend existing settings stub; replace StatusBar hardcoded version badges + "Offline-ready" line with live derived state
+- **Installable PWA** — `vite-plugin-pwa` (injectManifest mode) with hand-rolled `src/sw.ts`; precache app shell; runtime-cache codec wasms via Workbox `CacheFirst` (no first-visit ballooning); `beforeinstallprompt` → StatusBar install button
 
-Run `/gsd:new-milestone v1.2` to start scoping.
+**Locked stack additions (research-confirmed):**
+- `ssim.js@3.5.0` — perceptual quality metric (mature, small, no wasm cost)
+- `vite-plugin-pwa@1.3.0` (injectManifest mode) — PWA tooling on top of Workbox
+- Hand-built butteraugli wasm in `public/squoosh-kit/butteraugli/` — sibling to the existing codec wasms
+
+**Constraints (carried verbatim from v1.0/v1.1):**
+- Zero-server, zero-telemetry — non-negotiable
+- WCAG-AA — every new affordance gets keyboard + aria
+- Initial JS gzipped budget: 200 KB (currently 195.12 KB; every v1.2 feature MUST be lazy-loaded — metrics behind first-compute, SW registration in separate chunk, Settings panel on first open)
+- Locked codec surface: jSquash + svgo; v1.2 only ADDS comparators, never replaces codecs
+
+**Deferred (rolled to v1.3+):**
+- VAR-01 / VAR-02 1×/2×/3× density variants
+- PERS-01 named setting presets via idb-keyval
+- Watch folder follow-ups (Stop watching UI, IDB persistence, recursive traversal, multi-folder)
+- Phase 12 snippet follow-ups (multi-format `<picture>`, customization toggles, inline SVG, manifest in ZIP)
+- Web Share Target API integration (mobile install nice-to-have)
+
+See [research/v1.2-quality-metrics.md](research/v1.2-quality-metrics.md), [research/v1.2-pwa.md](research/v1.2-pwa.md), [research/v1.2-ingest.md](research/v1.2-ingest.md), and [research/v1.2-diagnostics.md](research/v1.2-diagnostics.md) for the full research output.
 
 <details>
 <summary>Previous milestone snapshot (v1.1)</summary>

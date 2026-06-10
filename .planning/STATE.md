@@ -1,23 +1,23 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.1
-milestone_name: Real Optimization Pipeline
-status: completed
-stopped_at: Completed Phase 12 Plan 05 (last plan in Phase 12)
-last_updated: "2026-06-03T15:52:02.510Z"
-last_activity: 2026-06-03 -- Phase 12 marked complete
+milestone: v1.2
+milestone_name: Polish, Diagnostics, PWA + Quality Metrics
+status: active
+stopped_at: Scoped via /gsd:new-milestone — REQUIREMENTS.md + ROADMAP.md written
+last_updated: "2026-06-10T00:00:00.000Z"
+last_activity: 2026-06-10 -- v1.2 milestone scoped (5 phases, 15 requirements)
 progress:
   total_phases: 5
-  completed_phases: 5
-  total_plans: 25
-  completed_plans: 25
-  percent: 100
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
-# STATE: oimg.app — v1.1 Real Optimization Pipeline
+# STATE: oimg.app — v1.2 Polish, Diagnostics, PWA + Quality Metrics
 
-**Last updated:** 2026-05-25
-**Milestone:** v1.1 Real Optimization Pipeline (Phases 8–12)
+**Last updated:** 2026-06-10
+**Milestone:** v1.2 Polish, Diagnostics, PWA + Quality Metrics (Phases 13–17)
 
 ---
 
