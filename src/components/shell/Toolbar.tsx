@@ -4,8 +4,9 @@ import { useStore } from '@nanostores/react'
 import { Plus, Export, CaretDown, MagnifyingGlass, Sun, Moon, GearSix, Lightning } from '@phosphor-icons/react'
 import { uiAtom, setOpen, setView, setTheme, setAutoTarget } from '@/stores/ui'
 import type { View } from '@/stores/ui'
-import { filesAtom, $hasDone, setFilter, addFromUrl } from '@/stores/files'
-import { setWorkerCount } from '@/stores/runtime'
+import { filesAtom, $hasDone, $queueEmpty, setFilter, addFromUrl, clearFiles } from '@/stores/files'
+import { runtimeAtom, setWorkerCount } from '@/stores/runtime'
+import { toast } from 'sonner'
 import { useOptimize } from '@/hooks/useOptimize'
 import { useIngest } from '@/hooks/useIngest'
 import { useExport } from '@/hooks/useExport'
@@ -31,6 +32,21 @@ export function Toolbar() {
   const { open, view, theme } = useStore(uiAtom)
   const { filterQuery } = useStore(filesAtom)
   const hasDone = useStore($hasDone)
+  const queueEmpty = useStore($queueEmpty)
+  const clearDisabledTitle = queueEmpty ? 'No files to clear' : undefined
+  // Phase 13 — D-14 / T-13-03: warning-toast confirmation when work is in flight.
+  // Read runtimeAtom.get() inside the handler (NOT useStore) — avoids Toolbar re-renders
+  // on every job-count change. PATTERNS lines 467-482 verbatim shape.
+  const handleClearAll = () => {
+    const { runningJobs } = runtimeAtom.get()
+    if (runningJobs > 0) {
+      toast.warning(`Cancel ${runningJobs} in-flight jobs?`, {
+        action: { label: 'Clear anyway', onClick: () => clearFiles() },
+      })
+      return
+    }
+    clearFiles()
+  }
   const { runOptimize } = useOptimize()
   const { openPicker } = useIngest()
   const { exportZip, exportIndividually } = useExport()
@@ -263,6 +279,17 @@ export function Toolbar() {
         <PopoverContent className={popoverContentClass} align="end">
           <div className="flex flex-col">
             <button type="button" className={menuItemClass} onClick={() => { setWorkerCount(4); setOpen(null) }}>Workers: 4 (auto)</button>
+            {/* Phase 13 — D-14 / CLR-01: Clear all menu item with disable-then-explain triple.
+                Mirrors Export button shape (lines 96-100 + 122-126). Plan 07 will wrap this
+                content in Radix Tabs (General + Diagnostics). */}
+            <button
+              type="button"
+              className={cn(menuItemClass, queueEmpty && 'opacity-50 cursor-not-allowed')}
+              onClick={() => { handleClearAll(); setOpen(null) }}
+              disabled={queueEmpty}
+              aria-disabled={queueEmpty}
+              title={clearDisabledTitle}
+            >Clear all</button>
           </div>
         </PopoverContent>
       </Popover>
