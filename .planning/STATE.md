@@ -114,6 +114,7 @@ Progress: [█████████░] 88%
 | 260610-lby | add-heic-extension-support | 2026-06-10 | 2 (+1 type fix) | ⚠️ code-complete (heic.test 6/6 green, tsc clean after c7f4994 type-decl fix) — Task 3 needs human verify with a real .heic file |
 | fast | svg-compare-iframe | 2026-06-10 | 1 | ✅ CompareStage renders SVG layers in sandboxed iframe (cc0fb7b) |
 | fast | svg-compare-codec-switch | 2026-06-10 | 1 | ✅ Encoded layer iframe/img switches on output codec; orig stays iframe for SVG source (1124b39) |
+| fast | svg-export-raster-codec | 2026-06-10 | 1 | ✅ SVG exports to selected raster codec via main-thread canvas (single/ZIP/individual); new src/lib/svg-export.ts (9a50b56) |
 
 ---
 
