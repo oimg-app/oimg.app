@@ -1,7 +1,12 @@
 // Phase 03 — STORE-04: runtimeAtom + startRun/stopRun/pushToast/dismissToast. Source: 03-01-PLAN.md
 // Phase 09 — Plan 03: encodingFileId + setEncodingFile for DeltaStrip in-flight shimmer (UI-SPEC §4)
 // Quick 260603-s2x: watchedFolderAtom — active "Watch folder" state (handle + observer).
+// Phase 13 — DIA-01/DIA-02 (D-05/D-06): retire svgoVersion/codecVersion/wasmInfo strings;
+//   replace with structured `versions: BUILD_VERSIONS` + `caps: Caps`. Phase 16 appends
+//   versions.ssim; Phase 17 appends versions.butteraugli.buildHash.
 import { atom, map } from 'nanostores'
+import { BUILD_VERSIONS } from '@/lib/versions'
+import type { Caps } from '@/lib/caps'
 
 export interface Toast {
   id: string
@@ -14,10 +19,18 @@ interface RuntimeState {
   runningJobs: number
   queuedJobs: number
   toasts: Toast[]
-  svgoVersion: string
-  codecVersion: string
-  wasmInfo: string
+  versions: typeof BUILD_VERSIONS
+  caps: Caps
   encodingFileId: string | null  // tracks in-flight file for DeltaStrip shimmer (UI-SPEC §4)
+}
+
+// Phase 13 — D-04: safe-zero baseline. main.tsx overwrites pre-render via setCaps(probeCaps()).
+const INITIAL_CAPS: Caps = {
+  simd: false,
+  threads: false,
+  crossOriginIsolated: false,
+  hardwareConcurrency: 1,
+  offlineReady: false,
 }
 
 export const runtimeAtom = map<RuntimeState>({
@@ -25,9 +38,8 @@ export const runtimeAtom = map<RuntimeState>({
   runningJobs: 0,
   queuedJobs: 0,
   toasts: [],
-  svgoVersion: '4.0.1',
-  codecVersion: '0.6.0',
-  wasmInfo: 'WASM ready · 312 KB',
+  versions: BUILD_VERSIONS,
+  caps: INITIAL_CAPS,
   encodingFileId: null,
 })
 
@@ -66,6 +78,12 @@ export function setJobCounts(running: number, queued: number): void {
 // Phase 09 — Plan 03: CR-01 atomic setKey — drives DeltaStrip in-flight shimmer (UI-SPEC §4)
 export function setEncodingFile(id: string | null): void {
   runtimeAtom.setKey('encodingFileId', id)
+}
+
+// Phase 13 — DIA-02 (D-04): called once from main.tsx pre-render with the boot probe result.
+// CR-01 atomic setKey precedent (line 60-64). Same pattern as setEncodingFile.
+export function setCaps(c: Caps): void {
+  runtimeAtom.setKey('caps', c)
 }
 
 // Quick 260603-s2x: "Watch folder" active state — directory handle + (optional) observer.

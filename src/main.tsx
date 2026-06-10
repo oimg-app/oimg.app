@@ -6,6 +6,8 @@ import './index.css'
 import App from './App.tsx'
 import { registerCommands } from '@/stores/ui'
 import { ALL_COMMANDS } from '@/lib/commands'
+import { probeCaps } from '@/lib/caps'
+import { setCaps } from '@/stores/runtime'
 
 export const isCrossOriginIsolated: boolean = crossOriginIsolated
 if (!isCrossOriginIsolated) {
@@ -15,6 +17,13 @@ if (!isCrossOriginIsolated) {
     'Codec workers will not function in Phase 2+.'
   )
 }
+
+// Phase 13 — DIA-02 (D-04): capability probe runs ONCE pre-render. Result goes
+// into runtimeAtom.caps so StatusBar/SettingsPanel render the truth on first paint.
+// Pattern: same pre-render-side-effect placement as the crossOriginIsolated guard above.
+// PATTERNS finding #5 — INSERT after the COI block, do NOT replace it (different purposes:
+// COI is the codec-worker COOP/COEP smoke test; this writes to the atom for UI surface).
+setCaps(probeCaps())
 
 // Inject ALL_COMMANDS into ui.ts before first render so $cmdFlat is populated immediately.
 registerCommands(ALL_COMMANDS.flatMap(g => g.items))

@@ -1,4 +1,8 @@
 // Phase 03 — NAV-03 (full NAV-03: pip + versions + WASM + file count + size summary). Source: 03-02-PLAN.md
+// Phase 13 — DIA-01/02/03 (D-07/D-08/D-09): versions/caps read from runtimeAtom (Plan 13-03 reshape).
+//   - SVGO + jSquash badges read live versions (D-08).
+//   - WASM info is DERIVED from caps.simd/threads (D-07) — no atom field.
+//   - Offline-ready pill is HIDDEN when !caps.offlineReady (D-09).
 import { useStore } from '@nanostores/react'
 import { runtimeAtom } from '@/stores/runtime'
 import { filesAtom, $totals } from '@/stores/files'
@@ -6,7 +10,7 @@ import { fmtBytes } from '@/lib/format'
 import { cn } from '@/lib/utils'
 
 export function StatusBar() {
-  const { running, svgoVersion, codecVersion, wasmInfo } = useStore(runtimeAtom)
+  const { running, versions, caps } = useStore(runtimeAtom)
   const totals = useStore($totals)
   const { entries } = useStore(filesAtom)
 
@@ -16,6 +20,14 @@ export function StatusBar() {
   const done = entries.filter((e) => e.status === 'done').length
   const total = entries.length
   const counterText = total > 0 ? `${done}/${total} optimized` : ''
+
+  // Phase 13 — D-07: derive WASM-capability badge inline from caps. Four-way
+  // ternary matches PATTERNS lines 297-302.
+  const wasmStr =
+    caps.simd && caps.threads ? 'WASM ready · SIMD · MT'
+    : caps.simd               ? 'WASM ready · SIMD'
+    : caps.threads            ? 'WASM ready · MT'
+    : 'WASM ready'
 
   return (
     <div
@@ -49,13 +61,23 @@ export function StatusBar() {
       </span>
 
       <span aria-hidden="true">·</span>
-      <span className="font-mono text-[11px] font-semibold">SVGO {svgoVersion}</span>
+      <span className="font-mono text-[11px] font-semibold">SVGO {versions.svgo}</span>
 
       <span aria-hidden="true">·</span>
-      <span className="font-mono text-[11px] font-semibold">@squoosh-kit/core {codecVersion}</span>
+      <span className="font-mono text-[11px] font-semibold">jSquash · webp {versions.jsquash.webp}</span>
 
       <span aria-hidden="true">·</span>
-      <span>{wasmInfo}</span>
+      <span>{wasmStr}</span>
+
+      {/* Phase 13 — D-09: Offline-ready pill HIDES when SW controller is absent.
+          Never render "Online-only" placeholder — silent omission matches the
+          zero-telemetry / no-stale-status contract from CONTEXT.md. */}
+      {caps.offlineReady && (
+        <>
+          <span aria-hidden="true">·</span>
+          <span>Offline-ready</span>
+        </>
+      )}
 
       <span aria-hidden="true">·</span>
       <span data-testid="status-filecount">{entries.length} files</span>
