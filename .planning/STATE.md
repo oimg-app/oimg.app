@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Polish, Diagnostics, PWA + Quality Metrics
 status: executing
-stopped_at: Completed quick task 260603-s2x — Watch folder (showDirectoryPicker + FileSystemObserver)
-last_updated: "2026-06-10T13:04:56.245Z"
+stopped_at: Completed quick task 260610-lby — HEIC/HEIF decode-only input support via heic-decode
+last_updated: "2026-06-10T14:06:34.187Z"
 last_activity: 2026-06-10 -- Phase 13 planning complete
 progress:
   total_phases: 5
   completed_phases: 0
   total_plans: 8
-  completed_plans: 0
+  completed_plans: 7
   percent: 0
 ---
 
@@ -35,7 +35,7 @@ Phase: 12 — COMPLETE
 Plan: 12-05 complete (Wave 2 — FileRow ContextMenu Copy <picture> + Copy data-URI siblings)
 Status: Ready to execute
 Last activity: 2026-06-10 -- Phase 13 planning complete
-Progress: [██████████] 100%
+Progress: [█████████░] 88%
 
 ## Performance Metrics
 
@@ -102,7 +102,7 @@ Progress: [██████████] 100%
 
 ## Session Continuity
 
-**Last session:** 2026-06-10
+**Last session:** 2026-06-10T14:06:34.182Z
 **Stopped At:** Completed quick task 260610-lby — HEIC/HEIF decode-only input support via heic-decode
 **To resume:** HEIC code-complete + typecheck-clean. Manual check pending: `npm run dev`, drop a real `.heic`, confirm decode→JPEG export and NO inspector HEIC tab (see 260610-lby-SUMMARY.md §Manual verification). Milestone v1.2 (Phases 13–17) is the active track.
 

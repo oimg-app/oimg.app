@@ -65,16 +65,16 @@ Shipped as **Executed** — all 22 plans built + summarized; formal phase verifi
 Plans:
 **Wave 1**
 
-- [ ] 13-00-PLAN.md — Wave 0: ambient `src/types/globals.d.ts` declarations for Vite `define` globals (DIA-01)
-- [ ] 13-01-PLAN.md — Wave 1: vite.config.ts `define` injection + `src/lib/versions.ts` typed wrapper + Node unit (DIA-01)
-- [ ] 13-02-PLAN.md — Wave 1: `src/lib/caps.ts` runtime capability probe + Node unit (DIA-02)
-- [ ] 13-03-PLAN.md — Wave 1: runtimeAtom reshape (drop legacy strings, add versions+caps) + main.tsx pre-render probe + StatusBar wiring + e2e (DIA-01/DIA-02/DIA-03)
+- [x] 13-00-PLAN.md — Wave 0: ambient `src/types/globals.d.ts` declarations for Vite `define` globals (DIA-01)
+- [x] 13-01-PLAN.md — Wave 1: vite.config.ts `define` injection + `src/lib/versions.ts` typed wrapper + Node unit (DIA-01)
+- [x] 13-02-PLAN.md — Wave 1: `src/lib/caps.ts` runtime capability probe + Node unit (DIA-02)
+- [x] 13-03-PLAN.md — Wave 1: runtimeAtom reshape (drop legacy strings, add versions+caps) + main.tsx pre-render probe + StatusBar wiring + e2e (DIA-01/DIA-02/DIA-03)
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 13-04-PLAN.md — Wave 2: `clearFiles()` action + `$queueEmpty` computed atom in `src/stores/files.ts` + Node unit (CLR-01)
-- [ ] 13-05-PLAN.md — Wave 2: Toolbar Settings popover Clear all button + T-13-03 warning toast + Playwright e2e (CLR-01)
-- [ ] 13-06-PLAN.md — Wave 2: FilesPane header XCircle icon + T-13-03 warning toast + Playwright e2e (CLR-01)
+- [x] 13-04-PLAN.md — Wave 2: `clearFiles()` action + `$queueEmpty` computed atom in `src/stores/files.ts` + Node unit (CLR-01)
+- [x] 13-05-PLAN.md — Wave 2: Toolbar Settings popover Clear all button + T-13-03 warning toast + Playwright e2e (CLR-01)
+- [x] 13-06-PLAN.md — Wave 2: FilesPane header XCircle icon + T-13-03 warning toast + Playwright e2e (CLR-01)
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
@@ -150,7 +150,7 @@ Plans:
 
 | Phase | Milestone | Plans | Status | Completed |
 |-------|-----------|-------|--------|-----------|
-| 13. Diagnostics + Clear Queue | v1.2 | 0/8 | Not started | - |
+| 13. Diagnostics + Clear Queue | v1.2 | 7/8 | In Progress|  |
 | 14. Installable PWA | v1.2 | 0/? | Not started | - |
 | 15. From URL or paste | v1.2 | 0/? | Not started | - |
 | 16. SSIM Quality Metric | v1.2 | 0/? | Not started | - |

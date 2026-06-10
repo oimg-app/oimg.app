@@ -14,7 +14,7 @@ Layers polish + diagnostic transparency + perceptual quality + installable/offli
 
 ### Queue Hygiene
 
-- [ ] **CLR-01**: `clearFiles()` action added to `src/stores/files.ts`. Toolbar overflow menu gains "Clear all" item. FilesPane header gains a small × icon. Both call the same action. Both disable-then-explain (Phase 11 D-13 pattern) when queue is empty.
+- [x] **CLR-01**: `clearFiles()` action added to `src/stores/files.ts`. Toolbar overflow menu gains "Clear all" item. FilesPane header gains a small × icon. Both call the same action. Both disable-then-explain (Phase 11 D-13 pattern) when queue is empty.
 
 ### Quality Metrics
 
@@ -77,7 +77,7 @@ Deferred to a later milestone. Tracked but not in this roadmap.
 |-------------|-------|--------|
 | ING-01 | TBD | Pending |
 | ING-02 | TBD | Pending |
-| CLR-01 | TBD | Pending |
+| CLR-01 | TBD | Complete |
 | MTR-01 | TBD | Pending |
 | MTR-02 | TBD | Pending |
 | MTR-03 | TBD | Pending |
