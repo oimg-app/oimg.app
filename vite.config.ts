@@ -2,7 +2,33 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import path from 'node:path'
+import fs from 'node:fs'
 import squooshVitePlugin from '@squoosh-kit/vite-plugin';
+
+// Phase 13 — DIA-01 (D-01/D-02): build-time version injection.
+// Security (T-13-02 mitigation): only reads `node_modules/<pkg>/package.json`
+// version fields — never env vars and never filesystem paths.
+// Versions are inlined as literal expressions into the bundle via Vite's
+// `define` plugin (see below). Consumers read `BUILD_VERSIONS` from
+// `src/lib/versions.ts` — NOT these raw globals.
+function readVer(pkg: string): string {
+  const pkgPath = path.resolve(`node_modules/${pkg}/package.json`)
+  return JSON.parse(fs.readFileSync(pkgPath, 'utf-8')).version as string
+}
+
+const VERSIONS = {
+  svgo: readVer('svgo'),
+  jsquash: {
+    webp: readVer('@jsquash/webp'),
+    jpeg: readVer('@jsquash/jpeg'),
+    avif: readVer('@jsquash/avif'),
+    oxipng: readVer('@jsquash/oxipng'),
+    png: readVer('@jsquash/png'),
+    resize: readVer('@jsquash/resize'),
+  },
+  // Phase 16 — append: ssim: readVer('ssim.js')
+  // Phase 17 — append: butteraugli build hash (read from vendored artefact)
+}
 
 export default defineConfig({
   plugins: [
@@ -45,6 +71,18 @@ export default defineConfig({
       '@jsquash/png', '@jsquash/jpeg', '@jsquash/webp',
       '@jsquash/avif', '@jsquash/oxipng', '@jsquash/resize',
     ],
+  },
+  // Phase 13 — DIA-01: build-time version injection.
+  // T-13-02 mitigation: ONLY `node_modules/<pkg>/package.json` version fields
+  // are injected — NO env vars, NO filesystem paths. Each literal is
+  // wrapped in `JSON.stringify(...)` per PATTERNS finding #3: bare values
+  // inject as JS expressions (e.g. `4.0.1` → broken token), JSON-stringified
+  // values inject as proper string/object literals.
+  define: {
+    __SVGO_VERSION__: JSON.stringify(VERSIONS.svgo),
+    __JSQUASH_VERSIONS__: JSON.stringify(VERSIONS.jsquash),
+    // Phase 16 — append: __SSIM_VERSION__: JSON.stringify(VERSIONS.ssim),
+    // Phase 17 — append: __BUTTERAUGLI_BUILD__: JSON.stringify(VERSIONS.butteraugli),
   },
   server: {
     headers: {
