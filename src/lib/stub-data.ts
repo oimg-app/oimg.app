@@ -105,6 +105,11 @@ function codecForType(type: string): Codec {
       return 'WebP'
     case 'avif':
       return 'AVIF'
+    // Quick 260610-lby: HEIC/HEIF are INPUT-only — map to JPEG (universal raster output for photos).
+    // DO NOT add 'HEIC' to the Codec union or CODECS array — that would create a forbidden inspector tab.
+    case 'heic':
+    case 'heif':
+      return 'JPEG'
     default:
       return 'WebP'
   }

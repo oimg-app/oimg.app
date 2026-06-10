@@ -29,6 +29,9 @@ function toSourceFormat(type: string): EncodeJob['sourceFormat'] | null {
     case 'webp': return 'webp'
     case 'avif': return 'avif'
     case 'svg':  return 'svg'
+    // Quick 260610-lby: HEIC/HEIF are INPUT-only decode formats
+    case 'heic': return 'heic'
+    case 'heif': return 'heif'
     default:     return null
   }
 }
@@ -58,7 +61,8 @@ export function useLiveEncode() {
       // Guard: rawBuffer and settings must both be present (T-9-V5)
       if (!entry?.rawBuffer || !entry.settings) return
 
-      const codec = toCodec(entry.type)
+      // Quick 260610-lby: HEIC/HEIF have no output codec — fall back to settings.codec (seeded 'JPEG')
+      const codec = toCodec(entry.type) ?? (entry.settings?.codec ?? null)
       if (codec === null) return
 
       // WR-03: validate source format (no unchecked cast); silently skip unsupported live re-encode

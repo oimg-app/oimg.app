@@ -46,6 +46,11 @@ function toSourceFormat(type: string): EncodeJob['sourceFormat'] | null {
       return 'avif'
     case 'svg':
       return 'svg'
+    // Quick 260610-lby: HEIC/HEIF are INPUT-only decode formats
+    case 'heic':
+      return 'heic'
+    case 'heif':
+      return 'heif'
     default:
       return null
   }
@@ -72,7 +77,10 @@ export function useOptimize() {
       // (status === 'error') are still retried; only successful 'done' entries are filtered out.
       if (entry.status === 'done') continue
 
-      const codec = toCodec(entry.type)
+      // Quick 260610-lby: HEIC/HEIF have no output codec of their own — fall back to the entry's
+      // settings.codec (seeded to 'JPEG' by codecForType in stub-data.ts). This prevents toCodec
+      // returning null and skipping the file while keeping HEIC out of the Codec union.
+      const codec = toCodec(entry.type) ?? (entry.settings?.codec ?? null)
       if (codec === null) continue
 
       // WR-03: validate the source format up front — skip unsupported inputs with a clear toast

@@ -70,6 +70,9 @@ export default defineConfig({
     exclude: [
       '@jsquash/png', '@jsquash/jpeg', '@jsquash/webp',
       '@jsquash/avif', '@jsquash/oxipng', '@jsquash/resize',
+      // Quick 260610-lby: heic-decode wraps libheif-js (WASM/asm.js) — same treatment as
+      // @jsquash/* to prevent esbuild from flattening its WASM URL resolution.
+      'heic-decode', 'libheif-js',
     ],
   },
   // Phase 13 — DIA-01: build-time version injection.

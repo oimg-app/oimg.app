@@ -11,7 +11,7 @@ if (import.meta.env.DEV && !crossOriginIsolated) {
 
 export interface EncodeJob {
   codec: 'PNG' | 'WebP' | 'JPEG' | 'AVIF' | 'SVG'
-  sourceFormat: 'png' | 'jpeg' | 'jpg' | 'webp' | 'avif' | 'svg'  // NEW — drives decoder selection
+  sourceFormat: 'png' | 'jpeg' | 'jpg' | 'webp' | 'avif' | 'svg' | 'heic' | 'heif'  // INPUT — heic/heif decode-only
   buffer: ArrayBuffer
   settings: FileSettings  // typed per-file settings (replaces Record<string, unknown>)
 }
@@ -45,6 +45,23 @@ async function decodeSource(buffer: ArrayBuffer, sourceFormat: string): Promise<
     case 'avif': {
       const { decode } = await import('@jsquash/avif')
       return decode(buffer)
+    }
+    // Quick 260610-lby: HEIC/HEIF decode-only input via heic-decode (libheif WASM).
+    // Dynamic import inside branch preserves PIPE-02 discipline (never hoist codec imports).
+    // heic-decode default export: async ({ buffer }) => { width, height, data: Uint8Array RGBA }
+    case 'heic':
+    case 'heif': {
+      try {
+        // heic-decode ships a browser-compatible ESM build; bare specifier resolves via package exports.
+        // If this fails to bundle (esbuild flattens WASM URL), see vite.config.ts optimizeDeps.exclude.
+        const heicDecode = (await import('heic-decode')).default
+        const decoded = await heicDecode({ buffer })
+        return new ImageData(new Uint8ClampedArray(decoded.data), decoded.width, decoded.height)
+      } catch (err) {
+        // Mirror the AVIF Safari try/catch pattern: rethrow descriptive error so useOptimize/useLiveEncode
+        // convert it to a per-file error + toast, never crashing the worker (D-13 / T-08-01).
+        throw new Error('HEIC decode failed (libheif may not be supported in this browser): ' + String(err))
+      }
     }
     default:
       throw new Error('Unknown source format: ' + sourceFormat)
