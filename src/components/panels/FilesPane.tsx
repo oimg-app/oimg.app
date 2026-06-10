@@ -20,7 +20,8 @@ const SORT_OPTIONS: { label: string; key: SortKey }[] = [
 ]
 
 // D-06 accept string: all supported ext + MIME combos
-const ACCEPT = '.png,.jpg,.jpeg,.webp,.svg,.avif,image/png,image/jpeg,image/webp,image/svg+xml,image/avif'
+// Quick 260610-lby: added .heic,.heif,image/heic,image/heif (decode-only input)
+const ACCEPT = '.png,.jpg,.jpeg,.webp,.svg,.avif,.heic,.heif,image/png,image/jpeg,image/webp,image/svg+xml,image/avif,image/heic,image/heif'
 
 export function FilesPane() {
   const files = useStore($filteredFiles)
@@ -127,7 +128,7 @@ export function FilesPane() {
       >
         <span className="text-[13px] font-semibold text-[var(--fg-0)] block mb-[3px]">Drop images to optimize</span>
         <span className="text-[12px] text-[var(--fg-2)] block">or click to browse · max 200 files</span>
-        <div className="font-mono text-[10px] tracking-[0.05em] text-[var(--fg-3)] mt-[6px]">SVG · PNG · JPEG · WEBP · AVIF · JXL</div>
+        <div className="font-mono text-[10px] tracking-[0.05em] text-[var(--fg-3)] mt-[6px]">SVG · PNG · JPEG · WEBP · AVIF · HEIC · JXL</div>
       </div>
 
       {/* FILES-03: File list */}
