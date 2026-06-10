@@ -23,6 +23,15 @@ function parseDimRatio(dim: string): string {
   return w > 0 && h > 0 ? `${w} / ${h}` : '4 / 3'
 }
 
+// SVG layers render inside a sandboxed <iframe> (sandbox="allow-scripts", no allow-same-origin)
+// so script-bearing/untrusted SVG is isolated from the app origin. The iframe src must be a
+// real image/svg+xml document — a blob: object URL is unreliable here (a sandboxed opaque-origin
+// frame is blocked from fetching the parent's blob URL), so encode the bytes as a data URI.
+function svgDataUri(buf: ArrayBuffer): string {
+  const text = new TextDecoder('utf-8').decode(buf)
+  return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(text)
+}
+
 const MIN_SCALE = 0.05
 const MAX_SCALE = 8
 const WHEEL_FACTOR = 0.001
@@ -47,6 +56,7 @@ export function CompareStage() {
   const fromScroll = useRef(false) // scroll originated the zoom change — skip effect reset
 
   const isFit = zoom === 'fit'
+  const isSvg = selectedFile?.type === 'svg'
   const aspectRatio = parseDimRatio(selectedFile?.dim ?? '4×3')
 
   function applyTransform() {
@@ -61,11 +71,16 @@ export function CompareStage() {
       setOrigSrc(null)
       return
     }
+    // SVG → data URI (rendered in a sandboxed iframe); raster → revocable object URL
+    if (isSvg) {
+      setOrigSrc(svgDataUri(selectedFile.rawBuffer))
+      return
+    }
     const blob = new Blob([selectedFile.rawBuffer])
     const url = URL.createObjectURL(blob)
     setOrigSrc(url)
     return () => URL.revokeObjectURL(url)
-  }, [selectedFile?.rawBuffer])
+  }, [selectedFile?.rawBuffer, isSvg])
 
   // Build object URL for encoded layer — revoke on cleanup (T-9-URL)
   useEffect(() => {
@@ -73,11 +88,16 @@ export function CompareStage() {
       setEncodedSrc(null)
       return
     }
+    // SVG → data URI (rendered in a sandboxed iframe); raster → revocable object URL
+    if (isSvg) {
+      setEncodedSrc(svgDataUri(selectedFile.encodedBuffer))
+      return
+    }
     const blob = new Blob([selectedFile.encodedBuffer])
     const url = URL.createObjectURL(blob)
     setEncodedSrc(url)
     return () => URL.revokeObjectURL(url)
-  }, [selectedFile?.encodedBuffer])
+  }, [selectedFile?.encodedBuffer, isSvg])
 
   // Zoom dropdown → reset pan + snap scale. Skip when scroll set the zoom (no-op guard).
   useEffect(() => {
@@ -186,18 +206,29 @@ export function CompareStage() {
           aspectRatio,
         } as React.CSSProperties}
       >
-        {/* layer-orig — real original image via object URL */}
+        {/* layer-orig — real original image via object URL (SVG via sandboxed iframe) */}
         {origSrc ? (
-          <img
-            src={origSrc}
-            alt="Original"
-            className="absolute inset-0 w-full h-full object-contain"
-            style={{ clipPath: 'inset(0 calc(100% - var(--split)) 0 0)' }}
-            draggable={false}
-            // WR-06: a format-mismatched/undecodable buffer would render a broken image; fall back
-            // to the placeholder div by clearing the src so the (origSrc ? img : div) branch flips.
-            onError={() => setOrigSrc(null)}
-          />
+          isSvg ? (
+            <iframe
+              src={origSrc}
+              title="Original SVG"
+              sandbox="allow-scripts"
+              scrolling="no"
+              className="absolute inset-0 w-full h-full border-0 pointer-events-none"
+              style={{ clipPath: 'inset(0 calc(100% - var(--split)) 0 0)' }}
+            />
+          ) : (
+            <img
+              src={origSrc}
+              alt="Original"
+              className="absolute inset-0 w-full h-full object-contain"
+              style={{ clipPath: 'inset(0 calc(100% - var(--split)) 0 0)' }}
+              draggable={false}
+              // WR-06: a format-mismatched/undecodable buffer would render a broken image; fall back
+              // to the placeholder div by clearing the src so the (origSrc ? img : div) branch flips.
+              onError={() => setOrigSrc(null)}
+            />
+          )
         ) : (
           <div
             className="absolute inset-0 bg-[var(--color-bg-2)]"
@@ -205,18 +236,29 @@ export function CompareStage() {
           />
         )}
 
-        {/* layer-opt — real encoded image via object URL */}
+        {/* layer-opt — real encoded image via object URL (SVG via sandboxed iframe) */}
         {encodedSrc ? (
-          <img
-            src={encodedSrc}
-            alt="Optimized"
-            className="absolute inset-0 w-full h-full object-contain"
-            style={{ clipPath: 'inset(0 0 0 var(--split))' }}
-            draggable={false}
-            // WR-06: e.g. an AVIF fallback returning original bytes of another format would render
-            // broken; clear the src to drop back to the placeholder div rather than a broken image.
-            onError={() => setEncodedSrc(null)}
-          />
+          isSvg ? (
+            <iframe
+              src={encodedSrc}
+              title="Optimized SVG"
+              sandbox="allow-scripts"
+              scrolling="no"
+              className="absolute inset-0 w-full h-full border-0 pointer-events-none"
+              style={{ clipPath: 'inset(0 0 0 var(--split))' }}
+            />
+          ) : (
+            <img
+              src={encodedSrc}
+              alt="Optimized"
+              className="absolute inset-0 w-full h-full object-contain"
+              style={{ clipPath: 'inset(0 0 0 var(--split))' }}
+              draggable={false}
+              // WR-06: e.g. an AVIF fallback returning original bytes of another format would render
+              // broken; clear the src to drop back to the placeholder div rather than a broken image.
+              onError={() => setEncodedSrc(null)}
+            />
+          )
         ) : (
           <div
             className="absolute inset-0 bg-[var(--color-bg-3)]"
