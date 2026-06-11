@@ -96,7 +96,24 @@ Plans:
   5. SW handles its own version-bump skipWaiting + clientsClaim and surfaces "New version available — reload?" toast when a new SW takes over
   6. Phase 13's "Offline-ready" footer derivation now sees a real SW + precache state and shows green when offline-functional
 
-**Plans**: TBD
+**Plans**: 6 plans
+
+Plans:
+**Wave 0** *(blocking prerequisites)*
+
+- [ ] 14-00-PLAN.md — Wave 0: maskable 512 icon asset + `virtual:pwa-register` ambient type + failing test stubs (manifest.test.ts, pwa.spec.ts) (PWA-01/02/03/05)
+
+**Wave 1** *(blocked on Wave 0 completion)*
+
+- [ ] 14-01-PLAN.md — Wave 1: install vite-plugin-pwa (injectManifest) + hand-authored manifest.webmanifest + index.html link + build emits sw (PWA-01)
+- [ ] 14-02-PLAN.md — Wave 1: hand-rolled src/sw.ts — precache app shell + CacheFirst wasm (AVIF never precached) + skipWaiting/clientsClaim + COOP/COEP survival e2e (PWA-02)
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [ ] 14-03-PLAN.md — Wave 2: pwa store atoms + useInstallPrompt hook + StatusBar Install button (PWA-03)
+- [ ] 14-04-PLAN.md — Wave 2: register-sw.ts (update toast + onOfflineReady cap → SC#6) + App.tsx idle registration (PWA-05)
+- [ ] 14-05-PLAN.md — Wave 2: Cloudflare _headers — sw.js no-cache + manifest max-age + COOP/COEP preserved (PWA-04, blocking human curl checkpoint)
+
 **UI hint**: yes
 
 ### Phase 15: From URL or paste
@@ -150,13 +167,13 @@ Plans:
 
 | Phase | Milestone | Plans | Status | Completed |
 |-------|-----------|-------|--------|-----------|
-| 13. Diagnostics + Clear Queue | v1.2 | 7/8 | In Progress|  |
-| 14. Installable PWA | v1.2 | 0/? | Not started | - |
+| 13. Diagnostics + Clear Queue | v1.2 | 8/8 | Complete |  |
+| 14. Installable PWA | v1.2 | 0/6 | Planned | - |
 | 15. From URL or paste | v1.2 | 0/? | Not started | - |
 | 16. SSIM Quality Metric | v1.2 | 0/? | Not started | - |
 | 17. Butteraugli Quality Metric | v1.2 | 0/? | Not started | - |
 
 ---
 
-*Active milestone: v1.2 — Real-quality + transparency + installable. Next: `/gsd:plan-phase 13`.*
+*Active milestone: v1.2 — Real-quality + transparency + installable. Next: `/gsd:execute-phase 14`.*
 *Last archived: 2026-06-05 via /gsd:complete-milestone v1.1*
