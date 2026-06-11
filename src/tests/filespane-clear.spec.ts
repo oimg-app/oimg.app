@@ -32,8 +32,10 @@ async function injectEntries(page: Page, specs: InjectSpec[]): Promise<void> {
   await page.evaluate(
     async ({ specs, TINY_PNG_B64 }) => {
       // Absolute /src/... per CLAUDE.md MEMORY (accepted Vite pattern).
-      const filesMod = (await import('/src/stores/files.ts'))
-      const stubMod = (await import('/src/lib/stub-data.ts'))
+      // @ts-expect-error — Vite dev-server runtime path, not a TS-resolvable specifier
+      const filesMod = (await import(/* @vite-ignore */ '/src/stores/files.ts'))
+      // @ts-expect-error — Vite dev-server runtime path, not a TS-resolvable specifier
+      const stubMod = (await import(/* @vite-ignore */ '/src/lib/stub-data.ts'))
       const { filesAtom } = filesMod
       const { defaultFileSettings } = stubMod
 
@@ -68,7 +70,8 @@ async function injectEntries(page: Page, specs: InjectSpec[]): Promise<void> {
 async function setRunningJobs(page: Page, running: number, queued: number): Promise<void> {
   await page.evaluate(
     async ({ running, queued }) => {
-      const m = (await import('/src/stores/runtime.ts'))
+      // @ts-expect-error — Vite dev-server runtime path, not a TS-resolvable specifier
+      const m = (await import(/* @vite-ignore */ '/src/stores/runtime.ts'))
       m.setJobCounts(running, queued)
     },
     { running, queued },

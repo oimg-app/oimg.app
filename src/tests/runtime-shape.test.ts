@@ -19,7 +19,7 @@ function assert(name: string, cond: boolean): void {
 
 try {
   const rmod = await import('../stores/runtime.ts')
-  const state = rmod.runtimeAtom.get() as Record<string, unknown>
+  const state = rmod.runtimeAtom.get() as unknown as Record<string, unknown>
 
   // Post-reshape keys present
   assert("runtimeAtom has 'versions' key", 'versions' in state)
