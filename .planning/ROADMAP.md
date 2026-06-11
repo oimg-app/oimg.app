@@ -106,7 +106,7 @@ Plans:
 **Wave 1** *(blocked on Wave 0 completion)*
 
 - [x] 14-01-PLAN.md — Wave 1: install vite-plugin-pwa (injectManifest) + hand-authored manifest.webmanifest + index.html link + build emits sw (PWA-01)
-- [ ] 14-02-PLAN.md — Wave 1: hand-rolled src/sw.ts — precache app shell + CacheFirst wasm (AVIF never precached) + skipWaiting/clientsClaim + COOP/COEP survival e2e (PWA-02)
+- [x] 14-02-PLAN.md — Wave 1: hand-rolled src/sw.ts — precache app shell + CacheFirst wasm (AVIF never precached) + skipWaiting/clientsClaim + COOP/COEP survival e2e (PWA-02)
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
@@ -168,7 +168,7 @@ Plans:
 | Phase | Milestone | Plans | Status | Completed |
 |-------|-----------|-------|--------|-----------|
 | 13. Diagnostics + Clear Queue | v1.2 | 8/8 | Complete |  |
-| 14. Installable PWA | v1.2 | 2/6 | In Progress|  |
+| 14. Installable PWA | v1.2 | 3/6 | In Progress|  |
 | 15. From URL or paste | v1.2 | 0/? | Not started | - |
 | 16. SSIM Quality Metric | v1.2 | 0/? | Not started | - |
 | 17. Butteraugli Quality Metric | v1.2 | 0/? | Not started | - |
