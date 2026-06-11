@@ -21,7 +21,7 @@ export interface Caps {
   offlineReady: boolean // PLACEHOLDER until Phase 14 PWA-02 wires precacheComplete
 }
 
-// 47-byte SIMD probe: minimal WASM module that uses v128 — validates only on
+// Minimal v128 SIMD probe: 31-byte WASM module that uses v128 — validates only on
 // SIMD support. Standard sequence from the WebAssembly community feature-detect
 // suite (research §2 / 13-PATTERNS.md lines 143-148).
 const SIMD_PROBE = new Uint8Array([

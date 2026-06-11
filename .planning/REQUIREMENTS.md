@@ -24,10 +24,10 @@ Layers polish + diagnostic transparency + perceptual quality + installable/offli
 
 ### Diagnostics
 
-- [ ] **DIA-01**: `versionsAtom` (or `diagAtom` if a new atom is preferred) added to `src/stores/runtime.ts`. Populated at build time via Vite `define`: `svgo` (from svgo's package.json), `@jsquash/*` versions (webp, jpeg, avif, oxipng, png, resize), `ssim.js`, butteraugli build hash.
-- [ ] **DIA-02**: Runtime capability detection on app boot — SIMD support (WebAssembly.validate test), shared memory + threads support, `crossOriginIsolated`, `navigator.hardwareConcurrency`. Cached in the same atom under `caps`.
-- [ ] **DIA-03**: StatusBar hardcoded version badge text ("svgo 4.0.1 · webp 1.5" or similar) replaced with live `versionsAtom` reads. Footer "100% local · Offline-ready" derives the "Offline-ready" segment from `navigator.serviceWorker.controller != null && SW.precacheComplete === true` — only shows when the SW is registered AND the app shell precache is complete.
-- [ ] **DIA-04**: Settings popover (Toolbar) gains a "Diagnostics" tab rendering the full versions + caps + SW status surface. Read-only, copy-to-clipboard (via Phase 12 `copyToClipboard` chokepoint) for bug-report convenience.
+- [x] **DIA-01**: `versionsAtom` (or `diagAtom` if a new atom is preferred) added to `src/stores/runtime.ts`. Populated at build time via Vite `define`: `svgo` (from svgo's package.json), `@jsquash/*` versions (webp, jpeg, avif, oxipng, png, resize), `ssim.js`, butteraugli build hash.
+- [x] **DIA-02**: Runtime capability detection on app boot — SIMD support (WebAssembly.validate test), shared memory + threads support, `crossOriginIsolated`, `navigator.hardwareConcurrency`. Cached in the same atom under `caps`.
+- [x] **DIA-03**: StatusBar hardcoded version badge text ("svgo 4.0.1 · webp 1.5" or similar) replaced with live `versionsAtom` reads. Footer "100% local · Offline-ready" derives the "Offline-ready" segment from `navigator.serviceWorker.controller != null && SW.precacheComplete === true` — only shows when the SW is registered AND the app shell precache is complete.
+- [x] **DIA-04**: Settings popover (Toolbar) gains a "Diagnostics" tab rendering the full versions + caps + SW status surface. Read-only, copy-to-clipboard (via Phase 12 `copyToClipboard` chokepoint) for bug-report convenience.
 
 ### Installable PWA
 
@@ -77,14 +77,14 @@ Deferred to a later milestone. Tracked but not in this roadmap.
 |-------------|-------|--------|
 | ING-01 | TBD | Pending |
 | ING-02 | TBD | Pending |
-| CLR-01 | TBD | Complete |
+| CLR-01 | 13 | Complete |
 | MTR-01 | TBD | Pending |
 | MTR-02 | TBD | Pending |
 | MTR-03 | TBD | Pending |
-| DIA-01 | TBD | Pending |
-| DIA-02 | TBD | Pending |
-| DIA-03 | TBD | Pending |
-| DIA-04 | TBD | Pending |
+| DIA-01 | 13 | Complete |
+| DIA-02 | 13 | Complete |
+| DIA-03 | 13 | Complete |
+| DIA-04 | 13 | Complete |
 | PWA-01 | TBD | Pending |
 | PWA-02 | TBD | Pending |
 | PWA-03 | TBD | Pending |
