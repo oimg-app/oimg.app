@@ -3,16 +3,23 @@
 //   - SVGO + jSquash badges read live versions (D-08).
 //   - WASM info is DERIVED from caps.simd/threads (D-07) — no atom field.
 //   - Offline-ready pill is HIDDEN when !caps.offlineReady (D-09).
+// Phase 14 — Plan 03 (PWA-03): Install button adjacent to the offline pill,
+//   gated on useInstallPrompt().canInstall; click invokes the deferred
+//   beforeinstallprompt event. Button is absent on Firefox (event never fires)
+//   and after appinstalled (atom clears).
 import { useStore } from '@nanostores/react'
 import { runtimeAtom } from '@/stores/runtime'
 import { filesAtom, $totals } from '@/stores/files'
 import { fmtBytes } from '@/lib/format'
 import { cn } from '@/lib/utils'
+import { useInstallPrompt } from '@/hooks/useInstallPrompt'
 
 export function StatusBar() {
   const { running, versions, caps } = useStore(runtimeAtom)
   const totals = useStore($totals)
   const { entries } = useStore(filesAtom)
+  // Phase 14 — PWA-03: deferred beforeinstallprompt → Install affordance.
+  const { canInstall, promptInstall } = useInstallPrompt()
 
   // Phase 11 Plan 02 (OPT-02 / D-01): aggregate X/Y counter derived live from entries.
   // No new batchProgressAtom — derivation only (per plan constraint).
@@ -76,6 +83,25 @@ export function StatusBar() {
         <>
           <span aria-hidden="true">·</span>
           <span>Offline-ready</span>
+        </>
+      )}
+
+      {/* Phase 14 — PWA-03: Install button. Gated on canInstall so it's absent on
+          Firefox (event never fires), when already installed (appinstalled
+          cleared the atom), and on Plan 14-04 SW-uncontrolled first visit.
+          Accent-coloured underlined text matches existing 11px badge styling
+          (Tailwind utilities only, no inline styles per 14-03-PLAN). */}
+      {canInstall && (
+        <>
+          <span aria-hidden="true">·</span>
+          <button
+            type="button"
+            data-testid="install-button"
+            onClick={() => void promptInstall()}
+            className="text-[11px] text-[var(--color-accent)] underline underline-offset-2 hover:opacity-90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--color-accent)] rounded-sm"
+          >
+            Install
+          </button>
         </>
       )}
 
