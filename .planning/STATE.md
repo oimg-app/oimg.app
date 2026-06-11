@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Polish, Diagnostics, PWA + Quality Metrics
-status: executing
+status: completed
 stopped_at: Completed quick task 260610-lby — HEIC/HEIF decode-only input support via heic-decode
-last_updated: "2026-06-10T14:06:34.187Z"
-last_activity: 2026-06-10 -- Phase 13 planning complete
+last_updated: "2026-06-11T14:21:28.300Z"
+last_activity: 2026-06-11 -- Phase 13 marked complete
 progress:
   total_phases: 5
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 8
-  completed_plans: 7
-  percent: 0
+  completed_plans: 8
+  percent: 20
 ---
 
 # STATE: oimg.app — v1.2 Polish, Diagnostics, PWA + Quality Metrics
@@ -31,10 +31,10 @@ progress:
 
 ## Current Position
 
-Phase: 12 — COMPLETE
+Phase: 13 — COMPLETE
 Plan: 12-05 complete (Wave 2 — FileRow ContextMenu Copy <picture> + Copy data-URI siblings)
-Status: Ready to execute
-Last activity: 2026-06-10 -- Phase 13 planning complete
+Status: Phase 13 complete
+Last activity: 2026-06-11 -- Phase 13 marked complete
 Progress: [█████████░] 88%
 
 ## Performance Metrics
