@@ -82,13 +82,18 @@ test.describe('PWA-05 — SW update toast', () => {
   test('a "New version available" toast with a Reload action appears on onNeedRefresh', async ({ page }) => {
     await page.goto('/')
 
-    // Plan 14-02 wires `bootstrapSW()` → registerSW({ onNeedRefresh }).
-    // Simulate the callback firing via the registered toast path. Until the
-    // wiring exists, this test is RED — the toast never appears.
-    await page.evaluate(async () => {
-      // Plan 14-02 contract: `window.__simulateSWNeedRefresh()` invokes the
-      // onNeedRefresh callback for e2e purposes (dev/test hook only). The
-      // function does not exist yet — this is the RED gate.
+    // Plan 14-04 wires `bootstrapSW()` → registerSW({ onNeedRefresh }) and
+    // exposes `window.__simulateSWNeedRefresh()` (DEV/test hook). App.tsx
+    // defers registration via requestIdleCallback — poll until the hook is
+    // present rather than racing first paint.
+    await page.waitForFunction(
+      () => typeof (window as unknown as { __simulateSWNeedRefresh?: () => void })
+        .__simulateSWNeedRefresh === 'function',
+      undefined,
+      { timeout: 10_000 },
+    )
+
+    await page.evaluate(() => {
       const w = window as unknown as { __simulateSWNeedRefresh?: () => void }
       w.__simulateSWNeedRefresh?.()
     })
@@ -104,25 +109,36 @@ test.describe('PWA-05 — SW update toast', () => {
   })
 })
 
-// ─── (d) SC#6: StatusBar Offline-ready pill flips green on onOfflineReady ──
+// ─── (d) SC#6: StatusBar Offline-ready pill renders on onOfflineReady ──────
 test.describe('SC#6 — Offline-ready pill', () => {
-  test('offline-ready pill renders in its active state after onOfflineReady fires', async ({ page }) => {
+  test('offline-ready pill renders after onOfflineReady fires (was hidden per D-09)', async ({ page }) => {
     await page.goto('/')
 
-    // Plan 14-02 wires onOfflineReady → setCaps({ ..., offlineReady: true }).
-    // Test hook: `window.__simulateSWOfflineReady()` invokes the bootstrap
-    // path's onOfflineReady callback. Until Plan 14-02 lands, this is RED.
-    await page.evaluate(async () => {
+    // Phase 13 D-09 HIDE rule: the "Offline-ready" pill is NOT in the DOM
+    // until caps.offlineReady === true. Verify the hidden baseline first.
+    await expect(
+      page.getByTestId('statusbar').getByText(/Offline-ready/i),
+    ).toHaveCount(0)
+
+    // Plan 14-04: poll for the test hook (App.tsx defers SW registration via
+    // requestIdleCallback so the hook is installed lazily).
+    await page.waitForFunction(
+      () => typeof (window as unknown as { __simulateSWOfflineReady?: () => void })
+        .__simulateSWOfflineReady === 'function',
+      undefined,
+      { timeout: 10_000 },
+    )
+
+    await page.evaluate(() => {
       const w = window as unknown as { __simulateSWOfflineReady?: () => void }
       w.__simulateSWOfflineReady?.()
     })
 
-    // The StatusBar "Offline-ready" pill (DIA-03, owned by StatusBar.tsx)
-    // exposes `data-testid="offline-ready-pill"`. Its active state is signalled
-    // via `data-active="true"` (Plan 14-02 extends StatusBar; the testid
-    // contract is part of Wave 1's API for Wave 2 verification).
-    const pill = page.getByTestId('offline-ready-pill')
-    await expect(pill).toBeVisible({ timeout: 10_000 })
-    await expect(pill).toHaveAttribute('data-active', 'true')
+    // StatusBar now RENDERS the "Offline-ready" text (HIDE-when-false rule
+    // inverted by setCaps({ ..., offlineReady: true })). This is SC#6: the
+    // pill flips from hidden → visible on real precache-complete signal.
+    await expect(
+      page.getByTestId('statusbar').getByText(/Offline-ready/i),
+    ).toBeVisible({ timeout: 10_000 })
   })
 })
