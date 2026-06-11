@@ -4,13 +4,13 @@ milestone: v1.2
 milestone_name: Polish, Diagnostics, PWA + Quality Metrics
 status: executing
 stopped_at: Completed quick task 260610-lby — HEIC/HEIF decode-only input support via heic-decode
-last_updated: "2026-06-11T16:21:47.007Z"
+last_updated: "2026-06-11T16:36:15.862Z"
 last_activity: 2026-06-11 -- Phase 14 planning complete
 progress:
   total_phases: 5
   completed_phases: 1
   total_plans: 14
-  completed_plans: 8
+  completed_plans: 10
   percent: 20
 ---
 
@@ -35,7 +35,7 @@ Phase: 13 — COMPLETE
 Plan: 12-05 complete (Wave 2 — FileRow ContextMenu Copy <picture> + Copy data-URI siblings)
 Status: Ready to execute
 Last activity: 2026-06-11 -- Phase 14 planning complete
-Progress: [█████████░] 88%
+Progress: [███████░░░] 71%
 
 ## Performance Metrics
 
@@ -56,6 +56,7 @@ Progress: [█████████░] 88%
 | Phase 10-single-file-optimize-loop P02 | 10m | 2 tasks | 2 files |
 | Phase 11-batch-optimize-export P05 | ~13m | 4 tasks | 6 files |
 | Phase 12-real-snippets P05 | ~15m | 2 tasks | 2 files |
+| Phase 14 P01 | 6min | 3 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -80,6 +81,7 @@ Progress: [█████████░] 88%
 - [Phase 11-05]: Rule-2 auto-add — mounted sonner Toaster in App.tsx (was missing app-wide; blocked D-12 toast contract)
 - [Phase 12-05]: FileRow ContextMenu Copy <picture> + Copy data-URI siblings wired via useSnippets per-file methods; D-13 disable-then-explain triple matches Phase 11 Save as… analog; label standardized to 'Copy data-URI' (hyphenated)
 - [Phase 12-05]: Rule-3 env repair — installed @esbuild/darwin-arm64 platform binary (npm-cli/4828 family, same precedent as scripts/ensure-rollup-binding.mjs); --no-save --ignore-scripts --cpu=arm64 flags; no package.json/lockfile change
+- [Phase ?]: Phase 14 Plan 01: vite-plugin-pwa@1.3.0 in injectManifest mode; theme_color #5eb87a verbatim; globIgnores excludes wasm
 
 ### Conventions (carried from v1.0)
 
@@ -102,7 +104,7 @@ Progress: [█████████░] 88%
 
 ## Session Continuity
 
-**Last session:** 2026-06-10T14:06:34.182Z
+**Last session:** 2026-06-11T16:36:06.957Z
 **Stopped At:** Completed quick task 260610-lby — HEIC/HEIF decode-only input support via heic-decode
 **To resume:** HEIC code-complete + typecheck-clean. Manual check pending: `npm run dev`, drop a real `.heic`, confirm decode→JPEG export and NO inspector HEIC tab (see 260610-lby-SUMMARY.md §Manual verification). Milestone v1.2 (Phases 13–17) is the active track.
 
