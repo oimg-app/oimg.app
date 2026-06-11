@@ -4,6 +4,7 @@ import tailwindcss from '@tailwindcss/vite'
 import path from 'node:path'
 import fs from 'node:fs'
 import squooshVitePlugin from '@squoosh-kit/vite-plugin';
+import { VitePWA } from 'vite-plugin-pwa'
 
 // Phase 13 — DIA-01 (D-01/D-02): build-time version injection.
 // Security (T-13-02 mitigation): only reads `node_modules/<pkg>/package.json`
@@ -34,7 +35,34 @@ export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
-    squooshVitePlugin(path.resolve('node_modules/@squoosh-kit'))
+    squooshVitePlugin(path.resolve('node_modules/@squoosh-kit')),
+    // Phase 14 — PWA-01: vite-plugin-pwa in injectManifest mode.
+    // - manifest: false → hand-authored public/manifest.webmanifest (theme_color
+    //   "#5eb87a" is PWA-01 verbatim, chosen over the RESEARCH alternative).
+    // - devOptions.enabled: false → SW must NOT register in dev (breaks HMR +
+    //   crossOriginIsolated for jSquash codecs).
+    // - injectManifest.globIgnores: '**/*.wasm' is MANDATORY — AVIF wasm
+    //   (~3.4 MB) must be runtime-cached, never precached.
+    // - src/sw.ts is owned by Plan 14-02 (not yet present here).
+    VitePWA({
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.ts',
+      registerType: 'prompt',
+      injectRegister: false,
+      manifest: false,
+      devOptions: { enabled: false },
+      injectManifest: {
+        globPatterns: ['**/*.{js,css,html,svg,woff2}'],
+        globIgnores: [
+          '**/node_modules/**',
+          '**/*.wasm',
+          '**/codec.worker-*.js',
+          '**/avif_enc*.wasm',
+        ],
+        maximumFileSizeToCacheInBytes: 2 * 1024 * 1024,
+      },
+    }),
   ],
   resolve: {
     alias: {
