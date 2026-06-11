@@ -1,0 +1,32 @@
+{
+  "id": "/",
+  "name": "oimg.app — Image Optimizer",
+  "short_name": "oimg",
+  "description": "100% client-side batch image optimizer. Drop assets, adjust settings once, walk away with optimized files + ZIP + paste-ready snippets. Nothing leaves the browser.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone"],
+  "theme_color": "#5eb87a",
+  "background_color": "#0f1410",
+  "icons": [
+    {
+      "src": "/oimg-logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/oimg-logo-1024.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/oimg-logo-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
