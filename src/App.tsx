@@ -9,8 +9,11 @@
 import { useEffect } from 'react'
 import { AppShell } from '@/components/shell'
 import { Toaster } from '@/components/ui/sonner'
+import { useClipboardIngest } from '@/hooks/useClipboardIngest'
 
 export default function App() {
+  useClipboardIngest() // Phase 15 — ING-02: document-level Cmd/Ctrl+V handler.
+
   useEffect(() => {
     // Defer SW registration past first paint. Dynamic import keeps
     // src/lib/register-sw.ts (and the virtual:pwa-register runtime) out of the
