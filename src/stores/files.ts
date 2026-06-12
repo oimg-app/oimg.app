@@ -97,7 +97,8 @@ export function setSortBy(s: SortKey): void {
 // Quick 260603-s2x: addWatchFolder retired — Toolbar now calls useWatchFolder().startWatching
 // (same retirement precedent as Phase 11 exportAsZip / Phase 12 snippet stubs).
 export function addFromDevice(): void {}
-export function addFromUrl(): void {}
+// Phase 15 — ING-01 (D-14): URL-paste stub retired. Toolbar now calls
+// pickFromClipboard({ ingest }) from @/lib/clipboard-ingest directly.
 
 // Phase 11 — Plan 05: All as ZIP + Save individually wired through useExport() hook.
 // Phase 12 — Plan 04 (D-09/D-10/D-11): Copy <picture> HTML / Copy as data URIs /
