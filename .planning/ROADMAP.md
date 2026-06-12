@@ -129,7 +129,19 @@ Plans:
   4. Document-level Cmd/Ctrl+V handler on `<App />` ingests any pasted image through the same dispatcher
   5. The empty `addFromUrl` stub in `src/stores/files.ts` is deleted (Phase 11/12/quick-task retirement precedent)
 
-**Plans**: TBD
+**Plans**: 4 plans
+
+Plans:
+**Wave 1**
+
+- [ ] 15-01-PLAN.md — Wave 1: `src/lib/url-ingest.ts` `pickFromUrl(url)` + Node unit + Playwright e2e (ING-01, T-15-01/T-15-04)
+- [ ] 15-02-PLAN.md — Wave 1: `src/lib/clipboard-ingest.ts` `pickFromClipboard` + `processClipboardEvent` + `tests/setup/clipboard-mocks.ts` read-direction shims + Node unit (ING-01, T-15-02)
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [ ] 15-03-PLAN.md — Wave 2: `src/hooks/useClipboardIngest.ts` + `App.tsx` invocation + Playwright e2e covering image / URL / input-guard (ING-02, T-15-03)
+- [ ] 15-04-PLAN.md — Wave 2: Toolbar onClick → `pickFromClipboard`; delete `addFromUrl` stub from `src/stores/files.ts`; Playwright e2e + bundle budget gate (ING-01)
+
 **UI hint**: yes
 
 ### Phase 16: SSIM Quality Metric
