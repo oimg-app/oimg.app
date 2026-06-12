@@ -50,7 +50,6 @@ export function CodecPanel() {
   const isPng = settings.codec === 'PNG'
   const isJpeg = settings.codec === 'JPEG'
 
-  console.log({ selectedFile, globalSettings, isJpeg })
   // Auto-switch away from SVG codec when a non-SVG file is selected
   useEffect(() => {
     if (!isSvgFile && settingsAtom.get().codec === 'SVG') {

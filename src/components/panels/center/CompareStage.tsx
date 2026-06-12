@@ -66,6 +66,8 @@ export function CompareStage() {
   const isSvgOutput = selectedFile?.settings?.codec === 'SVG'      // OUTPUT codec is SVG → encoded layer is an iframe (else <img>)
   const isHeic = selectedFile?.type === 'heic'
 
+  const optTarget = selectedFile?.settings?.codec.toUpperCase()
+
   const aspectRatio = parseDimRatio(selectedFile?.dim ?? '4×3')
 
   function applyTransform() {
@@ -331,7 +333,7 @@ export function CompareStage() {
         {/* split label right */}
         <div className="absolute bottom-3 right-3 flex items-center gap-1.5 px-2 py-1 rounded-[4px] font-mono text-[11px] font-semibold text-[var(--color-fg-0)] bg-[var(--color-bg-0)]/70 backdrop-blur-sm pointer-events-none">
           <span className="w-2 h-2 rounded-full bg-[var(--color-accent)] shrink-0" />
-          {selectedFile?.settings?.codec.toUpperCase() ?? '—'} · {fmtBytes(selectedFile?.opt ?? null)}
+          {optTarget ?? '—'} · {fmtBytes(selectedFile?.opt ?? null)}
         </div>
       </div>
     </div>

@@ -3,9 +3,9 @@
 // Source: 10-03-PLAN.md
 
 import { filesAtom, setFileRawBuffer, selectFile } from "@/stores/files";
-import {codecForType, defaultFileSettings} from "@/lib/stub-data";
+import {codecForType, defaultFileSettings} from "@/lib/settings";
 import { useOptimize } from "@/hooks/useOptimize";
-import type { FileEntry } from "@/lib/stub-data";
+import type { FileEntry } from "@/lib/settings";
 
 // --- Format gate (D-06) ---
 
@@ -70,7 +70,7 @@ async function fileToEntry(file: File): Promise<FileEntry> {
   const ext = getExt(file.name);
   // Normalize jpg → jpeg consistently for codec dispatch compatibility
   const type = ext === "jpg" ? "jpeg" : ext;
-  const target = codecForType(type)
+  const target = codecForType(type).toLowerCase()
   const rawBuffer = await file.arrayBuffer();
   const dim = await readDimensions(file, type);
 
@@ -86,7 +86,7 @@ async function fileToEntry(file: File): Promise<FileEntry> {
     createdAt: Date.now(), // Pitfall 2: required for queue-order sort (D-04)
     settings: defaultFileSettings(type, 82),
     rawBuffer,
-    target: '',
+    target,
     // No @jsquash import — ingest runs on main thread (200KB budget)
   };
 }
