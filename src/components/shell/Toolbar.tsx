@@ -19,7 +19,6 @@ import {
   $queueEmpty,
   $selectedFile,
   setFilter,
-  addFromUrl,
   clearFiles,
 } from "@/stores/files";
 import { runtimeAtom, setWorkerCount } from "@/stores/runtime";
@@ -41,6 +40,7 @@ import {
   TabsContent,
 } from "@/components/ui/tabs";
 import { copyToClipboard } from "@/lib/clipboard";
+import { pickFromClipboard } from "@/lib/clipboard-ingest";
 import { cn } from "@/lib/utils";
 
 const tbtnClass =
@@ -84,7 +84,7 @@ export function Toolbar() {
     clearFiles();
   };
   const { runOptimize } = useOptimize();
-  const { openPicker } = useIngest();
+  const { ingest, openPicker } = useIngest();
   const { exportZip, exportOne, exportIndividually } = useExport();
   const { copyPictureBulk, copyDataUrisBulk, copyManifestJson } = useSnippets();
   const { startWatching } = useWatchFolder();
@@ -151,8 +151,9 @@ export function Toolbar() {
               <button
                 type="button"
                 className={menuItemClass}
+                // Phase 15 — ING-01: clipboard → ingest dispatcher.
                 onClick={() => {
-                  addFromUrl();
+                  void pickFromClipboard({ ingest });
                   setOpen(null);
                 }}
               >
