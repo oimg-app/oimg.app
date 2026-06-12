@@ -21,7 +21,7 @@
 // users at the native paste-event path (Cmd/Ctrl+V) instead.
 
 import { toast } from 'sonner';
-import { pickFromUrl } from './url-ingest';
+import { pickFromUrl } from '@/lib/url-ingest';
 
 /**
  * Trailing image extension check. Accepts optional querystring/hash.
@@ -83,13 +83,15 @@ export async function pickFromClipboard(
     const text = await clip.readText();
     const trimmed = text.trim();
     if (trimmed && IMAGE_URL_RE.test(trimmed)) {
-      const result = await pickFromUrl(trimmed);
-      if (result.ok) {
-        await dispatcher.ingest([result.file]);
-        toast.success(`Imported from URL: ${result.host}`);
+      const file = await pickFromUrl(trimmed);
+      if (file) {
+        await dispatcher.ingest([file]);
+        let host = '';
+        try { host = new URL(trimmed).host } catch {}
+        toast.success(host ? `Imported from URL: ${host}` : 'Imported from URL');
         return;
       }
-      // pickFromUrl already toasts on failure; do not double-toast here.
+      // pickFromUrl returned null and already toasted the reason; no double-toast.
       return;
     }
   } catch {
@@ -146,13 +148,15 @@ export async function processClipboardEvent(
       });
       const trimmed = text.trim();
       if (trimmed && IMAGE_URL_RE.test(trimmed)) {
-        const result = await pickFromUrl(trimmed);
-        if (result.ok) {
-          await dispatcher.ingest([result.file]);
-          toast.success(`Imported from URL: ${result.host}`);
+        const file = await pickFromUrl(trimmed);
+        if (file) {
+          await dispatcher.ingest([file]);
+          let host = '';
+          try { host = new URL(trimmed).host } catch {}
+          toast.success(host ? `Imported from URL: ${host}` : 'Imported from URL');
           return true;
         }
-        // pickFromUrl toasted the failure reason; signal "handled" so the
+        // pickFromUrl returned null and already toasted; signal "handled" so the
         // caller still preventDefaults the paste (user clearly meant a URL).
         return true;
       }

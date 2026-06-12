@@ -5,29 +5,61 @@
 //        --import ./src/tests/_alias-loader.mjs \
 //        src/tests/clipboard-ingest.test.ts
 //
-// The alias loader maps `sonner` → src/tests/stubs/sonner.mjs which records
-// every toast.* call into globalThis.__toastCalls. We snapshot/reset that
-// array per test. pickFromUrl is left as-is (Wave 1 module), but its network
-// path is bypassed by stubbing globalThis.fetch via setFetchStub before
-// running URL branches.
+// Toast recording: sonner exports `toast` as a singleton object. We bootstrap
+// minimal DOM/window globals (mirroring url-ingest.test.ts) so sonner can load
+// without crashing, then monkey-patch toast.* methods to push into
+// globalThis.__toastCalls. clipboard-ingest is dynamically imported AFTER the
+// patch so its `import { toast } from 'sonner'` resolves to the patched object.
+// pickFromUrl's network path is bypassed via setFetchStub on URL branches.
 
 import { strict as assert } from 'node:assert';
 import { test } from 'node:test';
 
-import {
-  IMAGE_URL_RE,
-  pickFromClipboard,
-  processClipboardEvent,
-  type ClipboardDispatcher,
-} from '@/lib/clipboard-ingest';
+// ---------- DOM bootstrap (mirrors url-ingest.test.ts) ----------
+function defineGlobal(name: string, value: unknown): void {
+  Object.defineProperty(globalThis, name, { value, writable: true, configurable: true });
+}
+const headStub = { appendChild() {} };
+defineGlobal('window', globalThis);
+defineGlobal('isSecureContext', true);
+defineGlobal('navigator', { userAgent: 'node' });
+defineGlobal('document', {
+  createElement: (tag?: string) => {
+    if (tag === 'style') return { textContent: '', setAttribute() {}, appendChild() {} };
+    return { value: '', setAttribute() {}, style: {} as Record<string, string>, select() {} };
+  },
+  getElementsByTagName: (name: string) => (name === 'head' ? [headStub] : []),
+  createTextNode: (data: string) => ({ data, nodeValue: data }),
+  head: headStub,
+  body: { appendChild() {}, removeChild() {} },
+  execCommand: () => true,
+});
 
-// ---------- toast call recorder (from stubs/sonner.mjs) ----------
+// ---------- toast call recorder ----------
 type ToastCall = { level: string; message: string };
-const toastCalls: ToastCall[] = (globalThis as unknown as { __toastCalls: ToastCall[] })
-  .__toastCalls;
+const toastCalls: ToastCall[] = [];
+(globalThis as unknown as { __toastCalls: ToastCall[] }).__toastCalls = toastCalls;
 function resetToasts() {
   toastCalls.length = 0;
 }
+
+// ---------- patch sonner BEFORE loading clipboard-ingest ----------
+const sonner = await import('sonner');
+const makeRecorder = (level: string) => (m: unknown) => {
+  toastCalls.push({ level, message: typeof m === 'string' ? m : String(m) });
+};
+Object.assign((sonner as { toast: Record<string, unknown> }).toast, {
+  success: makeRecorder('success'),
+  error: makeRecorder('error'),
+  message: makeRecorder('message'),
+  warning: makeRecorder('warning'),
+  info: makeRecorder('info'),
+});
+
+// ---------- now dynamically import clipboard-ingest (uses the patched toast) ----------
+const clipMod = await import('@/lib/clipboard-ingest');
+const { IMAGE_URL_RE, pickFromClipboard, processClipboardEvent } = clipMod;
+type ClipboardDispatcher = { ingest: (files: File[]) => Promise<void> };
 
 // ---------- spy dispatcher ----------
 function makeDispatcher(): ClipboardDispatcher & { calls: File[][] } {
@@ -44,10 +76,12 @@ function makeDispatcher(): ClipboardDispatcher & { calls: File[][] } {
 type FetchStub = (input: RequestInfo | URL) => Promise<Response>;
 const originalFetch = globalThis.fetch;
 function setFetchStub(stub: FetchStub) {
-  (globalThis as { fetch: FetchStub }).fetch = stub;
+  // Use defineProperty (matches url-ingest.test.ts) — Node 25 native fetch
+  // is a non-writable global accessor; plain assignment silently no-ops.
+  Object.defineProperty(globalThis, 'fetch', { value: stub, writable: true, configurable: true });
 }
 function restoreFetch() {
-  (globalThis as { fetch: typeof originalFetch }).fetch = originalFetch;
+  Object.defineProperty(globalThis, 'fetch', { value: originalFetch, writable: true, configurable: true });
 }
 function imageResponse(bytes: Uint8Array, type = 'image/png'): Response {
   return new Response(bytes, {
