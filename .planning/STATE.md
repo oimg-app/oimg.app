@@ -4,14 +4,14 @@ milestone: v1.2
 milestone_name: Polish, Diagnostics, PWA + Quality Metrics
 status: completed
 stopped_at: Completed quick task 260610-lby — HEIC/HEIF decode-only input support via heic-decode
-last_updated: "2026-06-12T09:22:52.970Z"
-last_activity: 2026-06-12 -- Phase 14 marked complete
+last_updated: "2026-06-12T22:40:05.902Z"
+last_activity: 2026-06-12 -- Phase 15 marked complete
 progress:
   total_phases: 5
-  completed_phases: 2
-  total_plans: 14
-  completed_plans: 14
-  percent: 40
+  completed_phases: 3
+  total_plans: 18
+  completed_plans: 18
+  percent: 60
 ---
 
 # STATE: oimg.app — v1.2 Polish, Diagnostics, PWA + Quality Metrics
@@ -25,16 +25,16 @@ progress:
 
 **Core value:** A developer drops assets, adjusts settings once, and walks away with a ZIP of optimized files plus copy-paste snippets — without anything leaving the browser.
 
-**Current focus:** Phase 11 — batch optimize + export
+**Current focus:** Phase 15 — from-url-or-paste
 
 ---
 
 ## Current Position
 
-Phase: 14 — COMPLETE
-Plan: 12-05 complete (Wave 2 — FileRow ContextMenu Copy <picture> + Copy data-URI siblings)
-Status: Phase 14 complete
-Last activity: 2026-06-12 -- Phase 14 marked complete
+Phase: 15 — COMPLETE
+Plan: 1 of 4
+Status: Phase 15 complete
+Last activity: 2026-06-12 -- Phase 15 marked complete
 Progress: [████████░░] 79%
 
 ## Performance Metrics

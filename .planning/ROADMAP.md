@@ -41,7 +41,7 @@ Shipped as **Executed** — all 22 plans built + summarized; formal phase verifi
 
 - [x] **Phase 13: Diagnostics + Clear Queue** — versionsAtom + capability detection + live StatusBar footer + Settings Diagnostics tab + clearFiles() action — DIA-01..04, CLR-01
 - [x] **Phase 14: Installable PWA** — vite-plugin-pwa (injectManifest) + hand-rolled sw.ts + manifest.webmanifest + beforeinstallprompt + offline-derived footer — PWA-01..05
-- [ ] **Phase 15: From URL or paste** — clipboard read + paste-event handler + addFromUrl wire-up + CORS-honest failure messaging — ING-01, ING-02
+- [x] **Phase 15: From URL or paste** — clipboard read + paste-event handler + addFromUrl wire-up + CORS-honest failure messaging — ING-01, ING-02
 - [ ] **Phase 16: SSIM Quality Metric** — ssim.js@3.5.0 integration + metrics worker hook + Report panel banded display — MTR-01, MTR-03 (SSIM half)
 - [ ] **Phase 17: Butteraugli Quality Metric** — hand-built Emscripten wasm of libjxl butteraugli + Report panel integration alongside SSIM — MTR-02, MTR-03 (Butteraugli half)
 
@@ -134,13 +134,13 @@ Plans:
 Plans:
 **Wave 1**
 
-- [ ] 15-01-PLAN.md — Wave 1: `src/lib/url-ingest.ts` `pickFromUrl(url)` + Node unit + Playwright e2e (ING-01, T-15-01/T-15-04)
-- [ ] 15-02-PLAN.md — Wave 1: `src/lib/clipboard-ingest.ts` `pickFromClipboard` + `processClipboardEvent` + `tests/setup/clipboard-mocks.ts` read-direction shims + Node unit (ING-01, T-15-02)
+- [x] 15-01-PLAN.md — Wave 1: `src/lib/url-ingest.ts` `pickFromUrl(url)` + Node unit + Playwright e2e (ING-01, T-15-01/T-15-04)
+- [x] 15-02-PLAN.md — Wave 1: `src/lib/clipboard-ingest.ts` `pickFromClipboard` + `processClipboardEvent` + read-direction stubbing inlined into the unit test (CONTEXT D-15 follow-up) + Node unit (ING-01, T-15-02)
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 15-03-PLAN.md — Wave 2: `src/hooks/useClipboardIngest.ts` + `App.tsx` invocation + Playwright e2e covering image / URL / input-guard (ING-02, T-15-03)
-- [ ] 15-04-PLAN.md — Wave 2: Toolbar onClick → `pickFromClipboard`; delete `addFromUrl` stub from `src/stores/files.ts`; Playwright e2e + bundle budget gate (ING-01)
+- [x] 15-03-PLAN.md — Wave 2: `src/hooks/useClipboardIngest.ts` + `App.tsx` invocation + Playwright e2e covering image / URL / input-guard (ING-02, T-15-03)
+- [x] 15-04-PLAN.md — Wave 2: Toolbar onClick → `pickFromClipboard`; delete `addFromUrl` stub from `src/stores/files.ts`; Playwright e2e + bundle budget gate 194.9 KB / 200 KB (ING-01)
 
 **UI hint**: yes
 
