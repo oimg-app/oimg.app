@@ -40,7 +40,7 @@ Shipped as **Executed** — all 22 plans built + summarized; formal phase verifi
 ### 🚧 v1.2 Polish, Diagnostics, PWA + Quality Metrics (Phases 13–17)
 
 - [x] **Phase 13: Diagnostics + Clear Queue** — versionsAtom + capability detection + live StatusBar footer + Settings Diagnostics tab + clearFiles() action — DIA-01..04, CLR-01
-- [ ] **Phase 14: Installable PWA** — vite-plugin-pwa (injectManifest) + hand-rolled sw.ts + manifest.webmanifest + beforeinstallprompt + offline-derived footer — PWA-01..05
+- [x] **Phase 14: Installable PWA** — vite-plugin-pwa (injectManifest) + hand-rolled sw.ts + manifest.webmanifest + beforeinstallprompt + offline-derived footer — PWA-01..05
 - [ ] **Phase 15: From URL or paste** — clipboard read + paste-event handler + addFromUrl wire-up + CORS-honest failure messaging — ING-01, ING-02
 - [ ] **Phase 16: SSIM Quality Metric** — ssim.js@3.5.0 integration + metrics worker hook + Report panel banded display — MTR-01, MTR-03 (SSIM half)
 - [ ] **Phase 17: Butteraugli Quality Metric** — hand-built Emscripten wasm of libjxl butteraugli + Report panel integration alongside SSIM — MTR-02, MTR-03 (Butteraugli half)
@@ -110,9 +110,9 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 14-03-PLAN.md — Wave 2: pwa store atoms + useInstallPrompt hook + StatusBar Install button (PWA-03)
-- [ ] 14-04-PLAN.md — Wave 2: register-sw.ts (update toast + onOfflineReady cap → SC#6) + App.tsx idle registration (PWA-05)
-- [ ] 14-05-PLAN.md — Wave 2: Cloudflare _headers — sw.js no-cache + manifest max-age + COOP/COEP preserved (PWA-04, blocking human curl checkpoint)
+- [x] 14-03-PLAN.md — Wave 2: pwa store atoms + useInstallPrompt hook + StatusBar Install button (PWA-03)
+- [x] 14-04-PLAN.md — Wave 2: register-sw.ts (update toast + onOfflineReady cap → SC#6) + App.tsx idle registration (PWA-05)
+- [x] 14-05-PLAN.md — Wave 2: Cloudflare _headers — sw.js no-cache + manifest max-age + COOP/COEP preserved (PWA-04, blocking human curl checkpoint)
 
 **UI hint**: yes
 
