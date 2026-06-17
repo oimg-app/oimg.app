@@ -59,6 +59,22 @@ export interface ClipboardDispatcher {
 export async function pickFromClipboard(
   dispatcher: ClipboardDispatcher,
 ): Promise<void> {
+  // G-15-01: permission probe — surface honest recovery hint on denied state.
+  // When the browser has a recorded 'denied' decision for this origin, the
+  // implicit prompt at first clip.read() never fires; without this probe the
+  // user lands on the bland "no image or image URL" fallback. Safari rejects
+  // on the unknown permission name → fall through to the existing capability
+  // gate / try-read path.
+  try {
+    const perm = await navigator.permissions?.query?.({ name: 'clipboard-read' as PermissionName });
+    if (perm && perm.state === 'denied') {
+      toast.error('Clipboard read is blocked for this site — enable it in the address-bar lock icon, or use Cmd/Ctrl+V to paste.');
+      return;
+    }
+  } catch {
+    // Safari / older browsers reject on unknown permission name — fall through.
+  }
+
   // Capability gate: secure context + Permissions API + clipboard surface.
   // If either read or readText is missing we cannot proceed — direct user to
   // the native paste-event seam, which works without the Async Clipboard API.
