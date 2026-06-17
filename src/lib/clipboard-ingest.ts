@@ -67,8 +67,9 @@ export async function pickFromClipboard(
           const ext = type.split('/')[1] || 'png';
           const name = `pasted-${Date.now()}.${ext}`;
           const file = new File([blob], name, { type });
-          await dispatcher.ingest([file]);
+          // G-15-02: toast on accept; downstream optimize errors surface via setFileError.
           toast.success('Pasted image imported');
+          void dispatcher.ingest([file]).catch(() => {});
           return;
         }
       }
@@ -85,10 +86,11 @@ export async function pickFromClipboard(
     if (trimmed && IMAGE_URL_RE.test(trimmed)) {
       const file = await pickFromUrl(trimmed);
       if (file) {
-        await dispatcher.ingest([file]);
         let host = '';
         try { host = new URL(trimmed).host } catch {}
+        // G-15-02: toast on accept; downstream optimize errors surface via setFileError.
         toast.success(host ? `Imported from URL: ${host}` : 'Imported from URL');
+        void dispatcher.ingest([file]).catch(() => {});
         return;
       }
       // pickFromUrl returned null and already toasted the reason; no double-toast.
@@ -130,12 +132,13 @@ export async function processClipboardEvent(
     }
   }
   if (imageFiles.length > 0) {
-    await dispatcher.ingest(imageFiles);
+    // G-15-02: toast on accept; downstream optimize errors surface via setFileError.
     toast.success(
       imageFiles.length === 1
         ? 'Pasted image imported'
         : `Pasted ${imageFiles.length} images`,
     );
+    void dispatcher.ingest(imageFiles).catch(() => {});
     return true;
   }
 
@@ -150,10 +153,11 @@ export async function processClipboardEvent(
       if (trimmed && IMAGE_URL_RE.test(trimmed)) {
         const file = await pickFromUrl(trimmed);
         if (file) {
-          await dispatcher.ingest([file]);
           let host = '';
           try { host = new URL(trimmed).host } catch {}
+          // G-15-02: toast on accept; downstream optimize errors surface via setFileError.
           toast.success(host ? `Imported from URL: ${host}` : 'Imported from URL');
+          void dispatcher.ingest([file]).catch(() => {});
           return true;
         }
         // pickFromUrl returned null and already toasted; signal "handled" so the
