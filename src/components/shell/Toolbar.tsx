@@ -152,9 +152,10 @@ export function Toolbar() {
                 type="button"
                 className={menuItemClass}
                 // Phase 15 — ING-01: clipboard → ingest dispatcher.
+                // G-15-01: setOpen first → rAF → dispatcher (Popover-unmount race)
                 onClick={() => {
-                  void pickFromClipboard({ ingest });
                   setOpen(null);
+                  requestAnimationFrame(() => void pickFromClipboard({ ingest }));
                 }}
               >
                 From URL or paste
