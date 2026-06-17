@@ -12,7 +12,8 @@
 //
 // Decision tree per RESEARCH §1.2 / §5 and CONTEXT D-03, D-05:
 //   1. Image bytes (Blob with image/* MIME) → File → dispatcher.ingest()
-//   2. Else text → IMAGE_URL_RE → pickFromUrl → dispatcher.ingest()
+//   2. Else text → isHttpUrl (G-15-01(b): http(s) shape, Content-Type
+//      validated post-fetch by pickFromUrl) → pickFromUrl → dispatcher.ingest()
 //   3. Else: pickFromClipboard toasts a hint; processClipboardEvent silently
 //      returns false (paste events are frequent; spurious toasts are noise).
 //
@@ -24,10 +25,21 @@ import { toast } from 'sonner';
 import { pickFromUrl } from '@/lib/url-ingest';
 
 /**
- * Trailing image extension check. Accepts optional querystring/hash.
- * Pinned per CONTEXT D-05 + RESEARCH §2.
+ * G-15-01(b): two-tier URL gate — new URL() shape check + pickFromUrl
+ * Content-Type validation. Replaces the extension-only regex (RESEARCH §2)
+ * so URLs without an image suffix (picsum, unsplash, signed CDN URLs)
+ * reach pickFromUrl, which validates Content-Type and emits its own
+ * toasts on rejection. Bare hosts (e.g. `consent.cookiebot.com`) still
+ * throw inside `new URL()` and remain silent per CONTEXT D-12.
  */
-export const IMAGE_URL_RE = /\.(png|jpe?g|webp|avif|gif|svg|heic|heif)(\?.*)?$/i;
+export function isHttpUrl(text: string): boolean {
+  try {
+    const u = new URL(text);
+    return u.protocol === 'http:' || u.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
 
 /**
  * Minimal sink interface that the dispatcher writes into. Decouples the lib
@@ -83,7 +95,7 @@ export async function pickFromClipboard(
   try {
     const text = await clip.readText();
     const trimmed = text.trim();
-    if (trimmed && IMAGE_URL_RE.test(trimmed)) {
+    if (trimmed && isHttpUrl(trimmed)) {
       const file = await pickFromUrl(trimmed);
       if (file) {
         let host = '';
@@ -150,7 +162,7 @@ export async function processClipboardEvent(
         item.getAsString(resolve);
       });
       const trimmed = text.trim();
-      if (trimmed && IMAGE_URL_RE.test(trimmed)) {
+      if (trimmed && isHttpUrl(trimmed)) {
         const file = await pickFromUrl(trimmed);
         if (file) {
           let host = '';
