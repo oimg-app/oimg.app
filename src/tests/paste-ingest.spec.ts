@@ -102,6 +102,50 @@ test.describe('Phase 15 ING-02 — useClipboardIngest (document paste)', () => {
     await expect(toast).toBeVisible({ timeout: 5_000 })
   })
 
+  // --------------------------------------------------------------------------
+  // G-15-01(b) — URL without image extension reaches pickFromUrl via the
+  // broadened two-tier isHttpUrl gate. Pre-fix the extension-only IMAGE_URL_RE
+  // missed `https://picsum.photos/200/300` and similar real-world CDN URLs.
+  // --------------------------------------------------------------------------
+  test('Case B2 (G-15-01(b)): URL without extension → Content-Type sniff → ingest', async ({ page }) => {
+    const noExtUrl = 'https://picsum.photos/200/300'
+    await page.route(noExtUrl, (route) =>
+      route.fulfill({
+        status: 200,
+        headers: { 'Content-Type': 'image/png' },
+        body: Buffer.from(TINY_PNG_B64, 'base64'),
+      }),
+    )
+    await page.goto('/')
+    await expect(page.getByTestId('files-pane')).toBeVisible()
+
+    await page.evaluate((url: string) => {
+      const dt = new DataTransfer()
+      dt.items.add(url, 'text/plain')
+      const ev = new ClipboardEvent('paste', { clipboardData: dt, bubbles: true, cancelable: true })
+      document.body.dispatchEvent(ev)
+    }, noExtUrl)
+
+    // G-15-02 ordering: success toast must surface within 500ms — BEFORE
+    // worker pool optimize completes.
+    const toast = page.locator('[data-sonner-toast]').filter({
+      hasText: /Imported from URL: picsum\.photos/,
+    })
+    await expect(toast).toBeVisible({ timeout: 500 })
+
+    // Entry lands eventually (fire-and-forget ingest still runs).
+    await page.waitForFunction(
+      async () => {
+        const mod = (await import(/* @vite-ignore */ '/src/stores/files.ts')) as {
+          filesAtom: { get(): { entries: { name: string }[] } }
+        }
+        return mod.filesAtom.get().entries.length === 1
+      },
+      undefined,
+      { timeout: 10_000 },
+    )
+  })
+
   test('Case C: paste targeted at Toolbar filter input → D-11 guard blocks ingest', async ({ page }) => {
     await page.goto('/')
     await expect(page.getByTestId('files-pane')).toBeVisible()

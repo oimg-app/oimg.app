@@ -164,5 +164,116 @@ test.describe('Phase 15 ING-01 — Toolbar From URL or paste (e2e)', () => {
     // And the new dispatcher import IS present (positive regression lock).
     expect(toolbarSrc).toContain("from \"@/lib/clipboard-ingest\"")
     expect(toolbarSrc).toContain('pickFromClipboard({ ingest })')
+    // G-15-01 regression lock: the rAF ordering MUST stay — without it the
+    // Popover-unmount race silently drops the sonner toast render.
+    expect(toolbarSrc).toContain('requestAnimationFrame(() => void pickFromClipboard')
+  })
+
+  // --------------------------------------------------------------------------
+  // G-15-01 — Real browser clipboard permission + Popover-unmount-race repro.
+  //
+  // The Case A shim above replaced navigator.clipboard wholesale, bypassing
+  // the real permission flow. With grantPermissions() the browser's actual
+  // clipboard surface mediates the read — exactly the path that surfaced the
+  // unmount race in production. Toast assertion uses a tight 500ms window.
+  // --------------------------------------------------------------------------
+  test('Case D (G-15-01): real clipboard permission → toast within 500ms + entry appears', async ({
+    page,
+    context,
+  }) => {
+    await context.grantPermissions(['clipboard-read', 'clipboard-write'])
+
+    await page.goto('/')
+    await expect(page.getByTestId('toolbar')).toBeVisible()
+
+    // Write a real PNG onto the actual clipboard via the granted-permission
+    // navigator.clipboard.write API. ClipboardItem accepts a Blob.
+    await page.evaluate(async (pngB64: string) => {
+      const bin = atob(pngB64)
+      const bytes = new Uint8Array(bin.length)
+      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i)
+      const blob = new Blob([bytes], { type: 'image/png' })
+      await navigator.clipboard.write([
+        new ClipboardItem({ 'image/png': blob }),
+      ])
+    }, TINY_PNG_B64)
+
+    // Open Add files ▾ popover.
+    await page.getByRole('button', { name: 'Add files options' }).click()
+
+    // Click From URL or paste — the rAF onClick must NOT drop the toast.
+    await page.getByRole('button', { name: 'From URL or paste' }).click()
+
+    // G-15-02 ordering: success toast must surface within 500ms — BEFORE
+    // the worker pool finishes optimizing. The prior code awaited
+    // dispatcher.ingest() which awaited runOptimize() (multi-second).
+    const toast = page.locator('[data-sonner-toast]').filter({
+      hasText: /Pasted image imported/,
+    })
+    await expect(toast).toBeVisible({ timeout: 500 })
+
+    // And the entry actually landed (fire-and-forget ingest still ran).
+    await page.waitForFunction(
+      async () => {
+        const mod = (await import(/* @vite-ignore */ '/src/stores/files.ts')) as {
+          filesAtom: { get(): { entries: { name: string }[] } }
+        }
+        return mod.filesAtom
+          .get()
+          .entries.some((e) => /^pasted-\d+\.png$/.test(e.name))
+      },
+      undefined,
+      { timeout: 10_000 },
+    )
+  })
+
+  // --------------------------------------------------------------------------
+  // G-15-01 — Permission denied → recovery toast (the secondary sub-gap).
+  // --------------------------------------------------------------------------
+  test('Case E (G-15-01): permission denied → recovery toast appears', async ({
+    page,
+    context,
+  }) => {
+    // Wipe any inherited grant; then explicitly *deny* clipboard-read by
+    // overriding navigator.permissions.query at the init-script layer (Playwright
+    // does not expose a denyPermissions API — clearPermissions only revokes;
+    // queries still report 'prompt' afterwards).
+    await context.clearPermissions()
+    await page.addInitScript(() => {
+      // Stub permissions.query for the clipboard-read descriptor only —
+      // other descriptors fall through to the native implementation.
+      const original = navigator.permissions?.query?.bind(navigator.permissions)
+      Object.defineProperty(navigator, 'permissions', {
+        configurable: true,
+        value: {
+          query: async (descriptor: { name: string }) => {
+            if (descriptor && descriptor.name === 'clipboard-read') {
+              return { state: 'denied' } as PermissionStatus
+            }
+            return original ? original(descriptor as PermissionDescriptor) : ({ state: 'prompt' } as PermissionStatus)
+          },
+        },
+      })
+    })
+
+    await page.goto('/')
+    await expect(page.getByTestId('toolbar')).toBeVisible()
+
+    await page.getByRole('button', { name: 'Add files options' }).click()
+    await page.getByRole('button', { name: 'From URL or paste' }).click()
+
+    const recoveryToast = page.locator('[data-sonner-toast]').filter({
+      hasText: /Clipboard read is blocked for this site/,
+    })
+    await expect(recoveryToast).toBeVisible({ timeout: 500 })
+
+    // No entry was added.
+    const count = await page.evaluate(async () => {
+      const mod = (await import(/* @vite-ignore */ '/src/stores/files.ts')) as {
+        filesAtom: { get(): { entries: unknown[] } }
+      }
+      return mod.filesAtom.get().entries.length
+    })
+    expect(count).toBe(0)
   })
 })
