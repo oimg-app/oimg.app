@@ -42,6 +42,22 @@ export function isHttpUrl(text: string): boolean {
 }
 
 /**
+ * Quick — SVG markup detection. Copying an SVG from a code editor / browser
+ * devtools / design tool delivers plain-text markup to the clipboard (not a
+ * File and not an `image/svg+xml` Blob). Accept a leading `<?xml …?>` prolog
+ * and/or comment block, then require the `<svg` root element. Downstream
+ * ingest treats the produced File exactly like a dropped .svg — svgo +
+ * dompurify sanitize inside the worker.
+ */
+export function isSvgMarkup(text: string): boolean {
+  return /^\s*(?:<\?xml[^>]*\?>\s*)?(?:<!--[\s\S]*?-->\s*)*<svg[\s>]/i.test(text);
+}
+
+function svgTextToFile(svg: string): File {
+  return new File([svg], `pasted-${Date.now()}.svg`, { type: 'image/svg+xml' });
+}
+
+/**
  * Minimal sink interface that the dispatcher writes into. Decouples the lib
  * from React: useIngest constructs a dispatcher that calls back into its own
  * ingest() function (which already knows how to map File[] → FileEntry[]).
@@ -92,11 +108,12 @@ export async function pickFromClipboard(
       for (const type of item.types) {
         if (type.startsWith('image/')) {
           const blob = await item.getType(type);
-          const ext = type.split('/')[1] || 'png';
+          // Quick — svg+xml → ext 'svg' (subtype has '+xml'); worker gate keys on '.svg'.
+          const ext = type === 'image/svg+xml' ? 'svg' : (type.split('/')[1] || 'png');
           const name = `pasted-${Date.now()}.${ext}`;
           const file = new File([blob], name, { type });
           // G-15-02: toast on accept; downstream optimize errors surface via setFileError.
-          toast.success('Pasted image imported');
+          toast.success(type === 'image/svg+xml' ? 'Pasted SVG imported' : 'Pasted image imported');
           void dispatcher.ingest([file]).catch(() => {});
           return;
         }
@@ -107,10 +124,18 @@ export async function pickFromClipboard(
     // We deliberately swallow: the readText() branch below is the natural retry.
   }
 
-  // 2) Text branch — image URL match → reuse Wave 1 url-ingest.
+  // 2) Text branch — SVG markup match → File; else image URL match → reuse Wave 1 url-ingest.
   try {
     const text = await clip.readText();
     const trimmed = text.trim();
+    // Quick — SVG markup ahead of URL check; svg xmlns attrs never confuse isHttpUrl,
+    // but ordering makes the intent explicit and short-circuits multi-line payloads.
+    if (isSvgMarkup(trimmed)) {
+      const file = svgTextToFile(trimmed);
+      toast.success('Pasted SVG imported');
+      void dispatcher.ingest([file]).catch(() => {});
+      return;
+    }
     if (trimmed && isHttpUrl(trimmed)) {
       const file = await pickFromUrl(trimmed);
       if (file) {
@@ -170,7 +195,7 @@ export async function processClipboardEvent(
     return true;
   }
 
-  // 2) URL branch — first text/plain or text/uri-list item wins (RESEARCH P-11).
+  // 2) SVG-markup / URL branch — first text/plain or text/uri-list item wins (RESEARCH P-11).
   // getAsString is callback-based; promisify, but only call once per item.
   for (const item of items) {
     if (item.kind === 'string' && (item.type === 'text/plain' || item.type === 'text/uri-list')) {
@@ -178,6 +203,13 @@ export async function processClipboardEvent(
         item.getAsString(resolve);
       });
       const trimmed = text.trim();
+      // Quick — SVG markup pasted as text (e.g. copied from a code editor / devtools).
+      if (isSvgMarkup(trimmed)) {
+        const file = svgTextToFile(trimmed);
+        toast.success('Pasted SVG imported');
+        void dispatcher.ingest([file]).catch(() => {});
+        return true;
+      }
       if (trimmed && isHttpUrl(trimmed)) {
         const file = await pickFromUrl(trimmed);
         if (file) {
