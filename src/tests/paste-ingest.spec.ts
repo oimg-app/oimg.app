@@ -48,6 +48,7 @@ test.describe('Phase 15 ING-02 — useClipboardIngest (document paste)', () => {
     // Entry must land in filesAtom (async dispatcher → ingest → setKey).
     await page.waitForFunction(
       async () => {
+        // @ts-expect-error — Vite dev-server runtime path, not a TS-resolvable specifier
         const mod = (await import(/* @vite-ignore */ '/src/stores/files.ts')) as {
           filesAtom: { get(): { entries: { name: string }[] } }
         }
@@ -86,6 +87,7 @@ test.describe('Phase 15 ING-02 — useClipboardIngest (document paste)', () => {
     // The url-ingest path derives filename = 'paste-via-url.png' from the URL last segment.
     await page.waitForFunction(
       async () => {
+        // @ts-expect-error — Vite dev-server runtime path, not a TS-resolvable specifier
         const mod = (await import(/* @vite-ignore */ '/src/stores/files.ts')) as {
           filesAtom: { get(): { entries: { name: string }[] } }
         }
@@ -136,6 +138,7 @@ test.describe('Phase 15 ING-02 — useClipboardIngest (document paste)', () => {
     // Entry lands eventually (fire-and-forget ingest still runs).
     await page.waitForFunction(
       async () => {
+        // @ts-expect-error — Vite dev-server runtime path, not a TS-resolvable specifier
         const mod = (await import(/* @vite-ignore */ '/src/stores/files.ts')) as {
           filesAtom: { get(): { entries: { name: string }[] } }
         }
@@ -176,6 +179,7 @@ test.describe('Phase 15 ING-02 — useClipboardIngest (document paste)', () => {
     await page.waitForTimeout(750)
 
     const count = await page.evaluate(async () => {
+      // @ts-expect-error — Vite dev-server runtime path, not a TS-resolvable specifier
       const mod = (await import(/* @vite-ignore */ '/src/stores/files.ts')) as {
         filesAtom: { get(): { entries: unknown[] } }
       }

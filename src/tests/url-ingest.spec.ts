@@ -40,6 +40,7 @@ test.describe('Phase 15 ING-01 — pickFromUrl (e2e)', () => {
     await page.goto('/')
 
     const result = await page.evaluate(async (u: string) => {
+      // @ts-expect-error — Vite dev-server runtime path, not a TS-resolvable specifier
       const mod = (await import(/* @vite-ignore */ '/src/lib/url-ingest.ts')) as {
         pickFromUrl: (url: string) => Promise<File | null>
       }
@@ -64,6 +65,7 @@ test.describe('Phase 15 ING-01 — pickFromUrl (e2e)', () => {
     await page.goto('/')
 
     const result = await page.evaluate(async (u: string) => {
+      // @ts-expect-error — Vite dev-server runtime path, not a TS-resolvable specifier
       const mod = (await import(/* @vite-ignore */ '/src/lib/url-ingest.ts')) as {
         pickFromUrl: (url: string) => Promise<File | null>
       }

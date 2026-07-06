@@ -40,9 +40,9 @@ async function injectEntries(page: Page, specs: InjectSpec[]): Promise<void> {
       
       
       const filesMod = (await import('../stores/files'))
-      const stubMod = (await import('../lib/stub-data'))
+      const settingsMod = (await import('../lib/settings'))
       const { filesAtom } = filesMod
-      const { defaultFileSettings } = stubMod
+      const { defaultFileSettings } = settingsMod
 
       const bin = atob(TINY_WEBP_B64)
       const ab = new Uint8Array(bin.length)

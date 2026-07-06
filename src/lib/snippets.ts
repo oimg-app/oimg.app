@@ -1,7 +1,7 @@
 // Phase 06, Plan 01 — INSP-07 snippet builders
 // Phase 12, Plan 02 — D-01/D-02/D-03/D-04 + T-12-02 attr-escape + chunked base64 (V8 safety)
 // Pure string builders — no DOM, no clipboard, no store reads.
-import type { FileEntry } from '@/lib/stub-data'
+import type { FileEntry } from '@/lib/settings'
 import { renameExtension } from '@/lib/filename'
 import {bufferToBase64} from "@/lib/base64.ts";
 

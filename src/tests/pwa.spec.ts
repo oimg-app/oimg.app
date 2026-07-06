@@ -55,7 +55,7 @@ test.describe('PWA-02 — Service worker offline readiness', () => {
 
     // Wait for the SW to register. Playwright surfaces it via
     // context.serviceWorkers() once active; we poll with a small budget.
-    const sw = await page.waitForEvent('serviceworker', { timeout: 30_000 }).catch(() => null)
+    const sw = await context.waitForEvent('serviceworker', { timeout: 30_000 }).catch(() => null)
     expect(sw, 'a service worker should register on first visit').toBeTruthy()
 
     // Reload so the SW controls the page (controllerchange).

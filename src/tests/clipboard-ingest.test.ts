@@ -49,7 +49,7 @@ const sonner = await import('sonner');
 const makeRecorder = (level: string) => (m: unknown) => {
   toastCalls.push({ level, message: typeof m === 'string' ? m : String(m) });
 };
-Object.assign((sonner as { toast: Record<string, unknown> }).toast, {
+Object.assign((sonner as unknown as { toast: Record<string, unknown> }).toast, {
   success: makeRecorder('success'),
   error: makeRecorder('error'),
   message: makeRecorder('message'),
@@ -85,7 +85,7 @@ function restoreFetch() {
   Object.defineProperty(globalThis, 'fetch', { value: originalFetch, writable: true, configurable: true });
 }
 function imageResponse(bytes: Uint8Array, type = 'image/png'): Response {
-  return new Response(bytes, {
+  return new Response(bytes as unknown as BodyInit, {
     status: 200,
     headers: { 'content-type': type, 'content-length': String(bytes.length) },
   });

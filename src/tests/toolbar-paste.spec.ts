@@ -74,6 +74,7 @@ test.describe('Phase 15 ING-01 — Toolbar From URL or paste (e2e)', () => {
     // clipboard-ingest.ts:68.
     await page.waitForFunction(
       async () => {
+        // @ts-expect-error — Vite dev-server runtime path, not a TS-resolvable specifier
         const mod = (await import(/* @vite-ignore */ '/src/stores/files.ts')) as {
           filesAtom: { get(): { entries: { name: string }[] } }
         }
@@ -132,6 +133,7 @@ test.describe('Phase 15 ING-01 — Toolbar From URL or paste (e2e)', () => {
 
     // No entry was added.
     const count = await page.evaluate(async () => {
+      // @ts-expect-error — Vite dev-server runtime path, not a TS-resolvable specifier
       const mod = (await import(/* @vite-ignore */ '/src/stores/files.ts')) as {
         filesAtom: { get(): { entries: unknown[] } }
       }
@@ -215,6 +217,7 @@ test.describe('Phase 15 ING-01 — Toolbar From URL or paste (e2e)', () => {
     // And the entry actually landed (fire-and-forget ingest still ran).
     await page.waitForFunction(
       async () => {
+        // @ts-expect-error — Vite dev-server runtime path, not a TS-resolvable specifier
         const mod = (await import(/* @vite-ignore */ '/src/stores/files.ts')) as {
           filesAtom: { get(): { entries: { name: string }[] } }
         }
@@ -269,6 +272,7 @@ test.describe('Phase 15 ING-01 — Toolbar From URL or paste (e2e)', () => {
 
     // No entry was added.
     const count = await page.evaluate(async () => {
+      // @ts-expect-error — Vite dev-server runtime path, not a TS-resolvable specifier
       const mod = (await import(/* @vite-ignore */ '/src/stores/files.ts')) as {
         filesAtom: { get(): { entries: unknown[] } }
       }
