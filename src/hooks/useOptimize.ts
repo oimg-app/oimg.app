@@ -77,10 +77,12 @@ export function useOptimize() {
       // (status === 'error') are still retried; only successful 'done' entries are filtered out.
       if (entry.status === 'done') continue
 
-      // Quick 260610-lby: HEIC/HEIF have no output codec of their own — fall back to the entry's
-      // settings.codec (seeded to 'JPEG' by codecForType in stub-data.ts). This prevents toCodec
-      // returning null and skipping the file while keeping HEIC out of the Codec union.
-      const codec = toCodec(entry.type) ?? (entry.settings?.codec ?? null)
+      // User's chosen output codec (settings.codec) wins — falling through to source-derived
+      // toCodec(entry.type) only when settings.codec is missing (legacy entry). Previously this
+      // was inverted: source-derived codec always took precedence, so picking PNG in Output for
+      // an SVG file dispatched codec=SVG and nothing changed. HEIC/HEIF have no output codec of
+      // their own, so settings.codec (seeded to JPEG by codecForType) is the authoritative source.
+      const codec = entry.settings?.codec ?? toCodec(entry.type)
       if (codec === null) continue
 
       // WR-03: validate the source format up front — skip unsupported inputs with a clear toast

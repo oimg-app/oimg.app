@@ -64,6 +64,23 @@ async function decodeSource(buffer: ArrayBuffer, sourceFormat: string): Promise<
         throw new Error('HEIC decode failed (libheif may not be supported in this browser): ' + String(err))
       }
     }
+    // SVG → ImageData for raster output (PNG/WebP/JPEG/AVIF). The browser's image parser
+    // rasterizes the SVG blob without executing script tags (no DOM), so this path is safe
+    // to run in a worker without DOMPurify. bitmap.width/height fall back to the SVG's
+    // intrinsic size; if the SVG has only a viewBox, browsers default to 300x150 for the
+    // replaced-element size — user can override via the Resize section (maybeResize).
+    case 'svg': {
+      const svgString = new TextDecoder('utf-8').decode(buffer)
+      const blob = new Blob([svgString], { type: 'image/svg+xml' })
+      const bitmap = await createImageBitmap(blob)
+      const canvas = new OffscreenCanvas(bitmap.width, bitmap.height)
+      const ctx = canvas.getContext('2d')
+      if (!ctx) throw new Error('OffscreenCanvas 2d context unavailable')
+      ctx.drawImage(bitmap, 0, 0)
+      const data = ctx.getImageData(0, 0, bitmap.width, bitmap.height)
+      bitmap.close()
+      return data
+    }
     default:
       throw new Error('Unknown source format: ' + sourceFormat)
   }

@@ -61,8 +61,11 @@ export function useLiveEncode() {
       // Guard: rawBuffer and settings must both be present (T-9-V5)
       if (!entry?.rawBuffer || !entry.settings) return
 
-      // Quick 260610-lby: HEIC/HEIF have no output codec — fall back to settings.codec (seeded 'JPEG')
-      const codec = toCodec(entry.type) ?? (entry.settings?.codec ?? null)
+      // User's chosen output codec (settings.codec) wins — source-derived toCodec is the fallback
+      // for legacy entries lacking settings. Inverted from the earlier draft: picking PNG in Output
+      // for an SVG file used to dispatch codec=SVG because source-derived took precedence, so live
+      // re-encode never rasterized. HEIC/HEIF have no output codec so settings.codec is authoritative.
+      const codec = entry.settings?.codec ?? toCodec(entry.type)
       if (codec === null) return
 
       // WR-03: validate source format (no unchecked cast); silently skip unsupported live re-encode
