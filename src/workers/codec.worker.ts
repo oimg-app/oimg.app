@@ -122,6 +122,7 @@ async function maybeReduceColors(imageData: ImageData, settings: FileSettings): 
     return new ImageData(res.data as ImageDataArray, res.width, res.height)
   } catch (err) {
     console.error({ err })
+    throw new Error('Failed to reduce colors: ')
   }
 
   return imageData
