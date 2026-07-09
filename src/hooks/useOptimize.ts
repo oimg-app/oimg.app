@@ -4,6 +4,7 @@ import { useStore } from '@nanostores/react'
 import { filesAtom, setFileResult, setFileError, setFileRawBuffer, setFileProcessing } from '@/stores/files'
 import { settingsAtom } from '@/stores/settings'
 import { getPool } from '@/lib/worker-pool'
+import { rasterizeSvgToPng } from '@/lib/svg-rasterize'
 import { toast } from 'sonner'
 import type { EncodeJob } from '@/workers/codec.worker'
 
@@ -107,11 +108,30 @@ export function useOptimize() {
       // T-9-V5: never dispatch a 0-byte buffer; skip entries with no bytes available
       if (!rawBuffer || rawBuffer.byteLength === 0) continue
 
+      // SVG → raster (PNG/WebP/JPEG/AVIF): rasterize on the main thread because
+      // createImageBitmap() on an SVG blob is unreliable in workers (0x0 in Safari/Firefox
+      // when the SVG lacks explicit width/height). See src/lib/svg-rasterize.ts.
+      let dispatchBuffer = rawBuffer.slice(0)
+      let dispatchSourceFormat: EncodeJob['sourceFormat'] = sourceFormat
+      if (sourceFormat === 'svg' && codec !== 'SVG') {
+        try {
+          const settings = entry.settings ?? settingsAtom.get()
+          const targetWidth = settings.resizeOn && Number.isFinite(Number(settings.w))
+            ? Number(settings.w)
+            : undefined
+          dispatchBuffer = await rasterizeSvgToPng(rawBuffer, { targetWidth })
+          dispatchSourceFormat = 'png'
+        } catch (err) {
+          setFileError(entry.id, String(err))
+          toast.error('SVG rasterize failed: ' + entry.name)
+          continue
+        }
+      }
+
       const job: EncodeJob = {
         codec,
-        sourceFormat,
-        // slice(0) = copy so the cached rawBuffer survives Comlink.transfer (Pitfall 3)
-        buffer: rawBuffer.slice(0),
+        sourceFormat: dispatchSourceFormat,
+        buffer: dispatchBuffer,
         settings: entry.settings ?? settingsAtom.get(),
       }
 

@@ -3,6 +3,7 @@
 import { useRef, useCallback } from 'react'
 import { filesAtom, setFileResult, setFileError } from '@/stores/files'
 import { getPool } from '@/lib/worker-pool'
+import { rasterizeSvgToPng } from '@/lib/svg-rasterize'
 import { setEncodingFile } from '@/stores/runtime'
 import { toast } from 'sonner'
 import type { EncodeJob } from '@/workers/codec.worker'
@@ -72,11 +73,30 @@ export function useLiveEncode() {
       const sourceFormat = toSourceFormat(entry.type)
       if (sourceFormat === null) return
 
+      // SVG → raster (PNG/WebP/JPEG/AVIF): rasterize on main thread; worker createImageBitmap
+      // is unreliable for SVG blobs. Falls through as PNG source into the raster encode path.
+      let dispatchBuffer = entry.rawBuffer.slice(0)
+      let dispatchSourceFormat: EncodeJob['sourceFormat'] = sourceFormat
+      if (sourceFormat === 'svg' && codec !== 'SVG') {
+        try {
+          const targetWidth = entry.settings.resizeOn && Number.isFinite(Number(entry.settings.w))
+            ? Number(entry.settings.w)
+            : undefined
+          dispatchBuffer = await rasterizeSvgToPng(entry.rawBuffer, { targetWidth })
+          dispatchSourceFormat = 'png'
+        } catch (err) {
+          if (seq !== seqRef.current) return
+          setFileError(fileId, String(err))
+          toast.error('SVG rasterize failed: ' + String(err))
+          setEncodingFile(null)
+          return
+        }
+      }
+
       const job: EncodeJob = {
         codec,
-        sourceFormat,
-        // slice(0) = copy so the cached rawBuffer survives Comlink.transfer (Pitfall 3)
-        buffer: entry.rawBuffer.slice(0),
+        sourceFormat: dispatchSourceFormat,
+        buffer: dispatchBuffer,
         settings: entry.settings,
       }
 
