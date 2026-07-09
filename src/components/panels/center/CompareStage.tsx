@@ -11,8 +11,12 @@ import {fmtBytes} from '@/lib/format'
 // checker-light = light squares on white base.
 // black/white   = solid fills for hard-edge previews.
 function stageBgStyle(bg: 'checker-dark' | 'checker-light' | 'black' | 'white'): React.CSSProperties {
+  // Use the long-form `backgroundImage` — NOT the `background` shorthand — because writing to
+  // the shorthand resets sub-properties (backgroundSize/backgroundPosition) to their initial
+  // values, and React only re-applies keys that changed between renders. Switching square colors
+  // (checker-dark → checker-light) would keep backgroundSize at 'auto' → one giant 100% tile.
   const checker = (square: string, base: string): React.CSSProperties => ({
-    background: [
+    backgroundImage: [
       `linear-gradient(45deg, ${square} 25%, transparent 25%)`,
       `linear-gradient(-45deg, ${square} 25%, transparent 25%)`,
       `linear-gradient(45deg, transparent 75%, ${square} 75%)`,
@@ -23,9 +27,12 @@ function stageBgStyle(bg: 'checker-dark' | 'checker-light' | 'black' | 'white'):
     backgroundColor: base,
   })
   switch (bg) {
+    // Solid fills clear backgroundImage explicitly so switching from a checker mode to a solid
+    // fill doesn't leave stale gradients on the element (React does clear removed keys, but
+    // being explicit here documents intent + guards against future edits).
     case 'checker-light': return checker('#e5e5e5', '#ffffff')
-    case 'black':         return { backgroundColor: '#000000' }
-    case 'white':         return { backgroundColor: '#ffffff' }
+    case 'black':         return { backgroundImage: 'none', backgroundColor: '#000000' }
+    case 'white':         return { backgroundImage: 'none', backgroundColor: '#ffffff' }
     case 'checker-dark':
     default:              return checker('var(--color-bg-1)', 'var(--color-bg-0)')
   }
