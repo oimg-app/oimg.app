@@ -12,6 +12,7 @@ import {
   DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu'
 import { Kbd } from '@/components/ui/kbd'
+import { BackpressureIndicator } from './BackpressureIndicator'
 
 const menuItemClass =
   'px-3 py-1.5 text-xs text-[var(--color-fg-0)] rounded cursor-pointer flex items-center justify-between focus:bg-[var(--color-bg-3)] data-[highlighted]:bg-[var(--color-bg-3)]'
@@ -105,6 +106,7 @@ export function TitleBar() {
 
       {/* Right cluster: pills + ⌘K — ml-auto pushes to right edge */}
       <div className="flex items-center gap-2 ml-auto">
+        <BackpressureIndicator />
         <span className="text-[11px] text-[var(--color-fg-2)]">100% local</span>
         <span aria-hidden="true" className="text-[var(--color-fg-2)]">·</span>
         <span className="text-[11px] text-[var(--color-fg-2)]">Offline-ready</span>

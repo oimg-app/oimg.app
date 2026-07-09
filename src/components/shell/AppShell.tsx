@@ -10,7 +10,7 @@ import {
   ResizableHandle,
 } from '@/components/ui/resizable'
 import { FilesPane, CenterPane, InspectorPane } from '@/components/panels'
-import { Toolbar, StatusBar, TitleBar, CommandPalette, BackpressureIndicator } from '@/components/shell'
+import { Toolbar, StatusBar, TitleBar, CommandPalette } from '@/components/shell'
 import { uiAtom, openCmdk, closeCmdk, setOpen } from '@/stores/ui'
 import { cn } from '@/lib/utils'
 
@@ -66,7 +66,6 @@ export function AppShell() {
       </ResizablePanelGroup>
       <StatusBar />
       <CommandPalette />
-      <BackpressureIndicator />
     </div>
   )
 }
