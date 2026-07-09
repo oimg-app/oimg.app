@@ -5,6 +5,38 @@ import path from 'node:path'
 import fs from 'node:fs'
 import squooshVitePlugin from '@squoosh-kit/vite-plugin';
 import { VitePWA } from 'vite-plugin-pwa'
+import type { Plugin } from 'vite'
+
+// @squoosh-kit/imagequant's client-mode loader fetches WASM via
+// `./wasm/imagequant/imagequant.wasm` relative to the served index.browser.mjs URL —
+// which resolves to /node_modules/@squoosh-kit/imagequant/dist/wasm/imagequant/imagequant.wasm.
+// Vite's dev server SPA fallback returns index.html for that path, so the wasm binary
+// arrives as HTML and WebAssembly.instantiate() fails with "expected magic word ..., found 3c 21 64 6f".
+// This tiny middleware serves any .wasm/.js file under a /node_modules/@squoosh-kit/*/dist path
+// straight from disk with the correct MIME type.
+function serveSquooshKitNodeModuleWasm(): Plugin {
+  return {
+    name: 'serve-squoosh-kit-node-module-wasm',
+    configureServer(server) {
+      server.middlewares.use((req, res, next) => {
+        const url = req.url ?? ''
+        const match = url.match(/^\/node_modules\/(@squoosh-kit\/[^/]+\/dist\/.+\.(?:wasm|js|mjs))(?:\?.*)?$/)
+        if (!match) return next()
+        const fullPath = path.resolve('node_modules', match[1])
+        if (!fs.existsSync(fullPath)) return next()
+        const body = fs.readFileSync(fullPath)
+        const ct = fullPath.endsWith('.wasm')
+          ? 'application/wasm'
+          : 'application/javascript'
+        res.setHeader('Content-Type', ct)
+        res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp')
+        res.setHeader('Cross-Origin-Opener-Policy', 'same-origin')
+        res.setHeader('Content-Length', body.length.toString())
+        res.end(body)
+      })
+    },
+  }
+}
 
 // Phase 13 — DIA-01 (D-01/D-02): build-time version injection.
 // Security (T-13-02 mitigation): only reads `node_modules/<pkg>/package.json`
@@ -36,6 +68,7 @@ export default defineConfig({
     react(),
     tailwindcss(),
     squooshVitePlugin(path.resolve('node_modules/@squoosh-kit')),
+    serveSquooshKitNodeModuleWasm(),
     // Phase 14 — PWA-01: vite-plugin-pwa in injectManifest mode.
     // - manifest: false → hand-authored public/manifest.webmanifest (theme_color
     //   "#5eb87a" is PWA-01 verbatim, chosen over the RESEARCH alternative).
