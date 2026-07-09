@@ -111,21 +111,35 @@ async function maybeResize(imageData: ImageData, settings: FileSettings): Promis
   })
 }
 
+// imagequant's default `quantize()` spawns a nested Web Worker (imagequant.worker.js) via
+// new URL('../../imagequant/dist/…', import.meta.url), which resolves to a non-existent path
+// when the package is served from /node_modules and produces the "text/html MIME" error
+// (Vite's SPA fallback). We're already in a worker, so run it in-thread with the 'client'
+// bridge — WASM loads via loadImagequantModule() using ./wasm/… relative to the served
+// index.browser.mjs, which exists in node_modules.
+type Quantizer = (
+  image: ImageData,
+  opts: { numColors: number; dither: number },
+) => Promise<{ data: Uint8Array | Uint8ClampedArray; width: number; height: number }>
+
+let _quantizer: Quantizer | null = null
+async function getQuantizer(): Promise<Quantizer> {
+  if (_quantizer) return _quantizer
+  const { createImagequantQuantizer } = await import('@squoosh-kit/imagequant')
+  _quantizer = createImagequantQuantizer('client') as unknown as Quantizer
+  return _quantizer
+}
+
 async function maybeReduceColors(imageData: ImageData, settings: FileSettings): Promise<ImageData> {
   if (!settings.colorsOn) return imageData
-
-  const { quantize } = await import('@squoosh-kit/imagequant')
-
   try {
-    const res = await quantize(imageData,{ numColors: settings.colors, dither: settings.dithering })
-
+    const quantize = await getQuantizer()
+    const res = await quantize(imageData, { numColors: settings.colors, dither: settings.dithering })
     return new ImageData(res.data as ImageDataArray, res.width, res.height)
   } catch (err) {
-    console.error({ err })
-    throw new Error('Failed to reduce colors: ')
+    console.error('[maybeReduceColors]', err)
+    throw new Error('Failed to reduce colors: ' + String(err))
   }
-
-  return imageData
 }
 
 async function optimize(job: EncodeJob): Promise<EncodeResult> {
