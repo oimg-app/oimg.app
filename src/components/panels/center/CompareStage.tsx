@@ -25,11 +25,21 @@ function parseDimRatio(dim: string): string {
 
 // SVG layers render inside a sandboxed <iframe> (sandbox="allow-scripts", no allow-same-origin)
 // so script-bearing/untrusted SVG is isolated from the app origin. The iframe src must be a
-// real image/svg+xml document — a blob: object URL is unreliable here (a sandboxed opaque-origin
-// frame is blocked from fetching the parent's blob URL), so encode the bytes as a data URI.
+// real document — a blob: object URL is unreliable here (a sandboxed opaque-origin frame is
+// blocked from fetching the parent's blob URL), so encode inline as a data URI.
+//
+// The iframe body wraps the SVG in an <img> with object-fit: contain so oversize SVGs
+// (e.g. 800x800) fit the stage viewport regardless of viewBox or intrinsic dimensions.
+// object-fit on the iframe itself has no effect (iframe hosts a separate document).
 function svgDataUri(buf: ArrayBuffer): string {
   const text = new TextDecoder('utf-8').decode(buf)
-  return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(text)
+  const svgSrc = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(text)
+  const html =
+    '<!doctype html><html><head><meta charset="utf-8"><style>' +
+    'html,body{margin:0;padding:0;width:100%;height:100%;background:transparent;overflow:hidden}' +
+    'img{display:block;width:100%;height:100%;object-fit:contain}' +
+    '</style></head><body><img src="' + svgSrc + '"></body></html>'
+  return 'data:text/html;charset=utf-8,' + encodeURIComponent(html)
 }
 
 async function heicDataArr(buf: ArrayBuffer) {
