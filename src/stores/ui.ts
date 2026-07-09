@@ -7,6 +7,7 @@ import type { CommandItem } from '@/lib/commands'
 
 export type View = 'Batch' | 'Compare' | 'Report'
 export type Tab = 'codec' | 'output' | 'report'
+export type StageBg = 'checker-dark' | 'checker-light' | 'black' | 'white'
 
 interface UiState {
   open: string | null
@@ -19,6 +20,7 @@ interface UiState {
   cmdkSel: number
   rowMenu: string | null
   theme: 'dark' | 'light'
+  stageBg: StageBg
 }
 
 export const uiAtom = map<UiState>({
@@ -32,7 +34,12 @@ export const uiAtom = map<UiState>({
   cmdkSel: 0,
   rowMenu: null,
   theme: 'dark',
+  stageBg: 'checker-dark',
 })
+
+export function setStageBg(bg: StageBg): void {
+  uiAtom.setKey('stageBg', bg)
+}
 
 export function setRowMenu(id: string | null): void {
   uiAtom.setKey('rowMenu', id)

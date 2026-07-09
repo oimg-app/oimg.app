@@ -6,16 +6,29 @@ import {setSplit, setZoom, uiAtom} from '@/stores/ui'
 import {$selectedFile} from '@/stores/files'
 import {fmtBytes} from '@/lib/format'
 
-const CHECKER_BG: React.CSSProperties = {
-  background: [
-    'linear-gradient(45deg, var(--color-bg-1) 25%, transparent 25%)',
-    'linear-gradient(-45deg, var(--color-bg-1) 25%, transparent 25%)',
-    'linear-gradient(45deg, transparent 75%, var(--color-bg-1) 75%)',
-    'linear-gradient(-45deg, transparent 75%, var(--color-bg-1) 75%)',
-  ].join(', '),
-  backgroundSize: '16px 16px',
-  backgroundPosition: '0 0, 0 8px, 8px -8px, -8px 0',
-  backgroundColor: 'var(--color-bg-0)',
+// Four selectable stage backgrounds — the swatches in CenterHeader mutate uiAtom.stageBg.
+// checker-dark = current default (dark squares on darker base).
+// checker-light = light squares on white base.
+// black/white   = solid fills for hard-edge previews.
+function stageBgStyle(bg: 'checker-dark' | 'checker-light' | 'black' | 'white'): React.CSSProperties {
+  const checker = (square: string, base: string): React.CSSProperties => ({
+    background: [
+      `linear-gradient(45deg, ${square} 25%, transparent 25%)`,
+      `linear-gradient(-45deg, ${square} 25%, transparent 25%)`,
+      `linear-gradient(45deg, transparent 75%, ${square} 75%)`,
+      `linear-gradient(-45deg, transparent 75%, ${square} 75%)`,
+    ].join(', '),
+    backgroundSize: '16px 16px',
+    backgroundPosition: '0 0, 0 8px, 8px -8px, -8px 0',
+    backgroundColor: base,
+  })
+  switch (bg) {
+    case 'checker-light': return checker('#e5e5e5', '#ffffff')
+    case 'black':         return { backgroundColor: '#000000' }
+    case 'white':         return { backgroundColor: '#ffffff' }
+    case 'checker-dark':
+    default:              return checker('var(--color-bg-1)', 'var(--color-bg-0)')
+  }
 }
 
 function parseDimRatio(dim: string): string {
@@ -53,7 +66,7 @@ const MAX_SCALE = 8
 const WHEEL_FACTOR = 0.001
 
 export function CompareStage() {
-  const { split, zoom } = useStore(uiAtom)
+  const { split, zoom, stageBg } = useStore(uiAtom)
   const selectedFile = useStore($selectedFile)
 
   // Object URLs for original and encoded image layers (T-9-URL: revoke on cleanup)
@@ -243,7 +256,7 @@ export function CompareStage() {
     <div
       ref={stageRef}
       className="flex-1 min-h-0 overflow-hidden flex items-center justify-center"
-      style={CHECKER_BG}
+      style={stageBgStyle(stageBg)}
       onMouseDown={handleStageMouseDown}
       onContextMenu={(e) => e.preventDefault()}
     >

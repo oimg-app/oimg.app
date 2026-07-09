@@ -1,7 +1,8 @@
 // Phase 05 — CENTER-02: CenterHeader breadcrumb + zoom popover
 // Phase 07-polish — WCAG AA: zoom dropdown migrated Popover→DropdownMenu for arrow-key navigation.
 import { useStore } from '@nanostores/react'
-import { uiAtom, setZoom } from '@/stores/ui'
+import { uiAtom, setZoom, setStageBg } from '@/stores/ui'
+import type { StageBg } from '@/stores/ui'
 import { $selectedFile } from '@/stores/files'
 import { settingsAtom } from '@/stores/settings'
 import {
@@ -11,6 +12,32 @@ import {
   DropdownMenuItem,
 } from '@/components/ui/dropdown-menu'
 import { EyeIcon, CheckIcon, CaretDownIcon } from '@phosphor-icons/react'
+import { cn } from '@/lib/utils'
+
+// Stage-background swatches — replaces the old "Optimized" badge. Each option renders
+// as a small circle that previews its own background style (checkerboard or solid).
+const BG_SWATCHES: Array<{ id: StageBg; label: string; style: React.CSSProperties }> = [
+  {
+    id: 'checker-dark',
+    label: 'Dark checkerboard',
+    style: {
+      background:
+        'conic-gradient(var(--color-bg-1) 0 25%, var(--color-bg-0) 0 50%, var(--color-bg-1) 0 75%, var(--color-bg-0) 0)',
+      backgroundSize: '10px 10px',
+    },
+  },
+  {
+    id: 'checker-light',
+    label: 'Light checkerboard',
+    style: {
+      background:
+        'conic-gradient(#e5e5e5 0 25%, #ffffff 0 50%, #e5e5e5 0 75%, #ffffff 0)',
+      backgroundSize: '10px 10px',
+    },
+  },
+  { id: 'black', label: 'Black background', style: { backgroundColor: '#000000' } },
+  { id: 'white', label: 'White background', style: { backgroundColor: '#ffffff' } },
+]
 
 const FILE_TAG =
   'font-mono text-[11px] font-semibold bg-[var(--color-bg-2)] text-[var(--color-fg-1)] px-1.5 py-0.5 rounded-[3px] whitespace-nowrap'
@@ -18,7 +45,7 @@ const FILE_TAG =
 const ZOOM_OPTS = [25, 50, 100, 200, 'fit'] as const
 
 export function CenterHeader() {
-  const { zoom } = useStore(uiAtom)
+  const { zoom, stageBg } = useStore(uiAtom)
   const selectedFile = useStore($selectedFile)
   const { codec, q, resizeOn, w, h } = useStore(settingsAtom)
   const quality = selectedFile?.settings?.q ?? q
@@ -55,12 +82,27 @@ export function CenterHeader() {
 
       {/* Right controls */}
       <div className="flex items-center gap-2 shrink-0">
-        {selectedFile && (
-          <span className="font-mono text-[11px] font-semibold bg-[var(--color-accent-dim)] text-[var(--color-accent)] px-2 py-0.5 rounded-full flex items-center gap-1">
-            <CheckIcon size={10} />
-            {' Optimized'}
-          </span>
-        )}
+        {/* Stage background swatches — mutate uiAtom.stageBg, CompareStage consumes it. */}
+        <div className="flex items-center gap-1" role="radiogroup" aria-label="Stage background">
+          {BG_SWATCHES.map((s) => (
+            <button
+              key={s.id}
+              type="button"
+              role="radio"
+              aria-checked={stageBg === s.id}
+              aria-label={s.label}
+              title={s.label}
+              onClick={() => setStageBg(s.id)}
+              className={cn(
+                'w-4 h-4 rounded-full border transition-colors overflow-hidden',
+                stageBg === s.id
+                  ? 'border-[var(--color-accent)] ring-1 ring-[var(--color-accent)]'
+                  : 'border-[var(--color-line)] hover:border-[var(--color-fg-2)]',
+              )}
+              style={s.style}
+            />
+          ))}
+        </div>
 
         {/* Zoom dropdown */}
         <DropdownMenu>
