@@ -23,15 +23,15 @@ progress:
 
 **Core value:** A developer drops assets, adjusts settings once, and walks away with a ZIP of optimized files plus copy-paste snippets — without anything leaving the browser.
 
-**Current focus:** Phase 16 — SSIM Quality Metric
+**Current focus:** Phase 17 — Butteraugli Quality Metric
 
 ---
 
 ## Current Position
 
-Phase: 15 — COMPLETE; Phase 16 pending
-Status: 3 of 5 v1.2 phases complete
-Progress: [██████████] 96%
+Phase: 16 — COMPLETE; Phase 17 pending
+Status: 4 of 5 v1.2 phases complete
+Progress: [████████░░] 80%
 
 Prior milestone artifacts archived under `.planning/milestones/`:
 
@@ -59,7 +59,6 @@ Prior milestone artifacts archived under `.planning/milestones/`:
 
 ### Todos
 
-- Phase 16 (SSIM): plan + execute
 - Phase 17 (Butteraugli): plan + execute
 
 ---

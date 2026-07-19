@@ -42,7 +42,7 @@ Shipped as **Executed** — all 22 plans built + summarized; formal phase verifi
 - [x] **Phase 13: Diagnostics + Clear Queue** — versionsAtom + capability detection + live StatusBar footer + Settings Diagnostics tab + clearFiles() action — DIA-01..04, CLR-01
 - [x] **Phase 14: Installable PWA** — vite-plugin-pwa (injectManifest) + hand-rolled sw.ts + manifest.webmanifest + beforeinstallprompt + offline-derived footer — PWA-01..05
 - [x] **Phase 15: From URL or paste** — clipboard read + paste-event handler + addFromUrl wire-up + CORS-honest failure messaging — ING-01, ING-02
-- [ ] **Phase 16: SSIM Quality Metric** — ssim.js@3.5.0 integration + metrics worker hook + Report panel banded display — MTR-01, MTR-03 (SSIM half)
+- [x] **Phase 16: SSIM Quality Metric** — ssim.js@3.5.0 integration + metrics worker hook + Report panel banded display — MTR-01, MTR-03 (SSIM half)
 - [ ] **Phase 17: Butteraugli Quality Metric** — hand-built Emscripten wasm of libjxl butteraugli + Report panel integration alongside SSIM — MTR-02, MTR-03 (Butteraugli half)
 
 ## Phase Details
@@ -161,17 +161,17 @@ Plans:
 Plans:
 **Wave 0**
 
-- [ ] 16-01-PLAN.md — Wave 0: install `ssim.js@3.5.0` + `__SSIM_VERSION__` Vite define + `BUILD_VERSIONS.ssim` in `src/lib/versions.ts` + `runtimeAtom.versions.ssim` + StatusBar badge live-read (MTR-01)
+- [x] 16-01-PLAN.md — Wave 0: install `ssim.js@3.5.0` + `__SSIM_VERSION__` Vite define + `BUILD_VERSIONS.ssim` in `src/lib/versions.ts` + `runtimeAtom.versions.ssim` + StatusBar badge live-read (MTR-01)
 
 **Wave 1** *(blocked on Wave 0 completion)*
 
-- [ ] 16-02-PLAN.md — Wave 1: `src/lib/metrics-bands.ts` — `SSIM_BANDS` constants (green ≥ 0.95, yellow ≥ 0.85) + `bandFor()` pure fn + Node unit boundary-sweep (MTR-03)
-- [ ] 16-03-PLAN.md — Wave 1: `src/workers/metrics.worker.ts` (dynamic ssim.js + @jsquash/resize dim-align) + `src/lib/metrics-worker.ts` singleton + `FileEntry.metrics` in settings.ts + `setFileMetric` via `updateEntry` funnel + `setFileResult` invalidation patch (MTR-01)
+- [x] 16-02-PLAN.md — Wave 1: `src/lib/metrics-bands.ts` — `SSIM_BANDS` constants (green ≥ 0.95, yellow ≥ 0.85) + `bandFor()` pure fn + Node unit boundary-sweep (MTR-03)
+- [x] 16-03-PLAN.md — Wave 1: `src/workers/metrics.worker.ts` (dynamic ssim.js + @jsquash/resize dim-align) + `src/lib/metrics-worker.ts` singleton + `FileEntry.metrics` in settings.ts + `setFileMetric` via `updateEntry` funnel + `setFileResult` invalidation patch (MTR-01)
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 16-04-PLAN.md — Wave 2: `src/hooks/useMetricsAuto.ts` (CR-02 seqRef + selection subscribe + dynamic worker import + SVG src/tgt early-return) + `App.tsx` mount (MTR-01)
-- [ ] 16-05-PLAN.md — Wave 2: `ReportPanel.tsx` banded SSIM row via `metrics-bands.ts` + Playwright `ssim-metric.spec.ts` (happy + thrash + SVG-N/A) + `build.test.ts` extension: initial route ≤ 200 KB gzipped + `computeSSIM` absent from initial chunk (MTR-01, MTR-03)
+- [x] 16-04-PLAN.md — Wave 2: `src/hooks/useMetricsAuto.ts` (CR-02 seqRef + selection subscribe + dynamic worker import + SVG src/tgt early-return) + `App.tsx` mount (MTR-01)
+- [x] 16-05-PLAN.md — Wave 2: `ReportPanel.tsx` banded SSIM row via `metrics-bands.ts` + Playwright `ssim-metric.spec.ts` (happy + thrash + SVG-N/A) + `build.test.ts` extension: initial route ≤ 200 KB gzipped + `computeSSIM` absent from initial chunk (MTR-01, MTR-03)
 
 **UI hint**: yes
 
@@ -196,12 +196,12 @@ Plans:
 | Phase | Milestone | Plans | Status | Completed |
 |-------|-----------|-------|--------|-----------|
 | 13. Diagnostics + Clear Queue | v1.2 | 8/8 | Complete |  |
-| 14. Installable PWA | v1.2 | 3/6 | In Progress|  |
-| 15. From URL or paste | v1.2 | 0/? | Not started | - |
-| 16. SSIM Quality Metric | v1.2 | 0/5 | Planned |  |
+| 14. Installable PWA | v1.2 | 6/6 | Complete | 2026-06 |
+| 15. From URL or paste | v1.2 | 4/4 | Complete | 2026-06-12 |
+| 16. SSIM Quality Metric | v1.2 | 5/5 | Complete | 2026-07-20 |
 | 17. Butteraugli Quality Metric | v1.2 | 0/? | Not started | - |
 
 ---
 
-*Active milestone: v1.2 — Real-quality + transparency + installable. Next: `/gsd:execute-phase 14`.*
+*Active milestone: v1.2 — Real-quality + transparency + installable. Next: `/gsd-plan-phase 17`.*
 *Last archived: 2026-06-05 via /gsd:complete-milestone v1.1*
