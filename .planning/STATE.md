@@ -2,10 +2,10 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Polish, Diagnostics, PWA + Quality Metrics
-status: completed
-stopped_at: Completed quick task 260610-lby — HEIC/HEIF decode-only input support via heic-decode
-last_updated: "2026-06-12T22:40:05.902Z"
-last_activity: 2026-06-12 -- Phase 15 marked complete
+status: in_progress
+stopped_at: Phase 15 complete; Phase 16 (SSIM) next
+last_updated: "2026-07-19T14:38:00.000Z"
+last_activity: 2026-07-19 -- STATE.md reconciled with archived v1.1 phases
 progress:
   total_phases: 5
   completed_phases: 3
@@ -16,7 +16,7 @@ progress:
 
 # STATE: oimg.app — v1.2 Polish, Diagnostics, PWA + Quality Metrics
 
-**Last updated:** 2026-06-10
+**Last updated:** 2026-07-19
 **Milestone:** v1.2 Polish, Diagnostics, PWA + Quality Metrics (Phases 13–17)
 
 ---
@@ -25,75 +25,32 @@ progress:
 
 **Core value:** A developer drops assets, adjusts settings once, and walks away with a ZIP of optimized files plus copy-paste snippets — without anything leaving the browser.
 
-**Current focus:** Phase 15 — from-url-or-paste
+**Current focus:** Phase 16 — SSIM Quality Metric
 
 ---
 
 ## Current Position
 
-Phase: 15 — COMPLETE
-Plan: 1 of 4
-Status: Phase 15 complete
-Last activity: 2026-06-12 -- Phase 15 marked complete
-Progress: [████████░░] 79%
+Phase: 15 — COMPLETE; Phase 16 pending
+Status: 3 of 5 v1.2 phases complete
+Progress: [██████░░░░] 60%
 
-## Performance Metrics
-
-| Metric | Value |
-|--------|-------|
-| Phases total (v1.1) | 5 |
-| Phases complete | 0 |
-| Requirements total (v1.1) | 15 |
-| Requirements complete | 0 |
-| Phases with plans | 0 |
+Prior milestone artifacts archived under `.planning/milestones/`:
+- v1.0 (Phases 1–7) → `milestones/v1.0-phases/`
+- v1.1 (Phases 8–12) → `milestones/v1.1-phases/`
 
 ---
-| Phase 08-worker-pipeline-foundation P01 | 35m | 3 tasks | 3 files |
-| Phase 08-worker-pipeline-foundation P03 | 10 | 3 tasks | 2 files |
-| Phase 09-codec-encoders P01 | 20m | 3 tasks | 6 files |
-| Phase 09-codec-encoders P02 | 35m | 3 tasks | 3 files |
-| Phase 09-codec-encoders P03 | 20m | 2 tasks | 3 files |
-| Phase 10-single-file-optimize-loop P02 | 10m | 2 tasks | 2 files |
-| Phase 11-batch-optimize-export P05 | ~13m | 4 tasks | 6 files |
-| Phase 12-real-snippets P05 | ~15m | 2 tasks | 2 files |
-| Phase 14 P01 | 6min | 3 tasks | 4 files |
-| Phase 14 P02 | 45min | 2 tasks | 1 files |
 
-## Accumulated Context
+## Accumulated Context (v1.2)
 
 ### Decisions
 
-- v1.1 phases numbered 8–12, continuing from v1.0's Phase 7 (no reset)
-- Phase order follows dependency chain: pool foundation → encoders → single-file loop → batch+export → snippets
-- mvp mode: every phase delivers something demonstrable in the browser (vertical slices)
-- Pre-existing v1.0 scaffolding to wire (not rebuild): BackpressureIndicator (SHELL-02), runtimeStore running/startRun, OutputPanel snippet builders (`src/lib/snippets.ts`), ReportPanel
-- Codecs MUST be dynamic-imported inside workers to hold initial route < 200KB gzipped; AVIF (~8MB) lazy-loaded only on selection
-- OxiPNG is encode-only — decode PNG via @jsquash/png to ImageData first, then re-encode
-- comlink for worker RPC; roll-your-own bounded WorkerPool for backpressure
-- COOP/COEP headers required for SharedArrayBuffer (MT codecs) — dev server + Cloudflare Pages `_headers`
-- svgo v4 browser ESM, preset-default + overrides (no legacy `extendDefaultPlugins`)
-- [Phase ?]: Codec worker stubs all non-PNG formats
-- [Phase ?]: runtime.ts extended for worker-pool backpressure
-- [Phase ?]: pool.run API correction
-- [Phase ?]: filesAtom starts empty (D-04) — app opens on dropzone first-run view
-- [Phase ?]: queue-order sort uses createdAt timestamp replacing STUB_FILES.findIndex
-- [Phase ?]: useOptimize stale-closure fix: read filesAtom.get() at call time
-- [Phase 11-05]: buildZip uses streamFiles:true + DEFLATE level:1 (codec outputs already compressed); sanitizeBaseName(renameExtension) composed before zip.file (T-11-01); empty input throws NO_EXPORTABLE_FILES
-- [Phase 11-05]: Rule-2 auto-add — mounted sonner Toaster in App.tsx (was missing app-wide; blocked D-12 toast contract)
-- [Phase 12-05]: FileRow ContextMenu Copy <picture> + Copy data-URI siblings wired via useSnippets per-file methods; D-13 disable-then-explain triple matches Phase 11 Save as… analog; label standardized to 'Copy data-URI' (hyphenated)
-- [Phase 12-05]: Rule-3 env repair — installed @esbuild/darwin-arm64 platform binary (npm-cli/4828 family, same precedent as scripts/ensure-rollup-binding.mjs); --no-save --ignore-scripts --cpu=arm64 flags; no package.json/lockfile change
-- [Phase ?]: Phase 14 Plan 01: vite-plugin-pwa@1.3.0 in injectManifest mode; theme_color #5eb87a verbatim; globIgnores excludes wasm
-- [Phase ?]: Plan 14-02 — combined ServiceWorkerGlobalScope + __WB_MANIFEST in single intersection-typed declare const self in src/sw.ts
-- [Phase ?]: Plan 14-02 — bypassed npm run build's tsc -b gate (pre-existing RED baseline); ran vite build directly to verify dist/sw.js
-
-### Conventions (carried from v1.0)
-
-- Business logic in `src/hooks/*` and `src/stores/*` — never inline in components
-- STORE-08: zero `useState` for data in components; only ephemeral hover/focus allowed
-- Circular ESM guard: `files.ts ↔ runtime.ts ↔ settings.ts` — avoid cross-imports
-- Workers use literal string paths in ADAPTERS map (no template literals)
-- All files require phase/plan attribution header comment
-- Tailwind utility classes only — no CSS modules, no inline styles
+- [Phase 13]: Versions injected at build time via Vite `define` (only reads `node_modules/<pkg>/package.json` version fields — never env vars, never filesystem paths); consumers read `BUILD_VERSIONS` from `src/lib/versions.ts`
+- [Phase 13]: `versionsAtom` combines build-time versions + runtime caps (SIMD, threads, `crossOriginIsolated`, `hardwareConcurrency`)
+- [Phase 14]: vite-plugin-pwa@1.3.0 in injectManifest mode; theme_color `#5eb87a` verbatim; `globIgnores` excludes wasm; AVIF's 3.4 MB wasm runtime-cached only, never precached
+- [Phase 14 Plan 02]: combined ServiceWorkerGlobalScope + `__WB_MANIFEST` in single intersection-typed `declare const self` in `src/sw.ts`
+- [Phase 14 Plan 02]: bypassed `npm run build`'s `tsc -b` gate (pre-existing RED baseline); ran `vite build` directly to verify `dist/sw.js`
+- [Phase 15]: `pickFromUrl` + `pickFromClipboard` dispatchers with document-level Cmd/Ctrl+V handler; CORS-honest failure messaging; empty `addFromUrl` stub deleted from `src/stores/files.ts`
 
 ### Blockers
 
@@ -101,21 +58,20 @@ Progress: [████████░░] 79%
 
 ### Todos
 
-- None
+- Phase 16 (SSIM): plan + execute
+- Phase 17 (Butteraugli): plan + execute
 
 ---
 
 ## Session Continuity
 
-**Last session:** 2026-06-11T17:24:26.312Z
-**Stopped At:** Completed quick task 260610-lby — HEIC/HEIF decode-only input support via heic-decode
-**To resume:** HEIC code-complete + typecheck-clean. Manual check pending: `npm run dev`, drop a real `.heic`, confirm decode→JPEG export and NO inspector HEIC tab (see 260610-lby-SUMMARY.md §Manual verification). Milestone v1.2 (Phases 13–17) is the active track.
+**Last significant activity:** Quick task 260610-lby (HEIC decode support) — code-complete, human verify pending
+**To resume:** Milestone v1.2 track. Phases 13–15 shipped. Next: `/gsd-plan-phase 16` for SSIM integration.
 
-## Quick Tasks Completed
+## Quick Tasks Completed (v1.2 era)
 
 | ID | Slug | Date | Tasks | Status |
 |----|------|------|-------|--------|
-| 260603-s2x | watch-folder | 2026-06-03 | 8 | ✅ complete (3 e2e + 6 unit green; T-WF-01..04 mitigated) |
 | 260610-lby | add-heic-extension-support | 2026-06-10 | 2 (+1 type fix) | ⚠️ code-complete (heic.test 6/6 green, tsc clean after c7f4994 type-decl fix) — Task 3 needs human verify with a real .heic file |
 | fast | svg-compare-iframe | 2026-06-10 | 1 | ✅ CompareStage renders SVG layers in sandboxed iframe (cc0fb7b) |
 | fast | svg-compare-codec-switch | 2026-06-10 | 1 | ✅ Encoded layer iframe/img switches on output codec; orig stays iframe for SVG source (1124b39) |
@@ -123,46 +79,30 @@ Progress: [████████░░] 79%
 
 ---
 
-## Requirements Coverage (v1.1)
+## Requirements Coverage (v1.2)
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| PIPE-01 | 8 | Pending |
-| PIPE-02 | 8 | Pending |
-| PIPE-03 | 8 | Pending |
-| PIPE-04 | 8 | Pending |
-| ENC-01 | 9 | Pending |
-| ENC-02 | 9 | Pending |
-| ENC-03 | 9 | Pending |
-| ENC-04 | 9 | Pending |
-| ENC-05 | 9 | Pending |
-| ENC-06 | 9 | Pending |
-| OPT-01 | 10 | Pending |
-| OPT-02 | 11 | Pending |
-| EXP-01 | 11 | Pending |
-| EXP-02 | 11 | Pending |
-| SNIP-01 | 12 | Pending |
+| DIA-01 | 13 | Complete |
+| DIA-02 | 13 | Complete |
+| DIA-03 | 13 | Complete |
+| DIA-04 | 13 | Complete |
+| CLR-01 | 13 | Complete |
+| PWA-01 | 14 | Complete |
+| PWA-02 | 14 | Complete |
+| PWA-03 | 14 | Complete |
+| PWA-04 | 14 | Complete |
+| PWA-05 | 14 | Complete |
+| ING-01 | 15 | Complete |
+| ING-02 | 15 | Complete |
+| MTR-01 | 16 | Pending |
+| MTR-02 | 17 | Pending |
+| MTR-03 | 16/17 | Pending |
 
-**Coverage:** 15/15 mapped ✓
+**Coverage:** 12/15 complete
 
 ---
 
-## Deferred Items
-
-Acknowledged and deferred at v1.0 milestone close (2026-05-25). Milestone shipped as **Executed** — all 22 plans built + summarized, formal verification skipped per user decision.
-
-| Category | Item | Status |
-|----------|------|--------|
-| verification_gap | Phase 01 VERIFICATION.md | human_needed |
-| verification_gap | Phase 02 VERIFICATION.md | human_needed |
-| verification_gap | Phase 04 VERIFICATION.md | human_needed |
-| verification_gap | Phases 03/05/06/07 — no VERIFICATION.md | unverified (executed) |
-| requirements | 18/36 v1.0 requirements unchecked in traceability (likely tracking drift; code largely shipped) | accepted as tech debt |
-| wcag | Duplicate `banner` landmarks — 3 `<header>` elements (TitleBar + CenterHeader + InspectorPane) | deferred follow-up |
-| git | 3 stale locked `agent-*` worktrees from flaky-agent sessions | cleanup pending |
-| variants | 1×/2×/3× density variants (VAR-01/VAR-02) | deferred to future milestone |
-| persistence | Named setting presets via idb-keyval (PERS-01) | deferred to future milestone |
-
 ## Operator Next Steps
 
-- Plan the first v1.1 phase: `/gsd-plan-phase 8`
+- Plan Phase 16 (SSIM): `/gsd-plan-phase 16`
