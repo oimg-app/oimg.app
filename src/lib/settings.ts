@@ -25,6 +25,7 @@ export interface FileEntry {
     rawBuffer?: ArrayBuffer; // original file bytes; cache for live re-encode (D-05)
     encodedBuffer?: ArrayBuffer; // result of last encode
     error?: string; // per-file error message (D-13)
+    metrics?: { ssim?: number | null }; // Phase 16 — MTR-01: perceptual-quality cache; undefined=pending, null=failed, number=computed
 }
 
 export interface SvgoPlugin {
