@@ -2,15 +2,13 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Polish, Diagnostics, PWA + Quality Metrics
-status: in_progress
-stopped_at: Phase 15 complete; Phase 16 (SSIM) next
-last_updated: "2026-07-19T14:38:00.000Z"
-last_activity: 2026-07-19 -- STATE.md reconciled with archived v1.1 phases
+status: completed
+last_updated: "2026-07-20T00:00:00.000Z"
 progress:
   total_phases: 5
   completed_phases: 3
-  total_plans: 18
-  completed_plans: 18
+  total_plans: 24
+  completed_plans: 23
   percent: 60
 ---
 
@@ -33,9 +31,10 @@ progress:
 
 Phase: 15 — COMPLETE; Phase 16 pending
 Status: 3 of 5 v1.2 phases complete
-Progress: [██████░░░░] 60%
+Progress: [██████████] 96%
 
 Prior milestone artifacts archived under `.planning/milestones/`:
+
 - v1.0 (Phases 1–7) → `milestones/v1.0-phases/`
 - v1.1 (Phases 8–12) → `milestones/v1.1-phases/`
 
@@ -51,6 +50,8 @@ Prior milestone artifacts archived under `.planning/milestones/`:
 - [Phase 14 Plan 02]: combined ServiceWorkerGlobalScope + `__WB_MANIFEST` in single intersection-typed `declare const self` in `src/sw.ts`
 - [Phase 14 Plan 02]: bypassed `npm run build`'s `tsc -b` gate (pre-existing RED baseline); ran `vite build` directly to verify `dist/sw.js`
 - [Phase 15]: `pickFromUrl` + `pickFromClipboard` dispatchers with document-level Cmd/Ctrl+V handler; CORS-honest failure messaging; empty `addFromUrl` stub deleted from `src/stores/files.ts`
+- [Phase 16 Plan 04]: `useMetricsAuto` subscribes via `useStore($selectedFile)` (unlike `useLiveEncode`'s `filesAtom.get()` in async body) — the effect *is* the trigger so the useStore snapshot is the correct source; CR-02 seqRef pattern mirrored verbatim from `useLiveEncode.ts:47-51,111,115,122` to defuse selection thrash
+- [Phase 16 Plan 04]: `setFileMetric(id, 'ssim', null)` on failure (not `undefined`) so ReportPanel (16-05) renders "N/A" instead of perpetual "Computing…", and the cache-hit guard `metrics?.ssim !== undefined` short-circuits retries of known-bad files
 
 ### Blockers
 
@@ -65,8 +66,8 @@ Prior milestone artifacts archived under `.planning/milestones/`:
 
 ## Session Continuity
 
-**Last significant activity:** Quick task 260610-lby (HEIC decode support) — code-complete, human verify pending
-**To resume:** Milestone v1.2 track. Phases 13–15 shipped. Next: `/gsd-plan-phase 16` for SSIM integration.
+**Last significant activity:** Phase 16 Plan 04 shipped (2026-07-20) — `useMetricsAuto` hook + App.tsx root mount; auto-computes SSIM for the selected done file with CR-02 stale-drop.
+**To resume:** Milestone v1.2 track. Phases 13–15 + 16-01/02/03/04 shipped. Next: `/gsd-execute-phase 16` remaining plans (16-05 ReportPanel wiring, remaining phase plans).
 
 ## Quick Tasks Completed (v1.2 era)
 
