@@ -16,6 +16,7 @@ import {
 import { filesAtom, $selectedFile } from '@/stores/files'
 import { fmtBytes, fmtPct } from '@/lib/format'
 import { useExport } from '@/hooks/useExport'
+import { ssimBand, SSIM_BANDS, type Band } from '@/lib/metrics-bands'
 
 // Format label color convention — mirrors FileRow BADGE_CLASS.
 // svg=purple, png=blue, jpg/jpeg=orange, webp=cyan, avif=rose
@@ -26,6 +27,14 @@ const FORMAT_COLOR: Record<string, string> = {
   jpeg: 'text-orange-400',
   webp: 'text-cyan-400',
   avif: 'text-rose-400',
+}
+
+// Phase 16 — MTR-03: banded SSIM color map. CSS custom properties resolve at render;
+// keep values in one place so 16-02 threshold moves don't fan out to arbitrary text nodes.
+const BAND_COLOR: Record<Band, string> = {
+  green: 'var(--color-accent)',
+  yellow: 'var(--color-warn)',
+  red: 'var(--color-error)',
 }
 
 export function ReportPanel() {
@@ -159,6 +168,41 @@ export function ReportPanel() {
           </div>
         </TooltipProvider>
       </Section>
+
+      {/* Phase 16 — MTR-03: banded SSIM display; constants from @/lib/metrics-bands. */}
+      {selected?.status === 'done' && selected.type.toLowerCase() !== 'svg' && (
+        <Section title="Quality">
+          <div
+            data-testid="ssim-row"
+            className="flex items-baseline justify-between"
+          >
+            <span className="font-mono text-[10px] uppercase tracking-wider text-[var(--color-fg-2)]">
+              SSIM
+            </span>
+            {selected.metrics?.ssim === undefined ? (
+              <span className="text-[12px] font-mono text-[var(--color-fg-2)]">
+                Computing…
+              </span>
+            ) : selected.metrics.ssim === null ? (
+              <span className="text-[12px] font-mono text-[var(--color-fg-2)]">
+                N/A
+              </span>
+            ) : (
+              <span
+                data-testid="ssim-score"
+                data-band={ssimBand(selected.metrics.ssim)}
+                className="text-[14px] font-semibold font-mono"
+                style={{ color: BAND_COLOR[ssimBand(selected.metrics.ssim)] }}
+              >
+                {selected.metrics.ssim.toFixed(3)}
+              </span>
+            )}
+          </div>
+          <p className="text-[10px] text-[var(--color-fg-2)] mt-1">
+            Green ≥ {SSIM_BANDS.green} · Yellow ≥ {SSIM_BANDS.yellow} · Red below.
+          </p>
+        </Section>
+      )}
 
       {/* Format breakdown section */}
       <Section title="Format breakdown">
