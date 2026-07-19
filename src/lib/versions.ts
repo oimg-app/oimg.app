@@ -22,8 +22,8 @@ export type CodecKey = 'webp' | 'jpeg' | 'avif' | 'oxipng' | 'png' | 'resize'
 export interface BuildVersions {
   svgo: string
   jsquash: Record<CodecKey, string>
-  /** Phase 16 hook — populated when SSIM image-quality metric lands. */
-  ssim?: string
+  /** Phase 16 — MTR-01: perceptual-quality library version. */
+  ssim: string
   /** Phase 17 hook — populated when Butteraugli vendored build lands. */
   butteraugli?: { buildHash: string }
 }
@@ -45,5 +45,6 @@ export const BUILD_VERSIONS: BuildVersions = {
     typeof __JSQUASH_VERSIONS__ === 'object' && __JSQUASH_VERSIONS__
       ? __JSQUASH_VERSIONS__
       : FALLBACK_JSQUASH,
-  // ssim, butteraugli intentionally omitted — Phase 16/17 will populate.
+  ssim: typeof __SSIM_VERSION__ === 'string' ? __SSIM_VERSION__ : '0.0.0',
+  // butteraugli intentionally omitted — Phase 17 will populate.
 }

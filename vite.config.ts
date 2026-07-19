@@ -59,7 +59,7 @@ const VERSIONS = {
     png: readVer('@jsquash/png'),
     resize: readVer('@jsquash/resize'),
   },
-  // Phase 16 — append: ssim: readVer('ssim.js')
+  ssim: readVer('ssim.js'),
   // Phase 17 — append: butteraugli build hash (read from vendored artefact)
 }
 
@@ -145,7 +145,7 @@ export default defineConfig({
   define: {
     __SVGO_VERSION__: JSON.stringify(VERSIONS.svgo),
     __JSQUASH_VERSIONS__: JSON.stringify(VERSIONS.jsquash),
-    // Phase 16 — append: __SSIM_VERSION__: JSON.stringify(VERSIONS.ssim),
+    __SSIM_VERSION__: JSON.stringify(VERSIONS.ssim),
     // Phase 17 — append: __BUTTERAUGLI_BUILD__: JSON.stringify(VERSIONS.butteraugli),
   },
   server: {
