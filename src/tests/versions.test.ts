@@ -44,9 +44,25 @@ for (const c of codecs) {
     v.jsquash[c] === '0.0.0')
 }
 
-// Phase 16/17 hooks remain undefined this phase.
-assert('ssim hook is undefined in Phase 13',
-  v.ssim === undefined)
+// Phase 16 — MTR-01: ssim is now populated (Phase 17 butteraugli still deferred).
+// Outside Vite, __SSIM_VERSION__ is undefined and the guard yields '0.0.0'.
+// Inside Vite the constant is inlined to the installed semver.
+assert('BUILD_VERSIONS.ssim is a string',
+  typeof v.ssim === 'string')
+assert('BUILD_VERSIONS.ssim matches semver shape',
+  /^\d+\.\d+\.\d+(-[\w.]+)?$/.test(v.ssim))
+// When run outside Vite the value must be the '0.0.0' fallback; when run
+// inside Vite the constant is set and must differ. Assert whichever matches
+// the current runtime — but always require a well-formed semver string.
+if (typeof __SSIM_VERSION__ === 'undefined') {
+  assert('BUILD_VERSIONS.ssim safe-fallback === "0.0.0" outside Vite',
+    v.ssim === '0.0.0')
+} else {
+  assert('BUILD_VERSIONS.ssim !== "0.0.0" when __SSIM_VERSION__ is defined',
+    v.ssim !== '0.0.0')
+}
+
+// Phase 17 hook remains undefined.
 assert('butteraugli hook is undefined in Phase 13',
   v.butteraugli === undefined)
 
