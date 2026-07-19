@@ -16,10 +16,12 @@ function assert(name: string, cond: boolean) {
 }
 
 // Import via `@/` alias — resolved by `src/tests/_alias-loader.mjs`.
+// Type-side: use `typeof ssimBand` to assert the exported `Band` union at type-check time
+// without introducing an unused-type-alias warning under `tsc -b`.
 const mod = await import('@/lib/metrics-bands')
 const { SSIM_BANDS, ssimBand } = mod
-// Type-only import so the runner erases it; also asserts the exported type name exists.
-type _Band = import('@/lib/metrics-bands').Band
+const _bandCheck: ReturnType<typeof ssimBand> extends 'green' | 'yellow' | 'red' ? true : never = true
+void _bandCheck
 
 // ── describe: SSIM_BANDS — verbatim thresholds per REQUIREMENTS.md MTR-03 ─────
 assert('SSIM_BANDS.green === 0.95 (MTR-03 verbatim)',
