@@ -6,6 +6,7 @@ example-ui/
 .idea/
 .vscode/
 .claude/settings.local.json
+.playwright-mcp
 
 # OS
 .DS_Store
