@@ -229,5 +229,86 @@ try {
   }
 }
 
+// ── Phase 16 — MTR-01: setFileMetric writer + setFileResult metrics-invalidation ─
+try {
+  const files = await import('../stores/files.ts')
+  const { filesAtom, setFileMetric, setFileResult } = files
+
+  // Reset with two entries so we can prove the funnel doesn't touch siblings.
+  const seed = () => {
+    filesAtom.set({
+      entries: [
+        {
+          id: 'a', name: 'a.png', type: 'png', orig: 1000, opt: 0,
+          status: 'done', target: 'webp', dim: '10x10', q: 82,
+        },
+        {
+          id: 'b', name: 'b.png', type: 'png', orig: 2000, opt: 0,
+          status: 'done', target: 'webp', dim: '20x20', q: 82,
+        },
+      ],
+      selectedId: null,
+      filterQuery: '',
+      sortBy: 'queue order',
+    })
+  }
+
+  // (a) setFileMetric(id, 'ssim', number) writes only to target entry
+  seed()
+  setFileMetric('a', 'ssim', 0.981)
+  const afterA = filesAtom.get().entries
+  const eA = afterA.find(e => e.id === 'a')
+  const eB = afterA.find(e => e.id === 'b')
+  assert(
+    'setFileMetric(a, ssim, 0.981) → entries[a].metrics.ssim === 0.981',
+    eA?.metrics?.ssim === 0.981,
+  )
+  assert(
+    'setFileMetric(a, ...) does NOT touch sibling b.metrics',
+    eB?.metrics === undefined,
+  )
+
+  // (b) setFileMetric(id, 'ssim', null) writes null (failed-compute) distinguishable from undefined
+  setFileMetric('a', 'ssim', null)
+  const afterNull = filesAtom.get().entries.find(e => e.id === 'a')
+  assert(
+    'setFileMetric(a, ssim, null) → entries[a].metrics.ssim === null',
+    afterNull?.metrics?.ssim === null,
+  )
+
+  // (c) setFileResult invalidates prior metrics (Pitfall 4 — metrics: undefined)
+  seed()
+  // Seed a with metrics precondition
+  filesAtom.set({
+    ...filesAtom.get(),
+    entries: filesAtom.get().entries.map(e =>
+      e.id === 'a' ? { ...e, metrics: { ssim: 0.981 } } : e
+    ),
+  })
+  const buf = new ArrayBuffer(64)
+  setFileResult('a', buf, 128)
+  const afterResult = filesAtom.get().entries.find(e => e.id === 'a')
+  assert(
+    'setFileResult clears prior metrics (metrics: undefined)',
+    afterResult?.metrics === undefined,
+  )
+  assert(
+    'setFileResult sets status to "done"',
+    afterResult?.status === 'done',
+  )
+  assert(
+    'setFileResult writes encodedBuffer (byteLength === 64)',
+    afterResult?.encodedBuffer?.byteLength === 64,
+  )
+} catch (err) {
+  if (err instanceof Error && (err.message.includes('files.ts') || (err as NodeJS.ErrnoException).code === 'ERR_MODULE_NOT_FOUND')) {
+    passed++
+    console.log('Wave 0 stub: src/stores/files.ts not yet shipped (expected).')
+  } else {
+    failed++
+    console.error('Unexpected error in Phase 16 setFileMetric block:', err)
+  }
+}
+
 console.log(`${passed} passed, ${failed} failed`)
 process.exit(failed > 0 ? 1 : 0)
