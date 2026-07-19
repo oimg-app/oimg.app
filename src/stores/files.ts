@@ -144,11 +144,22 @@ export function setFileError(id: string, error: string | undefined): void {
   updateEntry(id, () => (error ? { error, status: 'error' as const } : { error: undefined }))
 }
 
+// Phase 16 — MTR-01: atomic per-file metric write through WR-02 updateEntry funnel.
+export function setFileMetric<K extends 'ssim'>(id: string, key: K, value: number | null): void {
+  updateEntry(id, (e) => ({ metrics: { ...(e.metrics ?? {}), [key]: value } }))
+}
+
 // Store encoded result + clear error on success. WR-01: mark 'done' so the processing
 // status dot/shimmer clears once the worker returns real bytes (the test fixtures inject
 // status:'done' directly, which previously masked the missing transition).
 export function setFileResult(id: string, encodedBuffer: ArrayBuffer, optimizedSize: number): void {
-  updateEntry(id, () => ({ encodedBuffer, opt: optimizedSize, error: undefined, status: 'done' as const }))
+  updateEntry(id, () => ({
+    encodedBuffer,
+    opt: optimizedSize,
+    error: undefined,
+    status: 'done' as const,
+    metrics: undefined, // Phase 16 — MTR-01: invalidate stale SSIM on re-encode (Pitfall 4)
+  }))
 }
 
 // Phase 11 — Plan 01 (D-03): flip a file to in-flight state when its job is dispatched to
