@@ -43,7 +43,7 @@ Shipped as **Executed** — all 22 plans built + summarized; formal phase verifi
 - [x] **Phase 14: Installable PWA** — vite-plugin-pwa (injectManifest) + hand-rolled sw.ts + manifest.webmanifest + beforeinstallprompt + offline-derived footer — PWA-01..05
 - [x] **Phase 15: From URL or paste** — clipboard read + paste-event handler + addFromUrl wire-up + CORS-honest failure messaging — ING-01, ING-02
 - [x] **Phase 16: SSIM Quality Metric** — ssim.js@3.5.0 integration + metrics worker hook + Report panel banded display — MTR-01, MTR-03 (SSIM half)
-- [ ] **Phase 17: Butteraugli Quality Metric** — hand-built Emscripten wasm of libjxl butteraugli + Report panel integration alongside SSIM — MTR-02, MTR-03 (Butteraugli half)
+- [ ] **Phase 17: Butteraugli Quality Metric** — @squoosh-kit/visdif@0.2.4 integration + metrics worker extension + Report panel banded display — MTR-02, MTR-03 (Butteraugli half)
 
 ## Phase Details
 
@@ -177,18 +177,37 @@ Plans:
 
 ### Phase 17: Butteraugli Quality Metric
 
-**Goal**: Land real perceptual quality measurement using a hand-built wasm Butteraugli comparator (from Google libjxl). Lazy-loaded; runs alongside SSIM in the metrics worker.
+**Goal**: Land real perceptual quality measurement using Butteraugli via `@squoosh-kit/visdif@0.2.4` (Squoosh's canonical Butteraugli wasm, ~57 KB, MIT + Apache-2.0). Lazy-loaded; runs alongside SSIM in the metrics worker.
 **Depends on**: Phase 16 (extends the Phase 16 metrics-worker integration + Report panel banded-display pattern)
 **Requirements**: MTR-02, MTR-03 (Butteraugli half)
+
+**Scope note (2026-07-20):** Original ROADMAP prescribed a hand-built Emscripten wasm. Research surfaced `@squoosh-kit/visdif@0.2.4` — same publisher as our existing `@squoosh-kit/imagequant`, wrapping Squoosh's canonical Butteraugli binary. User approved switch: dramatically simpler, mirrors Phase 16's ssim.js pattern, no Emscripten toolchain, no CI reproducibility burden.
+
 **Success Criteria** (what must be TRUE):
 
-  1. Butteraugli is compiled via Emscripten from Google libjxl's butteraugli comparator into `public/squoosh-kit/butteraugli/butteraugli.wasm` + a thin JS wrapper; build documented in a top-level script
-  2. The wasm is loaded via dynamic import in the metrics worker; same trigger rules as SSIM (selected file, post-`done`, refresh on re-encode); result cached on `FileEntry.metrics.butteraugli`
-  3. Report panel renders the Butteraugli score alongside SSIM with banded coloring: green < 1.5, yellow < 3.0, red ≥ 3.0 (lower is better); thresholds are documented constants
-  4. Initial bundle budget (200 KB gzipped) is preserved — Butteraugli wasm does NOT enter the initial chunk; verified at build time
-  5. `versionsAtom.butteraugli.buildHash` reflects the wasm artifact hash (so the Diagnostics tab can show which build is loaded)
+  1. `@squoosh-kit/visdif@0.2.4` installed; Butteraugli runs in the Phase 16 sibling metrics worker via `createVisDiff('client')` — same in-worker pattern as `createImagequantQuantizer('client')` in `codec.worker.ts`
+  2. Butteraugli auto-computes alongside SSIM for the currently-selected file when its `status === 'done'`; result cached on `FileEntry.metrics.butteraugli`; refreshes on re-encode via the existing Phase 16 `setFileResult` invalidation
+  3. Report panel renders the Butteraugli score alongside SSIM with banded coloring: green < 1.5, yellow < 3.0, red ≥ 3.0 (lower is better); thresholds are documented `BUTTERAUGLI_BANDS` constants in `src/lib/metrics-bands.ts`
+  4. Initial bundle budget (200 KB gzipped) is preserved — visdif wasm does NOT enter the initial chunk; verified at build time in `src/tests/build.test.ts`
+  5. `versionsAtom.butteraugli.buildHash` reads `BUILD_VERSIONS.butteraugli` (the visdif package semver via Vite `readVer('@squoosh-kit/visdif')`) so the Diagnostics tab surfaces which build is loaded
 
-**Plans**: TBD
+**Plans**: 5 plans
+
+Plans:
+**Wave 0**
+
+- [ ] 17-01-PLAN.md — Wave 0: install `@squoosh-kit/visdif@0.2.4` (blocking human-verify) + `__BUTTERAUGLI_BUILD__` Vite define + `BUILD_VERSIONS.butteraugli.buildHash` in `src/lib/versions.ts` + ambient globals decl + versions.test.ts semver assertion (MTR-02)
+
+**Wave 1** *(blocked on Wave 0 completion)*
+
+- [ ] 17-02-PLAN.md — Wave 1 (TDD): `BUTTERAUGLI_BANDS` constants (green < 1.5, yellow < 3.0) + `butteraugliBand()` strict-`<` classifier in `src/lib/metrics-bands.ts` + boundary-sweep unit test (MTR-03)
+- [ ] 17-03-PLAN.md — Wave 1: `computeButteraugli` in `src/workers/metrics.worker.ts` (`createVisDiff('client')` cache, dynamic `@squoosh-kit/visdif`, `Number.isFinite` guard) + `FileEntry.metrics.butteraugli` field + `setFileMetric` key-union widen to `'ssim' | 'butteraugli'` + stores.test.ts butteraugli/combined-key/combined-invalidation assertions (MTR-02)
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [ ] 17-04-PLAN.md — Wave 2: `useMetricsAuto.ts` extension — `Promise.allSettled([SSIM, Butteraugli])` parallel dispatch under single CR-02 seqRef with FOUR-slice buffer discipline (Pitfall 5) (MTR-02)
+- [ ] 17-05-PLAN.md — Wave 2: `ReportPanel.tsx` banded Butteraugli row (`.toFixed(2)`, `data-testid="butteraugli-score"`, `data-band`, direction-hint caption) + Playwright `butteraugli-metric.spec.ts` (happy + parallel-dispatch + thrash + SVG-N/A) + `build.test.ts` `VisDiff` hoist-sentinel absence + visdif chunk positive presence (MTR-02, MTR-03)
+
 **UI hint**: yes
 
 ## Progress
@@ -199,9 +218,9 @@ Plans:
 | 14. Installable PWA | v1.2 | 6/6 | Complete | 2026-06 |
 | 15. From URL or paste | v1.2 | 4/4 | Complete | 2026-06-12 |
 | 16. SSIM Quality Metric | v1.2 | 5/5 | Complete | 2026-07-20 |
-| 17. Butteraugli Quality Metric | v1.2 | 0/? | Not started | - |
+| 17. Butteraugli Quality Metric | v1.2 | 0/5 | Planned | - |
 
 ---
 
-*Active milestone: v1.2 — Real-quality + transparency + installable. Next: `/gsd-plan-phase 17`.*
+*Active milestone: v1.2 — Real-quality + transparency + installable. Next: `/gsd-execute-phase 17`.*
 *Last archived: 2026-06-05 via /gsd:complete-milestone v1.1*
