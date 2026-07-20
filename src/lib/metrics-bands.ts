@@ -16,5 +16,15 @@ export function ssimBand(v: number): Band {
   return 'red'
 }
 
-// Phase 17 hook — populated when Butteraugli vendored build lands. Lower is better (distance metric).
-// export const BUTTERAUGLI_BANDS = { green: 1.5, yellow: 3.0 } as const
+/** Phase 17 — MTR-03: Butteraugli band thresholds. Lower is better (0 = identical, ≥3 = visible artifacts). Strict-`<` boundaries. */
+export const BUTTERAUGLI_BANDS = { green: 1.5, yellow: 3.0 } as const
+
+/**
+ * Classify a Butteraugli distance into a band. Pure function over the reals — no clamp, no validation.
+ * Uses strict `<` (inverse of ssimBand's `>=`): v === 1.5 is yellow, v === 3.0 is red.
+ */
+export function butteraugliBand(v: number): Band {
+  if (v < BUTTERAUGLI_BANDS.green) return 'green'
+  if (v < BUTTERAUGLI_BANDS.yellow) return 'yellow'
+  return 'red'
+}
