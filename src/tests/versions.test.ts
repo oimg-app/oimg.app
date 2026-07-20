@@ -44,9 +44,9 @@ for (const c of codecs) {
     v.jsquash[c] === '0.0.0')
 }
 
-// Phase 16 — MTR-01: ssim is now populated (Phase 17 butteraugli still deferred).
-// Outside Vite, __SSIM_VERSION__ is undefined and the guard yields '0.0.0'.
-// Inside Vite the constant is inlined to the installed semver.
+// Phase 16 — MTR-01: ssim is populated. Phase 17 — MTR-02: butteraugli is populated too.
+// Outside Vite, __SSIM_VERSION__ / __BUTTERAUGLI_BUILD__ are undefined and the guards yield '0.0.0'.
+// Inside Vite the constants are inlined to the installed semver.
 assert('BUILD_VERSIONS.ssim is a string',
   typeof v.ssim === 'string')
 assert('BUILD_VERSIONS.ssim matches semver shape',
@@ -62,9 +62,22 @@ if (typeof __SSIM_VERSION__ === 'undefined') {
     v.ssim !== '0.0.0')
 }
 
-// Phase 17 hook remains undefined.
-assert('butteraugli hook is undefined in Phase 13',
-  v.butteraugli === undefined)
+// Phase 17 — MTR-02: butteraugli is now populated (visdif semver via readVer).
+// Outside Vite, __BUTTERAUGLI_BUILD__ is undefined and the guard yields '0.0.0'.
+// Inside Vite the constant is inlined to the installed visdif package semver.
+assert('BUILD_VERSIONS.butteraugli is an object',
+  typeof v.butteraugli === 'object' && v.butteraugli !== null)
+assert('BUILD_VERSIONS.butteraugli.buildHash is a string',
+  typeof v.butteraugli?.buildHash === 'string')
+assert('BUILD_VERSIONS.butteraugli.buildHash matches semver shape',
+  /^\d+\.\d+\.\d+(-[\w.]+)?$/.test(v.butteraugli.buildHash))
+if (typeof __BUTTERAUGLI_BUILD__ === 'undefined') {
+  assert('BUILD_VERSIONS.butteraugli.buildHash safe-fallback === "0.0.0" outside Vite',
+    v.butteraugli.buildHash === '0.0.0')
+} else {
+  assert('BUILD_VERSIONS.butteraugli.buildHash !== "0.0.0" when __BUTTERAUGLI_BUILD__ is defined',
+    v.butteraugli.buildHash !== '0.0.0')
+}
 
 console.log(`${passed} passed, ${failed} failed`)
 process.exit(failed > 0 ? 1 : 0)
