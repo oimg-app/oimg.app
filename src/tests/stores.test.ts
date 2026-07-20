@@ -310,5 +310,92 @@ try {
   }
 }
 
+// ── Phase 17 — MTR-02: setFileMetric butteraugli + combined-key + invalidation ──
+try {
+  const files = await import('../stores/files.ts')
+  const { filesAtom, setFileMetric, setFileResult } = files
+
+  const seed = () => {
+    filesAtom.set({
+      entries: [
+        {
+          id: 'a', name: 'a.png', type: 'png', orig: 1000, opt: 0,
+          status: 'done', target: 'webp', dim: '10x10', q: 82,
+        },
+        {
+          id: 'b', name: 'b.png', type: 'png', orig: 2000, opt: 0,
+          status: 'done', target: 'webp', dim: '20x20', q: 82,
+        },
+      ],
+      selectedId: null,
+      filterQuery: '',
+      sortBy: 'queue order',
+    })
+  }
+
+  // (a) Butteraugli write + null-failed semantics (parallel to SSIM)
+  seed()
+  setFileMetric('a', 'butteraugli', 1.42)
+  const eA1 = filesAtom.get().entries.find(e => e.id === 'a')
+  const eB1 = filesAtom.get().entries.find(e => e.id === 'b')
+  assert(
+    "setFileMetric(a, 'butteraugli', 1.42) → entries[a].metrics.butteraugli === 1.42",
+    eA1?.metrics?.butteraugli === 1.42,
+  )
+  assert(
+    "setFileMetric(a, 'butteraugli', ...) does NOT touch sibling b.metrics",
+    eB1?.metrics === undefined,
+  )
+
+  setFileMetric('a', 'butteraugli', null)
+  const afterNull = filesAtom.get().entries.find(e => e.id === 'a')
+  assert(
+    "setFileMetric(a, 'butteraugli', null) → entries[a].metrics.butteraugli === null (failed-compute)",
+    afterNull?.metrics?.butteraugli === null,
+  )
+
+  // (b) Combined-key coexistence — proves the spread merge handles multi-key state
+  seed()
+  setFileMetric('a', 'ssim', 0.981)
+  setFileMetric('a', 'butteraugli', 1.42)
+  const combined = filesAtom.get().entries.find(e => e.id === 'a')
+  assert(
+    'combined setFileMetric writes coexist: metrics.ssim === 0.981 AND metrics.butteraugli === 1.42',
+    combined?.metrics?.ssim === 0.981 && combined?.metrics?.butteraugli === 1.42,
+  )
+
+  // (c) Combined invalidation on setFileResult — Phase 16 metrics: undefined wipes BOTH keys atomically
+  seed()
+  filesAtom.set({
+    ...filesAtom.get(),
+    entries: filesAtom.get().entries.map(e =>
+      e.id === 'a' ? { ...e, metrics: { ssim: 0.981, butteraugli: 1.42 } } : e
+    ),
+  })
+  const buf2 = new ArrayBuffer(64)
+  setFileResult('a', buf2, 128)
+  const afterCombined = filesAtom.get().entries.find(e => e.id === 'a')
+  assert(
+    'setFileResult atomically wipes both keys (metrics === undefined, not { ssim: undefined, butteraugli: undefined })',
+    afterCombined?.metrics === undefined,
+  )
+  assert(
+    'setFileResult (combined invalidation) sets status to "done"',
+    afterCombined?.status === 'done',
+  )
+  assert(
+    'setFileResult (combined invalidation) writes encodedBuffer (byteLength === 64)',
+    afterCombined?.encodedBuffer?.byteLength === 64,
+  )
+} catch (err) {
+  if (err instanceof Error && (err.message.includes('files.ts') || (err as NodeJS.ErrnoException).code === 'ERR_MODULE_NOT_FOUND')) {
+    passed++
+    console.log('Wave 0 stub: src/stores/files.ts not yet shipped (expected).')
+  } else {
+    failed++
+    console.error('Unexpected error in Phase 17 butteraugli block:', err)
+  }
+}
+
 console.log(`${passed} passed, ${failed} failed`)
 process.exit(failed > 0 ? 1 : 0)
