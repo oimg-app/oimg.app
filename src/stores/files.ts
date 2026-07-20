@@ -144,8 +144,8 @@ export function setFileError(id: string, error: string | undefined): void {
   updateEntry(id, () => (error ? { error, status: 'error' as const } : { error: undefined }))
 }
 
-// Phase 16 — MTR-01: atomic per-file metric write through WR-02 updateEntry funnel.
-export function setFileMetric<K extends 'ssim'>(id: string, key: K, value: number | null): void {
+// Phase 16/17 — MTR-01/MTR-02: atomic per-file metric write through WR-02 updateEntry funnel.
+export function setFileMetric<K extends 'ssim' | 'butteraugli'>(id: string, key: K, value: number | null): void {
   updateEntry(id, (e) => ({ metrics: { ...(e.metrics ?? {}), [key]: value } }))
 }
 
