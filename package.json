@@ -30,6 +30,7 @@
     "@squoosh-kit/imagequant": "0.2.4",
     "@squoosh-kit/mozjpeg": "0.2.4",
     "@squoosh-kit/png": "0.2.4",
+    "@squoosh-kit/visdif": "0.2.4",
     "@squoosh-kit/vite-plugin": "0.2.4",
     "@squoosh-kit/webp": "0.2.4",
     "class-variance-authority": "^0.7.1",
