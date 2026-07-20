@@ -16,5 +16,4 @@ declare const __JSQUASH_VERSIONS__: {
   resize: string
 }
 declare const __SSIM_VERSION__: string
-// Phase 17 — append:
-// declare const __BUTTERAUGLI_BUILD__: string
+declare const __BUTTERAUGLI_BUILD__: string

@@ -24,8 +24,8 @@ export interface BuildVersions {
   jsquash: Record<CodecKey, string>
   /** Phase 16 — MTR-01: perceptual-quality library version. */
   ssim: string
-  /** Phase 17 hook — populated when Butteraugli vendored build lands. */
-  butteraugli?: { buildHash: string }
+  /** Phase 17 — MTR-02: Butteraugli wasm build identifier (semver of @squoosh-kit/visdif). */
+  butteraugli: { buildHash: string }
 }
 
 // Sentinel fallback used when the Vite-injected globals are absent
@@ -46,5 +46,7 @@ export const BUILD_VERSIONS: BuildVersions = {
       ? __JSQUASH_VERSIONS__
       : FALLBACK_JSQUASH,
   ssim: typeof __SSIM_VERSION__ === 'string' ? __SSIM_VERSION__ : '0.0.0',
-  // butteraugli intentionally omitted — Phase 17 will populate.
+  butteraugli: {
+    buildHash: typeof __BUTTERAUGLI_BUILD__ === 'string' ? __BUTTERAUGLI_BUILD__ : '0.0.0',
+  },
 }
