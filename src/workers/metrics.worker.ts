@@ -1,22 +1,47 @@
 // Phase 16 — MTR-01: sibling Comlink worker for perceptual-quality metrics.
-// PIPE-02 discipline: every codec / resize / ssim.js import is dynamic-inside-branch.
+// Phase 17 — MTR-02: extended with computeButteraugli (@squoosh-kit/visdif).
+// PIPE-02 discipline: every codec / resize / ssim.js / visdif import is dynamic-inside-branch.
 // Only Comlink is allowed at the top of the file — see codec.worker.ts for the pattern.
 import * as Comlink from 'comlink'
 
-export interface SSIMJob {
+export interface MetricJob {
   rawBuffer: ArrayBuffer
   encodedBuffer: ArrayBuffer
   sourceFormat: 'png' | 'jpeg' | 'jpg' | 'webp' | 'avif' | 'heic' | 'heif'
   targetFormat: 'png' | 'jpeg' | 'webp' | 'avif'
 }
 
+// Phase 17 — MTR-02: back-compat alias so 16-04's existing `SSIMJob` imports still resolve.
+export type SSIMJob = MetricJob
+
 export interface SSIMResult {
   mssim: number
   ms: number
 }
 
+// Phase 17 — MTR-02: distance = lower is better (0 = identical). See @squoosh-kit/visdif README.
+export interface ButteraugliResult {
+  distance: number
+  ms: number
+}
+
 export type MetricsApi = {
-  computeSSIM: (j: SSIMJob) => Promise<SSIMResult>
+  computeSSIM: (j: MetricJob) => Promise<SSIMResult>
+  computeButteraugli: (j: MetricJob) => Promise<ButteraugliResult>
+}
+
+// Phase 17 — MTR-02: visdif factory cache. 'client' mode is REQUIRED — nested worker under
+// Vite SPA fallback breaks WASM URL resolution (verbatim precedent:
+// codec.worker.ts:114-131 createImagequantQuantizer('client'), commit d3d2d2e).
+type VisDifFactory = (a: unknown, b: unknown, signal?: AbortSignal) => Promise<number>
+let _visdif: VisDifFactory | null = null
+async function getVisDif(): Promise<VisDifFactory> {
+  if (_visdif) return _visdif
+  // PIPE-02: dynamic import — the visdif chunk (JS + wasm) only enters the graph when this
+  // function is first called. Do NOT hoist to top of file.
+  const { createVisDiff } = await import('@squoosh-kit/visdif')
+  _visdif = createVisDiff('client') as unknown as VisDifFactory
+  return _visdif
 }
 
 // V5 Input Validation — enum guards mirroring codec.worker.ts:26 KNOWN_CODECS.
@@ -79,7 +104,7 @@ async function decode(buffer: ArrayBuffer, fmt: string): Promise<ImageData> {
  * Wrapped in try/catch so a per-job failure rejects only this promise — the worker
  * survives (mirrors codec.worker.ts:288-291 reject-only-this-job discipline).
  */
-async function computeSSIM(job: SSIMJob): Promise<SSIMResult> {
+async function computeSSIM(job: MetricJob): Promise<SSIMResult> {
   try {
     // V5 input validation — guard before any dynamic import (T-16-03-03 mitigation).
     if (!KNOWN_SOURCE_FORMATS.has(String(job.sourceFormat).toLowerCase())) {
@@ -131,4 +156,65 @@ async function computeSSIM(job: SSIMJob): Promise<SSIMResult> {
   }
 }
 
-Comlink.expose({ computeSSIM })
+/**
+ * Phase 17 — MTR-02: Compute Butteraugli perceptual distance between raw and encoded buffers.
+ * Distance is "lower is better" (0 = pixel-identical, <1 imperceptible, >3 visible artifacts).
+ * Same dim-align + V5-validation discipline as computeSSIM — Butteraugli also requires
+ * identical dims per @squoosh-kit/visdif README.
+ * Returns { distance, ms } where ms is wall-clock cost of the visdif comparison.
+ * Wrapped in try/catch so a per-job failure rejects only this promise — the worker
+ * survives (mirrors codec.worker.ts:288-291 reject-only-this-job discipline).
+ */
+async function computeButteraugli(job: MetricJob): Promise<ButteraugliResult> {
+  try {
+    // V5 input validation — guard before any dynamic import (T-17-03-02 mitigation).
+    if (!KNOWN_SOURCE_FORMATS.has(String(job.sourceFormat).toLowerCase())) {
+      throw new Error('Unsupported sourceFormat for Butteraugli: ' + String(job.sourceFormat))
+    }
+    if (!KNOWN_TARGET_FORMATS.has(String(job.targetFormat).toLowerCase())) {
+      throw new Error('Unsupported targetFormat for Butteraugli: ' + String(job.targetFormat))
+    }
+    // WR-02 pattern from codec.worker.ts:166 — empty-buffer guard (T-17-03-03).
+    if (job.rawBuffer.byteLength === 0) throw new Error('Empty rawBuffer')
+    if (job.encodedBuffer.byteLength === 0) throw new Error('Empty encodedBuffer')
+
+    // Decode raw + encoded in parallel — jSquash decodes are independent WASM calls.
+    const [rawImg, encImg] = await Promise.all([
+      decode(job.rawBuffer, job.sourceFormat),
+      decode(job.encodedBuffer, job.targetFormat),
+    ])
+
+    // Dimensional alignment — Butteraugli requires identical dims per visdif README (Pitfall 2).
+    // Reuse the same lanczos3 + stretch block as computeSSIM (Pitfall 1 — stretch preserves
+    // pixel-for-pixel comparison; contain would letterbox and bias the distance).
+    let alignedRaw: ImageData = rawImg
+    if (rawImg.width !== encImg.width || rawImg.height !== encImg.height) {
+      const { default: resize } = await import('@jsquash/resize')
+      alignedRaw = await resize(rawImg, {
+        width: encImg.width,
+        height: encImg.height,
+        method: 'lanczos3',
+        fitMethod: 'stretch',
+      })
+    }
+
+    const compare = await getVisDif()
+    const start = performance.now()
+    // ImageInput shape from @squoosh-kit/runtime: { data: Uint8ClampedArray, width, height }.
+    // ImageData already matches — direct pass-through, no adapter needed (RESEARCH §A5).
+    const distance = await compare(alignedRaw as unknown, encImg as unknown)
+    const end = performance.now()
+
+    // T-17-03-04 mitigation: reject NaN/Infinity leaks from wasm. Prevents bad values from
+    // landing in FileEntry.metrics.butteraugli and misclassifying via butteraugliBand().
+    if (!Number.isFinite(distance)) {
+      throw new Error('Butteraugli returned non-finite distance: ' + String(distance))
+    }
+
+    return { distance, ms: Math.round(end - start) }
+  } catch (err) {
+    return Promise.reject(err)
+  }
+}
+
+Comlink.expose({ computeSSIM, computeButteraugli })
