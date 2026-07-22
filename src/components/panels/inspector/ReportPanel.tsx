@@ -16,7 +16,7 @@ import {
 import { filesAtom, $selectedFile } from '@/stores/files'
 import { fmtBytes, fmtPct } from '@/lib/format'
 import { useExport } from '@/hooks/useExport'
-import { ssimBand, SSIM_BANDS, type Band } from '@/lib/metrics-bands'
+import { ssimBand, SSIM_BANDS, butteraugliBand, BUTTERAUGLI_BANDS, type Band } from '@/lib/metrics-bands'
 
 // Format label color convention — mirrors FileRow BADGE_CLASS.
 // svg=purple, png=blue, jpg/jpeg=orange, webp=cyan, avif=rose
@@ -198,8 +198,39 @@ export function ReportPanel() {
               </span>
             )}
           </div>
+          {/* Phase 17 — MTR-02/MTR-03: banded Butteraugli display; constants from @/lib/metrics-bands. Lower is better — strict `<` boundaries. */}
+          <div
+            data-testid="butteraugli-row"
+            className="flex items-baseline justify-between mt-2"
+          >
+            <span className="font-mono text-[10px] uppercase tracking-wider text-[var(--color-fg-2)]">
+              Butteraugli
+            </span>
+            {selected.metrics?.butteraugli === undefined ? (
+              <span className="text-[12px] font-mono text-[var(--color-fg-2)]">
+                Computing…
+              </span>
+            ) : selected.metrics.butteraugli === null ? (
+              <span className="text-[12px] font-mono text-[var(--color-fg-2)]">
+                N/A
+              </span>
+            ) : (
+              <span
+                data-testid="butteraugli-score"
+                data-band={butteraugliBand(selected.metrics.butteraugli)}
+                className="text-[14px] font-semibold font-mono"
+                style={{ color: BAND_COLOR[butteraugliBand(selected.metrics.butteraugli)] }}
+              >
+                {selected.metrics.butteraugli.toFixed(2)}
+              </span>
+            )}
+          </div>
           <p className="text-[10px] text-[var(--color-fg-2)] mt-1">
-            Green ≥ {SSIM_BANDS.green} · Yellow ≥ {SSIM_BANDS.yellow} · Red below.
+            SSIM: higher is better · Butteraugli: lower is better
+            <br />
+            SSIM: Green ≥ {SSIM_BANDS.green} · Yellow ≥ {SSIM_BANDS.yellow} · Red below.
+            <br />
+            Butteraugli: Green &lt; {BUTTERAUGLI_BANDS.green} · Yellow &lt; {BUTTERAUGLI_BANDS.yellow} · Red above.
           </p>
         </Section>
       )}
