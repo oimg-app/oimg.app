@@ -1,108 +1,73 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.2
-milestone_name: Polish, Diagnostics, PWA + Quality Metrics
-status: code_complete
-last_updated: "2026-07-23T04:30:00.000Z"
+milestone: none
+milestone_name: null
+status: quiescent
+last_updated: "2026-07-23T17:20:00.000Z"
+last_activity: 2026-07-23 -- v1.2 milestone archived
 progress:
-  total_phases: 5
-  completed_phases: 5
-  total_plans: 29
-  completed_plans: 29
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
-# STATE: oimg.app — v1.2 Polish, Diagnostics, PWA + Quality Metrics
+# STATE: oimg.app — between milestones
 
 **Last updated:** 2026-07-23
-**Milestone:** v1.2 Polish, Diagnostics, PWA + Quality Metrics (Phases 13–17) — CODE COMPLETE
+**Status:** v1.2 shipped and archived. No active milestone.
 
 ---
 
 ## Project Reference
 
-**Core value:** A developer drops assets, adjusts settings once, and walks away with a ZIP of optimized files plus copy-paste snippets — without anything leaving the browser.
+**Core value:** A developer drops assets, adjusts settings once, and walks away with a ZIP of optimized files plus copy-paste snippets — with real perceptual quality scores, installable as a desktop/mobile PWA, fully offline-capable on second visit. Nothing leaves the browser.
 
-**Current focus:** Milestone close-out — `/gsd-complete-milestone v1.2`
-
----
-
-## Current Position
-
-Phase: 17 — COMPLETE
-Status: 5 of 5 v1.2 phases complete
-Progress: [██████████] 100%
-
-Prior milestone artifacts archived under `.planning/milestones/`:
-
-- v1.0 (Phases 1–7) → `milestones/v1.0-phases/`
-- v1.1 (Phases 8–12) → `milestones/v1.1-phases/`
+**Current focus:** Between milestones. Start next via `/gsd-new-milestone`.
 
 ---
 
-## Accumulated Context (v1.2)
+## Shipped Milestones
 
-### Decisions
+- ✅ **v1.0** (2026-05-25) — UI Port. Phases 1–7; 22 plans. Shipped as Executed (phase verification skipped as tech debt). Archive: `.planning/milestones/v1.0-ROADMAP.md`
+- ✅ **v1.1** (2026-06-03) — Real Optimization Pipeline. Phases 8–12 + Watch folder quick task. 15/15 requirements satisfied; audit `tech_debt`. Archive: `.planning/milestones/v1.1-ROADMAP.md`
+- ✅ **v1.2** (2026-07-23) — Polish, Diagnostics, PWA + Quality Metrics. Phases 13–17 + 4 quick tasks. 15/15 requirements satisfied; audit `conditional`. Archive: `.planning/milestones/v1.2-ROADMAP.md`
 
-- [Phase 13]: Versions injected at build time via Vite `define` (only reads `node_modules/<pkg>/package.json` version fields — never env vars, never filesystem paths); consumers read `BUILD_VERSIONS` from `src/lib/versions.ts`
-- [Phase 13]: `versionsAtom` combines build-time versions + runtime caps (SIMD, threads, `crossOriginIsolated`, `hardwareConcurrency`)
-- [Phase 14]: vite-plugin-pwa@1.3.0 in injectManifest mode; theme_color `#5eb87a` verbatim; `globIgnores` excludes wasm; AVIF's 3.4 MB wasm runtime-cached only, never precached
-- [Phase 14 Plan 02]: combined ServiceWorkerGlobalScope + `__WB_MANIFEST` in single intersection-typed `declare const self` in `src/sw.ts`
-- [Phase 14 Plan 02]: bypassed `npm run build`'s `tsc -b` gate (pre-existing RED baseline); ran `vite build` directly to verify `dist/sw.js`
-- [Phase 15]: `pickFromUrl` + `pickFromClipboard` dispatchers with document-level Cmd/Ctrl+V handler; CORS-honest failure messaging; empty `addFromUrl` stub deleted from `src/stores/files.ts`
-- [Phase 16 Plan 04]: `useMetricsAuto` subscribes via `useStore($selectedFile)` (unlike `useLiveEncode`'s `filesAtom.get()` in async body) — the effect *is* the trigger so the useStore snapshot is the correct source; CR-02 seqRef pattern mirrored verbatim from `useLiveEncode.ts:47-51,111,115,122` to defuse selection thrash
-- [Phase 16 Plan 04]: `setFileMetric(id, 'ssim', null)` on failure (not `undefined`) so ReportPanel (16-05) renders "N/A" instead of perpetual "Computing…", and the cache-hit guard `metrics?.ssim !== undefined` short-circuits retries of known-bad files
+---
 
-### Blockers
+## v1.3 Candidates (Deferred from Earlier Milestones)
 
-- None
+- **VAR-01 / VAR-02** — 1×/2×/3× density variants via `@jsquash/resize` (twice-deferred from v1.0 and v1.2)
+- **PERS-01** — Named setting presets via `idb-keyval` (twice-deferred)
+- **PWA-NEXT** — Web Share Target API ("Share to oimg.app" from Photos/Files apps)
+- **Watch-folder polish** — Stop watching UI, IDB handle persistence, recursive traversal, multi-folder
+- **Snippet follow-ups** — multi-format `<picture>`, customization toggles, inline SVG snippet, manifest JSON in ZIP
+- **v1.2 human-verification dogfood** — 12 checkpoints across Phase 13/14/15 (clipboard round-trip, PWA install/offline flows, Cloudflare `_headers` curl checks)
+- **HEIC quick-task dogfood** — 260610-lby needs a real `.heic` file for final verify
 
-### Todos
+---
 
-- Milestone close-out: `/gsd-complete-milestone v1.2`
+## Accumulated Wisdom (persistent across milestones)
+
+### Discipline gates that repeatedly matter
+
+- **PIPE-02 dynamic imports** — every codec/metric wasm inside the async worker function body, never hoisted to file top. Grep-asserted in `build.test.ts` via hoist sentinels (e.g. `bezkrovny` for ssim, `VisDiff` for visdif).
+- **WR-02 single funnel** — all per-entry mutations through `updateEntry(id, patch)` in `src/stores/files.ts` (synchronous read-map-write, no `await` between read and write).
+- **CR-02 seqRef stale-drop** — every metrics/live-encode dispatch guards against selection thrash with a monotonic seqRef check on result write.
+- **Comlink 4-slice buffer discipline** (Phase 17 lesson) — when parallel-dispatching multiple worker RPCs that consume the same ArrayBuffers, `.slice(0)` each independently (Comlink transfer detaches).
+- **`client`-mode wasm loading** for `@squoosh-kit/*` packages (Phase 17 lesson via imagequant precedent from Phase 8 commit d3d2d2e) — default `'worker'` mode spawns nested worker with broken wasm URL under Vite SPA fallback.
+- **Comlink method-name hoist sentinels are FALSE POSITIVES** for bundle-budget asserts (Phase 16 lesson) — Comlink-referenced method names survive minification into initial route. Use package-internal identifiers (e.g. `bezkrovny`, `VisDiff`) as sentinels.
+
+### Baseline health
+
+- `tsc -b` red on pre-existing debt (stores.test.ts `stageBg`, test spec `/src/…` patterns). Build gate uses `./node_modules/.bin/vite build` directly.
+- Bundle: 197.2 KB gzipped initial route (200 KB PIPE-02 budget). ~2.8 KB headroom.
+- Playwright specs use `data-testid` + `data-band` attributes for stability; base64-embedded fixtures for determinism.
 
 ---
 
 ## Session Continuity
 
-**Last significant activity:** Phase 16 Plan 04 shipped (2026-07-20) — `useMetricsAuto` hook + App.tsx root mount; auto-computes SSIM for the selected done file with CR-02 stale-drop.
-**To resume:** Milestone v1.2 track. Phases 13–15 + 16-01/02/03/04 shipped. Next: `/gsd-execute-phase 16` remaining plans (16-05 ReportPanel wiring, remaining phase plans).
-
-## Quick Tasks Completed (v1.2 era)
-
-| ID | Slug | Date | Tasks | Status |
-|----|------|------|-------|--------|
-| 260610-lby | add-heic-extension-support | 2026-06-10 | 2 (+1 type fix) | ⚠️ code-complete (heic.test 6/6 green, tsc clean after c7f4994 type-decl fix) — Task 3 needs human verify with a real .heic file |
-| fast | svg-compare-iframe | 2026-06-10 | 1 | ✅ CompareStage renders SVG layers in sandboxed iframe (cc0fb7b) |
-| fast | svg-compare-codec-switch | 2026-06-10 | 1 | ✅ Encoded layer iframe/img switches on output codec; orig stays iframe for SVG source (1124b39) |
-| fast | svg-export-raster-codec | 2026-06-10 | 1 | ✅ SVG exports to selected raster codec via main-thread canvas (single/ZIP/individual); new src/lib/svg-export.ts (9a50b56) |
-
----
-
-## Requirements Coverage (v1.2)
-
-| Requirement | Phase | Status |
-|-------------|-------|--------|
-| DIA-01 | 13 | Complete |
-| DIA-02 | 13 | Complete |
-| DIA-03 | 13 | Complete |
-| DIA-04 | 13 | Complete |
-| CLR-01 | 13 | Complete |
-| PWA-01 | 14 | Complete |
-| PWA-02 | 14 | Complete |
-| PWA-03 | 14 | Complete |
-| PWA-04 | 14 | Complete |
-| PWA-05 | 14 | Complete |
-| ING-01 | 15 | Complete |
-| ING-02 | 15 | Complete |
-| MTR-01 | 16 | Pending |
-| MTR-02 | 17 | Pending |
-| MTR-03 | 16/17 | Pending |
-
-**Coverage:** 12/15 complete
-
----
-
-## Operator Next Steps
-
-- Plan Phase 16 (SSIM): `/gsd-plan-phase 16`
+**Last session:** 2026-07-23 — v1.2 milestone archived via `/gsd-complete-milestone`
+**To resume:** Start v1.3 via `/gsd-new-milestone` — questioning → research → requirements → roadmap. Or `/gsd-review-backlog` to promote v1.3 candidates from deferred lists into a new milestone scope.

@@ -10,48 +10,45 @@ A developer drops a folder of source assets, adjusts settings once, and walks aw
 
 ## Current State
 
-**Shipped:** v1.1 — Real Optimization Pipeline (2026-06-03)
+**Shipped:** v1.2 — Polish, Diagnostics, PWA + Quality Metrics (2026-07-23)
 
-The core promise from the project intro is now walked code-side:
+The core promise now walks with quality feedback and installability:
 
-> drop folder → settings once → real optimized result → ZIP + paste-ready snippets, nothing leaves the browser.
+> drop folder → settings once → real optimized result → quality scores → ZIP + paste-ready snippets, installable to desktop/mobile, nothing leaves the browser.
 
-v1.1 reconnected the full jSquash + svgo codec pipeline behind the v1.0 UI: bounded Comlink WorkerPool, all five codec adapters (PNG/OxiPNG, WebP, JPEG/MozJPEG, AVIF lazy-loaded, SVG/svgo v4), single-file + batch optimize, single-file download + batch ZIP via jszip, paste-ready snippets (Base64 + URL-encoded + `<picture>`) reflecting the real encoded bytes. Bonus quick task: Watch folder via showDirectoryPicker + FileSystemObserver. Audit `tech_debt` — 15/15 requirements satisfied, 3 non-blocking warnings captured.
+v1.2 layered polish + diagnostic transparency + perceptual quality + installable distribution on top of the v1.1 codec pipeline. Live version + capability diagnostics via Vite `define` (svgo + jSquash + ssim + butteraugli buildHash + SIMD/threads/COOP-COEP/CPUs). Installable PWA via `vite-plugin-pwa` (injectManifest) — app shell precached, codec wasms runtime-cached (AVIF's 3.4 MB never on first visit). URL + paste ingest as first-class channels. SSIM (via `ssim.js@3.5.0`) and Butteraugli (via `@squoosh-kit/visdif@0.2.4` — user-approved pivot from hand-built Emscripten) auto-compute alongside every optimized file with banded green/yellow/red display. Audit `conditional` — 15/15 requirements satisfied, 12 human-verification checkpoints and Toolbar `<dl>` polish closed inline; 2 non-trivial visdif interop auto-fixes documented.
 
-See [milestones/v1.1-ROADMAP.md](milestones/v1.1-ROADMAP.md) for the full ship report.
+See [milestones/v1.2-ROADMAP.md](milestones/v1.2-ROADMAP.md) for the full ship report.
 
-## Current Milestone: v1.2 Polish, Diagnostics, PWA + Quality Metrics
+## Next Milestone: v1.3 — TBD
 
-**Goal:** Round out the v1.1 pipeline with the remaining ingest channel, queue hygiene, real perceptual quality measurement, real diagnostics surfacing, and turn oimg.app into a true installable PWA with cached-codecs offline support.
+Awaiting `/gsd-new-milestone` for direction. Leading candidates from v1.2 deferred list:
+- **VAR-01 / VAR-02** — 1×/2×/3× density variants via `@jsquash/resize` (deferred since v1.0)
+- **PERS-01** — Named setting presets via `idb-keyval` (deferred since v1.0)
+- **PWA-NEXT** — Web Share Target API ("Share to oimg.app" from Photos/Files apps)
+- Watch-folder polish (Stop watching UI, IDB handle persistence, recursive/multi-folder)
+- Snippet follow-ups (multi-format `<picture>` fallback chain, customization toggles, inline SVG snippet, manifest JSON in ZIP)
+- Human-verification dogfood: 12 checkpoints across Phase 13/14/15 + HEIC quick-task (260610-lby)
 
-**Target features:**
-- **From URL / paste ingest** — Toolbar "From URL or paste" wires `addFromUrl` stub to a clipboard-paste handler (image bytes or image URL) with honest CORS-failure messaging
-- **Clear queue** — `clearFiles()` action surfaced via Toolbar overflow menu + FilesPane header X icon, disable-then-explain when empty
-- **Real SSIM perceptual metric** — `ssim.js`-based comparator runs in the codec worker post-encode for the selected file; banded display (green/yellow/red)
-- **Real Butteraugli metric (hand-built wasm)** — Emscripten build of Google libjxl's butteraugli comparator, lazy-loaded, runs alongside SSIM
-- **Real diagnostic values** — `versionsAtom` populated at build time via Vite `define`: svgo + per-codec jSquash versions; runtime capability detection: SIMD, threads, `crossOriginIsolated`, `hardwareConcurrency`
-- **Settings popover + Diagnostics tab** — extend existing settings stub; replace StatusBar hardcoded version badges + "Offline-ready" line with live derived state
-- **Installable PWA** — `vite-plugin-pwa` (injectManifest mode) with hand-rolled `src/sw.ts`; precache app shell; runtime-cache codec wasms via Workbox `CacheFirst` (no first-visit ballooning); `beforeinstallprompt` → StatusBar install button
+<details>
+<summary>Previous milestone snapshot (v1.2)</summary>
 
-**Locked stack additions (research-confirmed):**
-- `ssim.js@3.5.0` — perceptual quality metric (mature, small, no wasm cost)
-- `vite-plugin-pwa@1.3.0` (injectManifest mode) — PWA tooling on top of Workbox
-- Hand-built butteraugli wasm in `public/squoosh-kit/butteraugli/` — sibling to the existing codec wasms
+**Goal:** Round out the v1.1 pipeline with the remaining ingest channel, queue hygiene, real perceptual quality measurement, real diagnostics surfacing, and turn oimg.app into a true installable PWA.
 
-**Constraints (carried verbatim from v1.0/v1.1):**
-- Zero-server, zero-telemetry — non-negotiable
-- WCAG-AA — every new affordance gets keyboard + aria
-- Initial JS gzipped budget: 200 KB (currently 195.12 KB; every v1.2 feature MUST be lazy-loaded — metrics behind first-compute, SW registration in separate chunk, Settings panel on first open)
-- Locked codec surface: jSquash + svgo; v1.2 only ADDS comparators, never replaces codecs
+**Target features (all shipped):**
+- From URL / paste ingest with CORS-honest failure messaging
+- Clear queue action surfaced via Toolbar + FilesPane
+- Real SSIM perceptual metric (`ssim.js@3.5.0`) with banded display
+- Real Butteraugli metric — pivoted from hand-built Emscripten to `@squoosh-kit/visdif@0.2.4` (Squoosh's canonical binary; user-approved scope deviation 2026-07-20)
+- Live diagnostic values via `versionsAtom` (svgo, jSquash codecs, ssim, butteraugli buildHash, SIMD, threads, crossOriginIsolated, hardwareConcurrency)
+- Settings popover Diagnostics tab with copy-to-clipboard
+- Installable PWA (`vite-plugin-pwa` injectManifest, hand-rolled `src/sw.ts`, CacheFirst codec wasms, install prompt, "New version" toast)
 
-**Deferred (rolled to v1.3+):**
-- VAR-01 / VAR-02 1×/2×/3× density variants
-- PERS-01 named setting presets via idb-keyval
-- Watch folder follow-ups (Stop watching UI, IDB persistence, recursive traversal, multi-folder)
-- Phase 12 snippet follow-ups (multi-format `<picture>`, customization toggles, inline SVG, manifest in ZIP)
-- Web Share Target API integration (mobile install nice-to-have)
+**Bundle:** 197.2 KB gzipped initial route (< 200 KB PIPE-02 budget); 2.8 KB headroom.
 
-See [research/v1.2-quality-metrics.md](research/v1.2-quality-metrics.md), [research/v1.2-pwa.md](research/v1.2-pwa.md), [research/v1.2-ingest.md](research/v1.2-ingest.md), and [research/v1.2-diagnostics.md](research/v1.2-diagnostics.md) for the full research output.
+**Deferred (rolled to v1.3):** VAR-01/02 density variants, PERS-01 setting presets, Watch-folder polish, snippet follow-ups, PWA Share Target, 12 human-verification checkpoints.
+
+</details>
 
 <details>
 <summary>Previous milestone snapshot (v1.1)</summary>
@@ -99,12 +96,29 @@ See [research/v1.2-quality-metrics.md](research/v1.2-quality-metrics.md), [resea
 - [x] COOP/COEP headers for SharedArrayBuffer (MT codecs) — Phase 8
 - [x] Watch folder via showDirectoryPicker + FileSystemObserver — quick task 260603-s2x
 
-### Deferred to v1.2+
+### Shipped (v1.2)
 
-- 1×/2×/3× density variants (@jsquash/resize) — VAR-01 / VAR-02
-- Named setting presets via idb-keyval — PERS-01
-- v1.0 tech debt: phase verification, duplicate `banner` landmarks (WCAG)
-- v1.1 audit tech debt: `addFromDevice` empty stub retirement; Nyquist sign-off on Phase 11/12 VALIDATION.md; Vite double-import inefficiency; Phase 12 paste-into-browser dogfood
+- [x] Live version + capability diagnostics via `versionsAtom` (svgo + jSquash + ssim + butteraugli buildHash + SIMD/threads/COOP-COEP/CPUs) — Phase 13
+- [x] Settings popover Diagnostics tab with copy-to-clipboard — Phase 13
+- [x] `clearFiles()` queue-hygiene action via Toolbar + FilesPane — Phase 13
+- [x] Installable PWA via `vite-plugin-pwa` (injectManifest) + hand-rolled `src/sw.ts` + `beforeinstallprompt` — Phase 14
+- [x] Cloudflare `_headers` for sw.js no-cache + manifest max-age + COOP/COEP preserved — Phase 14
+- [x] URL + paste ingest via `pickFromUrl` / `pickFromClipboard` + document-level Cmd/Ctrl+V handler — Phase 15
+- [x] Real SSIM perceptual metric via `ssim.js@3.5.0` in sibling metrics worker + banded ReportPanel row — Phase 16
+- [x] Real Butteraugli metric via `@squoosh-kit/visdif@0.2.4` (pivot from hand-built Emscripten, user-approved) + parallel dispatch with SSIM — Phase 17
+- [x] 4 quick tasks: HEIC decode (260610-lby); svg-compare-iframe; svg-compare-codec-switch; svg-export-raster-codec
+
+### Deferred to v1.3+
+
+- 1×/2×/3× density variants (@jsquash/resize) — VAR-01 / VAR-02 (twice-deferred)
+- Named setting presets via idb-keyval — PERS-01 (twice-deferred)
+- Web Share Target API — PWA-NEXT
+- Watch-folder polish: Stop watching UI, IDB handle persistence, recursive/multi-folder
+- Snippet follow-ups: multi-format `<picture>`, customization toggles, inline SVG snippet, manifest JSON in ZIP
+- v1.2 human-verification checkpoints: 12 dogfood tasks across Phase 13/14/15 (clipboard round-trip, PWA install/offline flows, Cloudflare `_headers` curl checks)
+- HEIC quick-task human verification (260610-lby)
+- v1.1 audit tech debt (still open): `addFromDevice` empty stub retirement; Nyquist sign-off on Phase 11/12 VALIDATION.md; Vite double-import inefficiency; Phase 12 paste-into-browser dogfood
+- v1.0 tech debt (still open): phase verification, duplicate `banner` landmarks (WCAG)
 
 ### Out of Scope
 
@@ -178,4 +192,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-05-28 after Phase 10 (Single-File Optimize Loop) complete*
+*Last updated: 2026-07-23 after v1.2 milestone archive complete*

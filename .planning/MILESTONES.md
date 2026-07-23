@@ -60,3 +60,34 @@
 **Stats:** 10-day span (2026-05-25 → 2026-06-03), 167 commits, 239 files changed (71 src, 28 tests), +22,549 / −459 LOC.
 
 ---
+
+## v1.2 Polish, Diagnostics, PWA + Quality Metrics (Shipped: 2026-07-23)
+
+**Phases completed:** 5 phases, 29 plans + 4 quick tasks
+
+**Status:** Audit `conditional` — 15/15 requirements satisfied (DIA-01..04 / CLR-01 / PWA-01..05 / ING-01..02 / MTR-01..03), all 7 cross-phase integration dimensions PASS, 12 human-verification dogfood checkpoints acknowledged as tech debt.
+
+**Delivered:** The app became honest, installable, and measurable. Live diagnostics surface real svgo + jSquash + ssim + butteraugli versions at build time. Installable PWA with offline app shell + on-demand codec cache. URL + paste ingest as first-class channels. Two independent perceptual quality metrics (SSIM higher-better + Butteraugli lower-better) auto-compute alongside every optimized file with banded green/yellow/red display.
+
+**Key accomplishments:**
+
+- Live diagnostics: `versionsAtom` populated at build time via Vite `define` from `node_modules/<pkg>/package.json` (svgo + jsquash.{png/jpeg/webp/avif/oxipng/resize} + ssim + butteraugli buildHash); runtime `caps` for SIMD/threads/COOP-COEP/hardwareConcurrency; StatusBar badges + Settings Diagnostics tab + Copy diagnostics JSON — Phase 13
+- Installable PWA: `vite-plugin-pwa@1.3.0` injectManifest + hand-rolled `src/sw.ts` (Workbox primitives, CacheFirst codec wasms, AVIF's 3.4 MB never precached), `beforeinstallprompt` → StatusBar Install button, skipWaiting + clientsClaim + "New version" toast, Cloudflare `_headers` sw.js no-cache + manifest max-age with COOP/COEP preserved — Phase 14
+- URL + paste ingest: `pickFromUrl` + `pickFromClipboard` dispatchers with document-level Cmd/Ctrl+V handler + CORS-honest failure toasts; retires the empty `addFromUrl` stub from v1.1 debt — Phase 15
+- Real SSIM perceptual metric: `ssim.js@3.5.0` sibling metrics worker with dynamic imports + CR-02 seqRef stale-drop + WR-02 `updateEntry` funnel; ReportPanel banded row (green ≥ 0.95, yellow ≥ 0.85); Playwright happy + thrash + SVG N/A — Phase 16
+- Real Butteraugli metric: `@squoosh-kit/visdif@0.2.4` (user-approved pivot from hand-built Emscripten 2026-07-20 — same publisher as trusted imagequant, wraps Squoosh's canonical binary, MIT + Apache-2.0, 57 KB); `createVisDiff('client')` in-worker pattern from imagequant precedent; `Promise.allSettled` parallel dispatch under single seqRef with 4-slice buffer discipline; strict-`<` direction inversion (green < 1.5, yellow < 3.0) — Phase 17
+- Bundle discipline: 197.2 KB gzipped initial route with both metrics + PWA stacked (2.8 KB headroom vs. 200 KB PIPE-02 ceiling); `bezkrovny` (ssim) and `VisDiff` (visdif) hoist-sentinels asserted absent from initial chunk in `build.test.ts`
+- Non-trivial visdif interop fixes: Rule 3 `__dirname`/`process` Node-only wasm-glue shim; Rule 1 `self.onmessage` disarm wrapper on visdif's rogue init handler (only surfaced by thrash-scenario e2e — Playwright coverage caught it)
+- 4 quick tasks: HEIC decode support (260610-lby, ⚠ human dogfood pending); svg-compare-iframe (sandboxed SVG in CompareStage); svg-compare-codec-switch; svg-export-raster-codec (SVG → PNG/WebP/JPEG/AVIF via main-thread canvas)
+
+**Tech Debt (non-blocking — see [v1.2-MILESTONE-AUDIT.md](v1.2-MILESTONE-AUDIT.md)):**
+
+- 12 human-verification checkpoints aggregated across Phase 13/14/15 (dogfood tasks for clipboard round-trip, PWA install/offline flows, Cloudflare `_headers` curl checks)
+- HEIC quick-task (260610-lby) needs a real `.heic` file for final decode→JPEG export dogfood
+- `tsc -b` baseline still red (pre-existing from v1.1 + local `stores.test.ts` `stageBg` types + `ssim-metric.spec.ts` `/src/…` pattern); build gate uses `./node_modules/.bin/vite build` directly
+- Bundle headroom is 2.8 KB — any v1.3 initial-chunk addition needs to move fast to preserve it (or raise the ceiling deliberately)
+- Two Phase 17 auto-fixes (Rule 3 `__dirname`/`process` shim; Rule 1 `self.onmessage` disarm) live inside `metrics.worker.ts` — brittle to future visdif version bumps
+
+**Stats:** ~6.5-week calendar span (2026-06-08 → 2026-07-23; two active clusters), 50 commits, 273 files changed, +29,750 / −1,292 LOC.
+
+---
