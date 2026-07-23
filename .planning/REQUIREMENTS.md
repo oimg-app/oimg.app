@@ -75,26 +75,26 @@ Deferred to a later milestone. Tracked but not in this roadmap.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| ING-01 | TBD | Pending |
-| ING-02 | TBD | Pending |
+| ING-01 | 15 | Complete |
+| ING-02 | 15 | Complete |
 | CLR-01 | 13 | Complete |
-| MTR-01 | TBD | Pending |
-| MTR-02 | TBD | Pending |
-| MTR-03 | TBD | Pending |
+| MTR-01 | 16 | Complete |
+| MTR-02 | 17 | Complete |
+| MTR-03 | 16/17 | Complete |
 | DIA-01 | 13 | Complete |
 | DIA-02 | 13 | Complete |
 | DIA-03 | 13 | Complete |
 | DIA-04 | 13 | Complete |
-| PWA-01 | TBD | Complete |
-| PWA-02 | TBD | Complete |
+| PWA-01 | 14 | Complete |
+| PWA-02 | 14 | Complete |
 | PWA-03 | 14 | Complete |
 | PWA-04 | 14 | Complete |
 | PWA-05 | 14 | Complete |
 
 **Coverage:**
 - v1.2 requirements: 15 total
-- Mapped to phases: 0 (pending roadmap creation)
-- Unmapped: 15
+- Mapped to phases: 15
+- Complete: 15 / 15
 
 ---
 *Requirements defined: 2026-06-10*

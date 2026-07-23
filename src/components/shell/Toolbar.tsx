@@ -476,6 +476,8 @@ export function Toolbar() {
               <dl className="grid grid-cols-2 gap-x-2 gap-y-0.5 font-mono text-[10px]">
                 <dt>svgo</dt>
                 <dd>{versions.svgo}</dd>
+                <dt>jsquash png</dt>
+                <dd>{versions.jsquash.png}</dd>
                 <dt>jsquash webp</dt>
                 <dd>{versions.jsquash.webp}</dd>
                 <dt>jsquash jpeg</dt>
@@ -484,6 +486,12 @@ export function Toolbar() {
                 <dd>{versions.jsquash.avif}</dd>
                 <dt>jsquash oxipng</dt>
                 <dd>{versions.jsquash.oxipng}</dd>
+                <dt>jsquash resize</dt>
+                <dd>{versions.jsquash.resize}</dd>
+                <dt>ssim</dt>
+                <dd>{versions.ssim}</dd>
+                <dt>butteraugli</dt>
+                <dd>{versions.butteraugli?.buildHash ?? "—"}</dd>
                 <dt>SIMD</dt>
                 <dd>{caps.simd ? "yes" : "no"}</dd>
                 <dt>WASM threads</dt>
