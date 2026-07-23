@@ -37,6 +37,24 @@ type VisDifFactory = (a: unknown, b: unknown, signal?: AbortSignal) => Promise<n
 let _visdif: VisDifFactory | null = null
 async function getVisDif(): Promise<VisDifFactory> {
   if (_visdif) return _visdif
+  // Rule 3 auto-fix (Phase 17-05): @squoosh-kit/visdif@0.2.4 ships a Node-only
+  // Emscripten WASM glue (visdif.js) with `ENVIRONMENT_IS_NODE=true` hardcoded — its
+  // top-level init reads `__dirname` and the browser Web Worker context has none, so
+  // the dynamic `import(jsPath)` throws before any of our code runs. The Node-only
+  // fs/path branches are never *executed* at call time because the wrapper passes the
+  // wasm binary directly via `{ wasmBinary }`, so a bare `__dirname` shim is enough
+  // to survive module init. Same-publisher `@squoosh-kit/imagequant@0.2.4` builds with
+  // `ENVIRONMENT_IS_WORKER=true` and doesn't need this — this is a visdif-only bug.
+  const g = globalThis as unknown as {
+    __dirname?: string
+    process?: { argv: string[]; exit: (n: number) => void }
+  }
+  if (typeof g.__dirname === 'undefined') g.__dirname = '/'
+  // visdif.js also reads `process.argv` / `process.exit` inside its Node branch.
+  // Provide a no-op shim so the top-level init survives.
+  if (typeof g.process === 'undefined') {
+    g.process = { argv: [], exit: () => {} }
+  }
   // PIPE-02: dynamic import — the visdif chunk (JS + wasm) only enters the graph when this
   // function is first called. Do NOT hoist to top of file.
   const { createVisDiff } = await import('@squoosh-kit/visdif')
