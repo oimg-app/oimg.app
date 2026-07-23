@@ -58,7 +58,40 @@ async function getVisDif(): Promise<VisDifFactory> {
   // PIPE-02: dynamic import — the visdif chunk (JS + wasm) only enters the graph when this
   // function is first called. Do NOT hoist to top of file.
   const { createVisDiff } = await import('@squoosh-kit/visdif')
-  _visdif = createVisDiff('client') as unknown as VisDifFactory
+  const rawCompare = createVisDiff('client') as unknown as VisDifFactory
+  // Rule 1 auto-fix (Phase 17-05): @squoosh-kit/visdif@0.2.4's `VisDifClientBridge.compare`
+  // wraps `await Promise.resolve().then(() => (init_visdif_worker(), exports_visdif_worker))`,
+  // deferring `init_visdif_worker()` to the FIRST `compare()` call (not module init).
+  // `init_visdif_worker()` installs `self.onmessage = handler` in the worker's global
+  // scope. That handler catches EVERY message posted to the worker — including
+  // Comlink's APPLY messages — and synchronously posts back
+  // `{id, ok:false, error:"Unknown message type: APPLY"}` (no `type` field). On the
+  // main thread Comlink's `pendingListeners` map resolves-and-deletes on the first
+  // matching id; the malformed response wins and `fromWireValue` returns `undefined`,
+  // silently poisoning every subsequent `worker.compute*()` call.
+  //
+  // Fix: wrap `compare` to null `self.onmessage` after every call. Comlink's
+  // `addEventListener('message', ...)` listener is unaffected by the IDL-attribute
+  // reset (they're independent event surfaces). Client-mode compare() doesn't rely on
+  // postMessage-loopback — `visdifCompareClient(...)` calls the wasm inline — so no
+  // functionality is lost.
+  //
+  // Cannot fix by null-ing before import or immediately after `createVisDiff`: the
+  // handler doesn't exist yet (it's installed deep inside the first compare's
+  // microtask). Nulling immediately after each compare — before the NEXT worker
+  // message arrives — is the earliest safe point.
+  const disarm = (): void => {
+    const sw = self as unknown as { onmessage: unknown }
+    sw.onmessage = null
+  }
+  const wrappedCompare: VisDifFactory = async (a, b, signal) => {
+    try {
+      return await rawCompare(a, b, signal)
+    } finally {
+      disarm()
+    }
+  }
+  _visdif = wrappedCompare
   return _visdif
 }
 
