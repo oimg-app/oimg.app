@@ -169,4 +169,64 @@ const ssimChunk = assetsList.find((n) => /ssim/i.test(n))
 console.log(`[bundle-size] ssim chunk emitted: ${ssimChunk}`)
 
 console.log('[bundle-size] Phase 16 invariants: PASS')
+
+// ────────────────────────────────────────────────────────────────────────────
+// Phase 17 Plan 05 — post-Butteraugli bundle invariants (T-17-05-03).
+// ────────────────────────────────────────────────────────────────────────────
+//
+// Mirrors Phase 16's SSIM invariant block. Two new assertions:
+//   (e) `VisDiff` identifier is ABSENT from the initial-route chunk (guards
+//       against Pitfall 6: @squoosh-kit/visdif being hoisted into the initial
+//       bundle by static analysis).
+//   (f) some file under dist/ matches /visdif/i (positive check that the
+//       visdif chunk emits somewhere — the @squoosh-kit/vite-plugin routes
+//       visdif output to dist/squoosh-kit/visdif/, NOT dist/assets/).
+//
+// NOTE (Pitfall 6 discipline): `computeButteraugli` is intentionally NOT the
+// sentinel — the identifier legitimately appears in the initial route as a
+// Comlink method-call reference (useMetricsAuto is bundled into the initial
+// route via App.tsx and calls `worker.computeButteraugli(job)`). Only the
+// visdif package's `VisDiff` class constructor is exclusive to the chunked
+// visdif JS — it's referenced by `new module.VisDiff(...)` in
+// visdif.worker.browser.mjs so minifiers preserve the name.
+const VISDIF_HOIST_SENTINEL = 'VisDiff'
+for (const file of jsFiles) {
+  const filePath = resolve(distAssetsDir, file)
+  const source = readFileSync(filePath, 'utf-8')
+  if (source.includes(VISDIF_HOIST_SENTINEL)) {
+    console.error(
+      `[bundle-size] VisDiff sentinel found in initial-route chunk ${file}. @squoosh-kit/visdif was hoisted — PIPE-02 broken. Move the import back inside getVisDif() in metrics.worker.ts.`,
+    )
+    process.exit(1)
+  }
+}
+console.log(
+  '[bundle-size] visdif body absent from initial-route chunks (computeButteraugli only present as Comlink call ref) — PASS',
+)
+
+// (f) Some emitted file references `visdif` in its path — positive check that
+// the visdif chunk emits somewhere. The @squoosh-kit/vite-plugin routes
+// visdif output to dist/squoosh-kit/visdif/, so we walk dist/ recursively.
+function walk(dir: string, acc: string[] = []): string[] {
+  for (const name of readdirSync(dir, { withFileTypes: true })) {
+    const full = resolve(dir, name.name)
+    if (name.isDirectory()) walk(full, acc)
+    else acc.push(full)
+  }
+  return acc
+}
+const allDistFiles = walk(distDir)
+const hasVisdifChunk = allDistFiles.some((p) => /visdif/i.test(p))
+if (!hasVisdifChunk) {
+  console.error(
+    `[bundle-size] No visdif chunk found anywhere in dist/ — @squoosh-kit/visdif failed to emit. Files: ${JSON.stringify(allDistFiles.map((p) => p.slice(distDir.length + 1)))}`,
+  )
+  process.exit(1)
+}
+const visdifFiles = allDistFiles
+  .filter((p) => /visdif/i.test(p))
+  .map((p) => p.slice(distDir.length + 1))
+console.log(`[bundle-size] visdif chunk emitted: ${visdifFiles.join(', ')}`)
+
+console.log('[bundle-size] Phase 17 invariants: PASS')
 process.exit(0)
