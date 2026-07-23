@@ -2,20 +2,20 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Polish, Diagnostics, PWA + Quality Metrics
-status: completed
-last_updated: "2026-07-20T00:00:00.000Z"
+status: code_complete
+last_updated: "2026-07-23T04:30:00.000Z"
 progress:
   total_phases: 5
-  completed_phases: 3
-  total_plans: 24
-  completed_plans: 23
-  percent: 60
+  completed_phases: 5
+  total_plans: 29
+  completed_plans: 29
+  percent: 100
 ---
 
 # STATE: oimg.app — v1.2 Polish, Diagnostics, PWA + Quality Metrics
 
-**Last updated:** 2026-07-19
-**Milestone:** v1.2 Polish, Diagnostics, PWA + Quality Metrics (Phases 13–17)
+**Last updated:** 2026-07-23
+**Milestone:** v1.2 Polish, Diagnostics, PWA + Quality Metrics (Phases 13–17) — CODE COMPLETE
 
 ---
 
@@ -23,15 +23,15 @@ progress:
 
 **Core value:** A developer drops assets, adjusts settings once, and walks away with a ZIP of optimized files plus copy-paste snippets — without anything leaving the browser.
 
-**Current focus:** Phase 17 — Butteraugli Quality Metric
+**Current focus:** Milestone close-out — `/gsd-complete-milestone v1.2`
 
 ---
 
 ## Current Position
 
-Phase: 16 — COMPLETE; Phase 17 pending
-Status: 4 of 5 v1.2 phases complete
-Progress: [████████░░] 80%
+Phase: 17 — COMPLETE
+Status: 5 of 5 v1.2 phases complete
+Progress: [██████████] 100%
 
 Prior milestone artifacts archived under `.planning/milestones/`:
 
@@ -59,7 +59,7 @@ Prior milestone artifacts archived under `.planning/milestones/`:
 
 ### Todos
 
-- Phase 17 (Butteraugli): plan + execute
+- Milestone close-out: `/gsd-complete-milestone v1.2`
 
 ---
 

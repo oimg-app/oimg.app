@@ -4,7 +4,7 @@
 
 - ✅ **v1.0 — UI Port** — Phases 1–7 (shipped 2026-05-25) — full archive: [milestones/v1.0-ROADMAP.md](milestones/v1.0-ROADMAP.md)
 - ✅ **v1.1 — Real Optimization Pipeline** — Phases 8–12 + quick task 260603-s2x (shipped 2026-06-03) — full archive: [milestones/v1.1-ROADMAP.md](milestones/v1.1-ROADMAP.md)
-- 🚧 **v1.2 — Polish, Diagnostics, PWA + Quality Metrics** — Phases 13–17 (active) — installable PWA, real SSIM + Butteraugli metrics, real diagnostic values, URL/paste ingest, queue hygiene
+- ✅ **v1.2 — Polish, Diagnostics, PWA + Quality Metrics** — Phases 13–17 (code complete 2026-07-23) — installable PWA, real SSIM + Butteraugli metrics, real diagnostic values, URL/paste ingest, queue hygiene
 
 ## Phases
 
@@ -37,13 +37,13 @@ Shipped as **Executed** — all 22 plans built + summarized; formal phase verifi
 
 </details>
 
-### 🚧 v1.2 Polish, Diagnostics, PWA + Quality Metrics (Phases 13–17)
+### ✅ v1.2 Polish, Diagnostics, PWA + Quality Metrics (Phases 13–17) — CODE COMPLETE 2026-07-23
 
 - [x] **Phase 13: Diagnostics + Clear Queue** — versionsAtom + capability detection + live StatusBar footer + Settings Diagnostics tab + clearFiles() action — DIA-01..04, CLR-01
 - [x] **Phase 14: Installable PWA** — vite-plugin-pwa (injectManifest) + hand-rolled sw.ts + manifest.webmanifest + beforeinstallprompt + offline-derived footer — PWA-01..05
 - [x] **Phase 15: From URL or paste** — clipboard read + paste-event handler + addFromUrl wire-up + CORS-honest failure messaging — ING-01, ING-02
 - [x] **Phase 16: SSIM Quality Metric** — ssim.js@3.5.0 integration + metrics worker hook + Report panel banded display — MTR-01, MTR-03 (SSIM half)
-- [ ] **Phase 17: Butteraugli Quality Metric** — @squoosh-kit/visdif@0.2.4 integration + metrics worker extension + Report panel banded display — MTR-02, MTR-03 (Butteraugli half)
+- [x] **Phase 17: Butteraugli Quality Metric** — @squoosh-kit/visdif@0.2.4 integration + metrics worker extension + Report panel banded display — MTR-02, MTR-03 (Butteraugli half)
 
 ## Phase Details
 
@@ -196,17 +196,17 @@ Plans:
 Plans:
 **Wave 0**
 
-- [ ] 17-01-PLAN.md — Wave 0: install `@squoosh-kit/visdif@0.2.4` (blocking human-verify) + `__BUTTERAUGLI_BUILD__` Vite define + `BUILD_VERSIONS.butteraugli.buildHash` in `src/lib/versions.ts` + ambient globals decl + versions.test.ts semver assertion (MTR-02)
+- [x] 17-01-PLAN.md — Wave 0: install `@squoosh-kit/visdif@0.2.4` (blocking human-verify) + `__BUTTERAUGLI_BUILD__` Vite define + `BUILD_VERSIONS.butteraugli.buildHash` in `src/lib/versions.ts` + ambient globals decl + versions.test.ts semver assertion (MTR-02)
 
 **Wave 1** *(blocked on Wave 0 completion)*
 
-- [ ] 17-02-PLAN.md — Wave 1 (TDD): `BUTTERAUGLI_BANDS` constants (green < 1.5, yellow < 3.0) + `butteraugliBand()` strict-`<` classifier in `src/lib/metrics-bands.ts` + boundary-sweep unit test (MTR-03)
-- [ ] 17-03-PLAN.md — Wave 1: `computeButteraugli` in `src/workers/metrics.worker.ts` (`createVisDiff('client')` cache, dynamic `@squoosh-kit/visdif`, `Number.isFinite` guard) + `FileEntry.metrics.butteraugli` field + `setFileMetric` key-union widen to `'ssim' | 'butteraugli'` + stores.test.ts butteraugli/combined-key/combined-invalidation assertions (MTR-02)
+- [x] 17-02-PLAN.md — Wave 1 (TDD): `BUTTERAUGLI_BANDS` constants (green < 1.5, yellow < 3.0) + `butteraugliBand()` strict-`<` classifier in `src/lib/metrics-bands.ts` + boundary-sweep unit test (MTR-03)
+- [x] 17-03-PLAN.md — Wave 1: `computeButteraugli` in `src/workers/metrics.worker.ts` (`createVisDiff('client')` cache, dynamic `@squoosh-kit/visdif`, `Number.isFinite` guard) + `FileEntry.metrics.butteraugli` field + `setFileMetric` key-union widen to `'ssim' | 'butteraugli'` + stores.test.ts butteraugli/combined-key/combined-invalidation assertions (MTR-02)
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 17-04-PLAN.md — Wave 2: `useMetricsAuto.ts` extension — `Promise.allSettled([SSIM, Butteraugli])` parallel dispatch under single CR-02 seqRef with FOUR-slice buffer discipline (Pitfall 5) (MTR-02)
-- [ ] 17-05-PLAN.md — Wave 2: `ReportPanel.tsx` banded Butteraugli row (`.toFixed(2)`, `data-testid="butteraugli-score"`, `data-band`, direction-hint caption) + Playwright `butteraugli-metric.spec.ts` (happy + parallel-dispatch + thrash + SVG-N/A) + `build.test.ts` `VisDiff` hoist-sentinel absence + visdif chunk positive presence (MTR-02, MTR-03)
+- [x] 17-04-PLAN.md — Wave 2: `useMetricsAuto.ts` extension — `Promise.allSettled([SSIM, Butteraugli])` parallel dispatch under single CR-02 seqRef with FOUR-slice buffer discipline (Pitfall 5) (MTR-02)
+- [x] 17-05-PLAN.md — Wave 2: `ReportPanel.tsx` banded Butteraugli row (`.toFixed(2)`, `data-testid="butteraugli-score"`, `data-band`, direction-hint caption) + Playwright `butteraugli-metric.spec.ts` (happy + parallel-dispatch + thrash + SVG-N/A) + `build.test.ts` `VisDiff` hoist-sentinel absence + visdif chunk positive presence (MTR-02, MTR-03)
 
 **UI hint**: yes
 
@@ -218,9 +218,9 @@ Plans:
 | 14. Installable PWA | v1.2 | 6/6 | Complete | 2026-06 |
 | 15. From URL or paste | v1.2 | 4/4 | Complete | 2026-06-12 |
 | 16. SSIM Quality Metric | v1.2 | 5/5 | Complete | 2026-07-20 |
-| 17. Butteraugli Quality Metric | v1.2 | 0/5 | Planned | - |
+| 17. Butteraugli Quality Metric | v1.2 | 5/5 | Complete | 2026-07-23 |
 
 ---
 
-*Active milestone: v1.2 — Real-quality + transparency + installable. Next: `/gsd-execute-phase 17`.*
+*Active milestone: v1.2 — Real-quality + transparency + installable — CODE COMPLETE. Next: `/gsd-complete-milestone v1.2`.*
 *Last archived: 2026-06-05 via /gsd:complete-milestone v1.1*
