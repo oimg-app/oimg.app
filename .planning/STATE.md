@@ -69,5 +69,11 @@ progress:
 
 ## Session Continuity
 
-**Last session:** 2026-07-23 — v1.2 milestone archived via `/gsd-complete-milestone`
-**To resume:** Start v1.3 via `/gsd-new-milestone` — questioning → research → requirements → roadmap. Or `/gsd-review-backlog` to promote v1.3 candidates from deferred lists into a new milestone scope.
+**Last session:** 2026-07-26 — Quick task 260726-3cp shipped (SVG source + raster output codec-mismatch fix in CompareStage)
+**To resume:** Start v1.3 via `/gsd-new-milestone` — questioning → research → requirements → roadmap. Or `/gsd-review-backlog` to promote v1.3 candidates from deferred lists into a new milestone scope. Or knock off automatable follow-ups from `.planning/v1.2-DOGFOOD-CHECKLIST.md`.
+
+## Quick Tasks Completed (post-v1.2)
+
+| ID | Slug | Date | Status | Notes |
+|----|------|------|--------|-------|
+| 260726-3cp | svg-encoded-layer | 2026-07-26 | ✅ complete | Codec-mismatch gate in CompareStage encoded-layer — `FileEntry.encodedCodec` tags each buffer with its producing codec; render placeholder on mismatch. Commit `05e3290`. |
