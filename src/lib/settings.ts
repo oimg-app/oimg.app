@@ -24,6 +24,14 @@ export interface FileEntry {
     settings?: FileSettings; // per-file settings (D-01) — optional until initialized
     rawBuffer?: ArrayBuffer; // original file bytes; cache for live re-encode (D-05)
     encodedBuffer?: ArrayBuffer; // result of last encode
+    /**
+     * Codec that produced `encodedBuffer` (Quick 260726-3cp).
+     * CompareStage's encoded layer only renders bytes when this matches
+     * `settings.codec` — otherwise we show a placeholder rather than the
+     * stale bytes from the previous codec (e.g. SVG bytes lingering after
+     * user picks PNG, which decode-fail through <img> and trip onError).
+     */
+    encodedCodec?: Codec;
     error?: string; // per-file error message (D-13)
     metrics?: { ssim?: number | null; butteraugli?: number | null }; // Phase 16/17 — MTR-01/MTR-02: perceptual-quality cache; undefined=pending, null=failed, number=computed
 }

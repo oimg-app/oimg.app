@@ -154,7 +154,9 @@ export function useOptimize() {
       // pool's cap (min(hwConc, 4)) lets them through, matching the bounded-concurrency
       // model the FileRow status dot is meant to surface.
       pool.run(job, () => setFileProcessing(id)).then(
-        ({ buffer, optimizedSize }) => setFileResult(id, buffer, optimizedSize),
+        // Quick 260726-3cp: pass job.codec so CompareStage's encoded-layer gate
+        // (encodedCodec === settings.codec) has a truthful producer tag.
+        ({ buffer, optimizedSize }) => setFileResult(id, buffer, optimizedSize, job.codec),
         (err) => {
           setFileError(id, String(err))
           toast.error('Encode failed: ' + name)

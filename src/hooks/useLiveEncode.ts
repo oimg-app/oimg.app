@@ -109,7 +109,10 @@ export function useLiveEncode() {
         // CR-02: drop superseded results — a newer trigger has run since this job started,
         // so applying this result would write stale (or another file's) bytes.
         if (seq !== seqRef.current) return
-        setFileResult(fileId, result.buffer, result.optimizedSize)
+        // Quick 260726-3cp: pass the dispatched codec so CompareStage can gate its encoded
+        // layer on encodedCodec === settings.codec (prevents stale SVG bytes flashing as
+        // broken raster during the 300ms debounce between codec change and re-encode).
+        setFileResult(fileId, result.buffer, result.optimizedSize, codec)
       } catch (err) {
         // CR-02: only surface errors from the still-current invocation
         if (seq !== seqRef.current) return

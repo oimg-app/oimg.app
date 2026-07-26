@@ -8,6 +8,10 @@ import { defaultFileSettings } from '@/lib/settings'
 // Re-export types so components import from store barrel, not from stub-data directly (STORE-08 convention)
 export type { FileEntry, FileSettings, SortKey }
 
+// Quick 260726-3cp: setFileResult records the codec that produced the buffer; import the
+// Codec type so the setFileResult signature can type-check without pulling stub-data.
+import type { Codec } from '@/lib/settings'
+
 interface FilesState {
   entries: FileEntry[]
   selectedId: string | null
@@ -152,9 +156,16 @@ export function setFileMetric<K extends 'ssim' | 'butteraugli'>(id: string, key:
 // Store encoded result + clear error on success. WR-01: mark 'done' so the processing
 // status dot/shimmer clears once the worker returns real bytes (the test fixtures inject
 // status:'done' directly, which previously masked the missing transition).
-export function setFileResult(id: string, encodedBuffer: ArrayBuffer, optimizedSize: number): void {
+//
+// Quick 260726-3cp: `codec` is the codec the dispatched job produced these bytes with.
+// CompareStage's encoded-layer effect gates render on `encodedCodec === settings.codec`,
+// so we must record it here. Optional (with `?:`) so existing test fixtures + call sites
+// that predate the parameter continue to type-check; when omitted, the encoded layer
+// treats the entry as "no known codec" and won't try to interpret bytes as a raster.
+export function setFileResult(id: string, encodedBuffer: ArrayBuffer, optimizedSize: number, codec?: Codec): void {
   updateEntry(id, () => ({
     encodedBuffer,
+    encodedCodec: codec,  // Quick 260726-3cp — undefined stays undefined (legacy callers)
     opt: optimizedSize,
     error: undefined,
     status: 'done' as const,

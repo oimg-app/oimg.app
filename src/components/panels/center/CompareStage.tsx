@@ -157,22 +157,42 @@ export function CompareStage() {
   }, [selectedFile?.rawBuffer, isHeic])
 
   // Build object URL for encoded layer — revoke on cleanup (T-9-URL)
+  //
+  // Quick 260726-3cp: also gate on `encodedCodec === settings.codec`. Without this,
+  // when a user picks a raster codec on an SVG source, the 300ms live-encode debounce
+  // leaves `encodedBuffer` holding stale SVG bytes while `isSvgOutput` has already
+  // flipped to false. Rendering those SVG bytes through the raster `<img>` branch
+  // triggers `onError` (which nulls encodedSrc → placeholder), and if the re-encode
+  // ever silently fails the placeholder is sticky forever. Treating any codec mismatch
+  // as "no bytes yet" (placeholder div) fixes both transient flash and the sticky case.
+  //
+  // Legacy entries (no encodedCodec recorded) fall back to the previous behavior so
+  // existing test fixtures that inject encodedBuffer without encodedCodec still render.
   useEffect(() => {
-    if (!selectedFile?.encodedBuffer) {
+    const buf = selectedFile?.encodedBuffer
+    if (!buf) {
+      setEncodedSrc(null)
+      return
+    }
+    // Codec-mismatch gate: only render bytes that the currently-selected codec produced.
+    // If encodedCodec is undefined (legacy caller / test fixture), skip the gate.
+    const currentCodec = selectedFile?.settings?.codec
+    const producedBy = selectedFile?.encodedCodec
+    if (producedBy && currentCodec && producedBy !== currentCodec) {
       setEncodedSrc(null)
       return
     }
     // Encoded layer keys on the OUTPUT codec, not the source: SVG output → data URI
     // (sandboxed iframe); any raster codec (PNG/WebP/JPEG/AVIF) → revocable object URL (<img>).
     if (isSvgOutput) {
-      setEncodedSrc(svgDataUri(selectedFile.encodedBuffer))
+      setEncodedSrc(svgDataUri(buf))
       return
     }
-    const blob = new Blob([selectedFile.encodedBuffer])
+    const blob = new Blob([buf])
     const url = URL.createObjectURL(blob)
     setEncodedSrc(url)
     return () => URL.revokeObjectURL(url)
-  }, [selectedFile?.encodedBuffer, isSvgOutput])
+  }, [selectedFile?.encodedBuffer, selectedFile?.encodedCodec, selectedFile?.settings?.codec, isSvgOutput])
 
   // Zoom dropdown → reset pan + snap scale. Skip when scroll set the zoom (no-op guard).
   useEffect(() => {
