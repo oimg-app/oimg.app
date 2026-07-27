@@ -177,9 +177,15 @@ export function CodecPanel() {
   // AVIF-advanced state on settingsAtom, and global-encode paths use DEFAULT_AVIF_OPTIONS
   // via the worker fallback.
   const avif: AvifOptions = settings.avif ?? DEFAULT_AVIF_OPTIONS
+  const avifAdvancedOn = settings.avifAdvancedOn ?? false
   function handleSetAvif<K extends keyof AvifOptions>(key: K, value: AvifOptions[K]) {
     if (!selectedFile) return
     setFileSettings(selectedFile.id, 'avif', { ...avif, [key]: value })
+    trigger(selectedFile.id)
+  }
+  function handleSetAvifAdvancedOn(v: boolean) {
+    if (!selectedFile) return
+    setFileSettings(selectedFile.id, 'avifAdvancedOn', v)
     trigger(selectedFile.id)
   }
   const SUBSAMPLE_LABELS = ['4:4:4', '4:2:2', '4:2:0', '4:0:0'] as const
@@ -277,6 +283,14 @@ export function CodecPanel() {
               Per-file only (needs a selectedFile so setFileSettings has an id). */}
           {settings.codec === 'AVIF' && selectedFile && (
             <Section title="Advanced (AVIF)">
+              {/* Master switch — off by default. When off, the worker skips the entire
+                  advanced-knobs branch and jSquash's own defaults fill EncodeOptions,
+                  so users don't accidentally ship non-default encoder settings. */}
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[12px] text-[var(--color-fg-2)]">Enable advanced</span>
+                <Switch checked={avifAdvancedOn} onCheckedChange={handleSetAvifAdvancedOn} />
+              </div>
+              {avifAdvancedOn && <>
               {/* Subsample */}
               <div className="grid grid-cols-[100px_1fr] gap-2 mb-2 items-center">
                 <span className="text-[12px] text-[var(--color-fg-2)]">Subsample</span>
@@ -410,6 +424,7 @@ export function CodecPanel() {
                 <span className="text-[12px] text-[var(--color-fg-2)]">Sharp YUV</span>
                 <Switch checked={avif.enableSharpYUV} onCheckedChange={(v) => handleSetAvif('enableSharpYUV', v)} />
               </div>
+              </>}
             </Section>
           )}
 

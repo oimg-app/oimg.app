@@ -121,7 +121,8 @@ export interface FileSettings {
     colors: number;
     dithering: number;
 
-    avif?: AvifOptions; // AVIF-specific advanced knobs; undefined → worker uses DEFAULT_AVIF_OPTIONS
+    avifAdvancedOn?: boolean; // gate for AvifOptions — when false, worker uses jSquash defaults (only quality/speed/lossless)
+    avif?: AvifOptions; // AVIF-specific advanced knobs; only consulted when avifAdvancedOn === true
 }
 
 // D-01: shallow-copy helper — call when adding entries to assign per-file defaults without aliasing.
@@ -183,6 +184,7 @@ export function defaultFileSettings(
         progressive: true,
         colors: 256,
         dithering: 1,
+        avifAdvancedOn: false,
         avif: { ...DEFAULT_AVIF_OPTIONS },
     };
 }
