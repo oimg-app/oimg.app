@@ -9,6 +9,14 @@ export type View = 'Batch' | 'Compare' | 'Report'
 export type Tab = 'codec' | 'output' | 'report'
 export type StageBg = 'checker-dark' | 'checker-light' | 'black' | 'white'
 
+// Per-pane visibility gate for the three-column shell (Left FilesPane / Center CenterPane / Right InspectorPane).
+// Backed by three independent booleans (not a single "active view" enum) so the user can hide any subset.
+export interface PaneVisibility {
+  batch: boolean      // Left — FilesPane
+  compare: boolean    // Center — CenterPane
+  inspector: boolean  // Right — InspectorPane (labelled "Inspector view" in the menu; formerly "Report view")
+}
+
 interface UiState {
   open: string | null
   view: View
@@ -21,6 +29,7 @@ interface UiState {
   rowMenu: string | null
   theme: 'dark' | 'light'
   stageBg: StageBg
+  panes: PaneVisibility
 }
 
 export const uiAtom = map<UiState>({
@@ -35,7 +44,20 @@ export const uiAtom = map<UiState>({
   rowMenu: null,
   theme: 'dark',
   stageBg: 'checker-dark',
+  panes: { batch: true, compare: true, inspector: true },
 })
+
+// Toggle a single pane's visibility. Guardrail: refuse to hide the last visible pane —
+// that would leave a blank shell with no way for the user to bring anything back except
+// the menu itself (which is fine but visually alarming). If someone really needs a
+// blank shell, they can toggle multiple in sequence — this stops the accidental "hid
+// them all" click chain, not deliberate use.
+export function togglePane(key: keyof PaneVisibility): void {
+  const current = uiAtom.get().panes
+  const next = { ...current, [key]: !current[key] }
+  if (!next.batch && !next.compare && !next.inspector) return
+  uiAtom.setKey('panes', next)
+}
 
 export function setStageBg(bg: StageBg): void {
   uiAtom.setKey('stageBg', bg)

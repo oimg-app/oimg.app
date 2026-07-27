@@ -2,12 +2,13 @@
 // Phase 07-polish — WCAG AA: menus migrated Popover→DropdownMenu for arrow-key navigation.
 import { useStore } from '@nanostores/react'
 import { MagnifyingGlass } from '@phosphor-icons/react'
-import { uiAtom, setOpen, setView, setTheme, openCmdk, selectCodec, openDocs, openShortcuts, openChangelog } from '@/stores/ui'
+import { uiAtom, setOpen, setTheme, openCmdk, selectCodec, openDocs, openShortcuts, openChangelog, togglePane } from '@/stores/ui'
 import {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuCheckboxItem,
   DropdownMenuSeparator,
   DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu'
@@ -29,7 +30,7 @@ function MenuItem({ label, shortcut, onSelect }: { label: string; shortcut?: str
 }
 
 export function TitleBar() {
-  const { open } = useStore(uiAtom)
+  const { open, panes } = useStore(uiAtom)
 
   const triggerClass =
     'px-2 py-1 rounded text-xs text-[var(--color-fg-1)] hover:bg-[var(--color-bg-2)] hover:text-[var(--color-fg-0)] data-[state=open]:bg-[var(--color-bg-2)] data-[state=open]:text-[var(--color-fg-0)]'
@@ -78,9 +79,32 @@ export function TitleBar() {
             <button type="button" className={triggerClass}>View</button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className={menuContentClass}>
-            <MenuItem label="Batch view" onSelect={() => setView('Batch')} />
-            <MenuItem label="Compare view" onSelect={() => setView('Compare')} />
-            <MenuItem label="Report view" onSelect={() => setView('Report')} />
+            {/* Pane visibility toggles — checked = visible. onSelect preventDefault
+                keeps the menu open so users can flip multiple in one visit. */}
+            <DropdownMenuCheckboxItem
+              className={menuItemClass}
+              checked={panes.batch}
+              onCheckedChange={() => togglePane('batch')}
+              onSelect={(e) => e.preventDefault()}
+            >
+              Batch view
+            </DropdownMenuCheckboxItem>
+            <DropdownMenuCheckboxItem
+              className={menuItemClass}
+              checked={panes.compare}
+              onCheckedChange={() => togglePane('compare')}
+              onSelect={(e) => e.preventDefault()}
+            >
+              Compare view
+            </DropdownMenuCheckboxItem>
+            <DropdownMenuCheckboxItem
+              className={menuItemClass}
+              checked={panes.inspector}
+              onCheckedChange={() => togglePane('inspector')}
+              onSelect={(e) => e.preventDefault()}
+            >
+              Inspector view
+            </DropdownMenuCheckboxItem>
             <DropdownMenuSeparator className="bg-[var(--color-line)]" />
             <MenuItem label="Light theme" onSelect={() => setTheme('light')} />
             <MenuItem label="Dark theme" onSelect={() => setTheme('dark')} />

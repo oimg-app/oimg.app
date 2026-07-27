@@ -15,7 +15,7 @@ import { uiAtom, openCmdk, closeCmdk, setOpen } from '@/stores/ui'
 import { cn } from '@/lib/utils'
 
 export function AppShell() {
-  const { theme } = useStore(uiAtom)
+  const { theme, panes } = useStore(uiAtom)
 
   // SHELL-03: toggle html.dark class to match uiAtom.theme
   useEffect(() => {
@@ -51,18 +51,36 @@ export function AppShell() {
     >
       <TitleBar />
       <Toolbar />
-      <ResizablePanelGroup orientation="horizontal" className="flex-1 min-h-0">
-        <ResizablePanel defaultSize="20%" minSize="10%">
-          <FilesPane />
-        </ResizablePanel>
-        <ResizableHandle withHandle />
-        <ResizablePanel defaultSize="55%">
-          <CenterPane />
-        </ResizablePanel>
-        <ResizableHandle withHandle />
-        <ResizablePanel defaultSize="25%">
-          <InspectorPane />
-        </ResizablePanel>
+      {/* View menu drives per-pane visibility. Handles are only rendered *between*
+          two visible panels — hiding a middle pane collapses the two flanking panels
+          together with a fresh handle between them (rather than an orphaned divider).
+          `key` on the panel group forces react-resizable-panels to reset stored sizes
+          when the pane set changes (its layout persistence keys on stable child order). */}
+      <ResizablePanelGroup
+        key={`${panes.batch}-${panes.compare}-${panes.inspector}`}
+        orientation="horizontal"
+        className="flex-1 min-h-0"
+      >
+        {panes.batch && (
+          <ResizablePanel defaultSize="20%" minSize="10%">
+            <FilesPane />
+          </ResizablePanel>
+        )}
+        {panes.batch && panes.compare && <ResizableHandle withHandle />}
+        {panes.compare && (
+          <ResizablePanel defaultSize="55%">
+            <CenterPane />
+          </ResizablePanel>
+        )}
+        {panes.compare && panes.inspector && <ResizableHandle withHandle />}
+        {/* If Compare is hidden but both Batch and Inspector are on, we need a handle
+            directly between them so they stay independently resizable. */}
+        {!panes.compare && panes.batch && panes.inspector && <ResizableHandle withHandle />}
+        {panes.inspector && (
+          <ResizablePanel defaultSize="25%">
+            <InspectorPane />
+          </ResizablePanel>
+        )}
       </ResizablePanelGroup>
       <StatusBar />
       <CommandPalette />
