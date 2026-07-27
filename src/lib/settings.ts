@@ -69,6 +69,37 @@ export const SVGO_PLUGINS: SvgoPlugin[] = [
     { id: "mergePaths", on: true, saves: "7.2%" },
 ];
 
+// AVIF Advanced encoder options — mirrors @jsquash/avif's EncodeOptions (subset of exposed knobs).
+// Nested under FileSettings.avif so the generic setFileSettings<K>(id, 'avif', patch) writer
+// preserves flat top-level shape for all other codecs.
+export type AvifTune = "auto" | "psnr" | "ssim";
+
+export interface AvifOptions {
+    qualityAlpha: number; // -1 = match main quality; 0..100 explicit
+    denoiseLevel: number; // 0..50
+    tileRowsLog2: number; // 0..6
+    tileColsLog2: number; // 0..6
+    subsample: number; // 0=YUV444, 1=YUV422, 2=YUV420, 3=YUV400 (mono)
+    chromaDeltaQ: boolean;
+    sharpness: number; // 0..7
+    enableSharpYUV: boolean;
+    tune: AvifTune; // stored as string; worker maps to AVIFTune enum int
+    bitDepth: number; // 8 | 10 | 12
+}
+
+export const DEFAULT_AVIF_OPTIONS: AvifOptions = {
+    qualityAlpha: -1,
+    denoiseLevel: 0,
+    tileRowsLog2: 0,
+    tileColsLog2: 0,
+    subsample: 1,
+    chromaDeltaQ: false,
+    sharpness: 0,
+    enableSharpYUV: false,
+    tune: "auto",
+    bitDepth: 8,
+};
+
 // Phase 09, Plan 01 — D-01/D-03: per-file settings shape (mirrors SettingsState in settings.ts)
 export interface FileSettings {
     codec: Codec;
@@ -89,6 +120,8 @@ export interface FileSettings {
     colorsOn: boolean;
     colors: number;
     dithering: number;
+
+    avif?: AvifOptions; // AVIF-specific advanced knobs; undefined → worker uses DEFAULT_AVIF_OPTIONS
 }
 
 // D-01: shallow-copy helper — call when adding entries to assign per-file defaults without aliasing.
@@ -150,5 +183,6 @@ export function defaultFileSettings(
         progressive: true,
         colors: 256,
         dithering: 1,
+        avif: { ...DEFAULT_AVIF_OPTIONS },
     };
 }

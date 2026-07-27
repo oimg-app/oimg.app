@@ -2,7 +2,7 @@
 // Phase 09 — Plan 02: Real jSquash + svgo adapters (ENC-01..05). WR-02/WR-03 fold-in.
 import * as Comlink from 'comlink'
 import type {FileSettings} from '@/lib/settings'
-import {SVGO_PLUGINS} from '@/lib/settings'
+import {SVGO_PLUGINS, DEFAULT_AVIF_OPTIONS} from '@/lib/settings'
 
 // Dev guard: warn if crossOriginIsolated is false (OxiPNG MT will be disabled)
 if (import.meta.env.DEV && !crossOriginIsolated) {
@@ -234,12 +234,33 @@ async function optimize(job: EncodeJob): Promise<EncodeResult> {
 
           // AVIF WASM (~8MB) lazy-loaded ONLY here — protects <200KB initial-route budget (PIPE-02)
           const { encode } = await import('@jsquash/avif')
+          // AVIF advanced knobs — clamp each to libavif's valid range so a corrupted
+          // per-file setting (e.g. tileRowsLog2:-1) can't produce garbage output or
+          // escape into the encoder's undefined behavior. Fall back to canonical
+          // Squoosh defaults if the per-file .avif block is missing (legacy entries).
+          const a = job.settings.avif ?? DEFAULT_AVIF_OPTIONS
+          const tuneEnum = a.tune === 'psnr' ? 1 : a.tune === 'ssim' ? 2 : 0
+          const bitDepth = a.bitDepth === 10 || a.bitDepth === 12 ? a.bitDepth : 8
+          // qualityAlpha: -1 sentinel = "match main quality"; otherwise clamp to 0..100
+          const qualityAlpha = a.qualityAlpha === -1
+            ? -1
+            : Math.min(100, Math.max(0, Number(a.qualityAlpha) || 0))
           const result = await encode(imageData, {
             quality: job.settings.q ?? 50,
+            qualityAlpha,
+            denoiseLevel: Math.min(50, Math.max(0, Number(a.denoiseLevel) || 0)),
+            tileRowsLog2: Math.min(6, Math.max(0, Number(a.tileRowsLog2) || 0)),
+            tileColsLog2: Math.min(6, Math.max(0, Number(a.tileColsLog2) || 0)),
             // WR-05: invert effort→speed and clamp to 0–10 (libavif range). Number(...) || 4
             // rescues NaN; the outer min/max prevents a corrupted method (e.g. -1 → speed 7)
             // from escaping the valid range.
             speed: Math.min(10, Math.max(0, 6 - (Number(job.settings.method) || 4))),  // invert effort→speed (A1)
+            subsample: Math.min(3, Math.max(0, Number(a.subsample) || 0)),
+            chromaDeltaQ: !!a.chromaDeltaQ,
+            sharpness: Math.min(7, Math.max(0, Number(a.sharpness) || 0)),
+            enableSharpYUV: !!a.enableSharpYUV,
+            tune: tuneEnum,
+            bitDepth,
             lossless: job.settings.lossless ?? false,
           })
           return Comlink.transfer(

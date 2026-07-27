@@ -19,7 +19,8 @@ import {
   setColorsOn,
 } from '@/stores/settings'
 import type { Codec } from '@/stores/settings'
-import type { FileSettings } from '@/stores/files'
+import type { FileSettings, AvifOptions, AvifTune } from '@/stores/files'
+import { DEFAULT_AVIF_OPTIONS } from '@/stores/files'
 import { useLiveEncode } from '@/hooks/useLiveEncode'
 import { Slider2 } from '@/components/ui/slider2'
 import { Switch } from '@/components/ui/switch'
@@ -171,6 +172,20 @@ export function CodecPanel() {
     // progressive is JPEG-only — no global setter needed
   }
 
+  // AVIF advanced knobs — nested under settings.avif so the generic setFileSettings writer
+  // still applies (single key, whole object value). Per-file only: there's no global
+  // AVIF-advanced state on settingsAtom, and global-encode paths use DEFAULT_AVIF_OPTIONS
+  // via the worker fallback.
+  const avif: AvifOptions = settings.avif ?? DEFAULT_AVIF_OPTIONS
+  function handleSetAvif<K extends keyof AvifOptions>(key: K, value: AvifOptions[K]) {
+    if (!selectedFile) return
+    setFileSettings(selectedFile.id, 'avif', { ...avif, [key]: value })
+    trigger(selectedFile.id)
+  }
+  const SUBSAMPLE_LABELS = ['4:4:4', '4:2:2', '4:2:0', '4:0:0'] as const
+  const TUNE_OPTIONS: readonly AvifTune[] = ['auto', 'psnr', 'ssim'] as const
+  const BIT_DEPTH_OPTIONS = ['8', '10', '12'] as const
+
   return (
     <div>
       {/* INSP-02 — Output format */}
@@ -256,13 +271,147 @@ export function CodecPanel() {
               </div>
             )}
 
-            {settings.codec === 'AVIF' && (
+          </Section>
+
+          {/* AVIF advanced encoder knobs — mirrors jSquash EncodeOptions surface.
+              Per-file only (needs a selectedFile so setFileSettings has an id). */}
+          {settings.codec === 'AVIF' && selectedFile && (
+            <Section title="Advanced (AVIF)">
+              {/* Subsample */}
               <div className="grid grid-cols-[100px_1fr] gap-2 mb-2 items-center">
                 <span className="text-[12px] text-[var(--color-fg-2)]">Subsample</span>
-                <SegControl options={['4:2:0', '4:4:4']} value="4:2:0" onChange={() => {}} aria-label="Subsample" disabled />
+                <SegControl
+                  options={SUBSAMPLE_LABELS as unknown as string[]}
+                  value={SUBSAMPLE_LABELS[Math.min(3, Math.max(0, avif.subsample))]}
+                  onChange={(v) => handleSetAvif('subsample', SUBSAMPLE_LABELS.indexOf(v as typeof SUBSAMPLE_LABELS[number]))}
+                  aria-label="Subsample"
+                />
               </div>
-            )}
-          </Section>
+
+              {/* Tune */}
+              <div className="grid grid-cols-[100px_1fr] gap-2 mb-2 items-center">
+                <span className="text-[12px] text-[var(--color-fg-2)]">Tune</span>
+                <SegControl
+                  options={TUNE_OPTIONS as unknown as string[]}
+                  value={avif.tune}
+                  onChange={(v) => handleSetAvif('tune', v as AvifTune)}
+                  aria-label="Tune"
+                />
+              </div>
+
+              {/* Bit depth */}
+              <div className="grid grid-cols-[100px_1fr] gap-2 mb-2 items-center">
+                <span className="text-[12px] text-[var(--color-fg-2)]">Bit depth</span>
+                <SegControl
+                  options={BIT_DEPTH_OPTIONS as unknown as string[]}
+                  value={String(avif.bitDepth)}
+                  onChange={(v) => handleSetAvif('bitDepth', Number(v))}
+                  aria-label="Bit depth"
+                />
+              </div>
+
+              {/* Alpha quality — -1 sentinel = match main quality */}
+              <div className="grid grid-cols-[100px_1fr] gap-2 mb-2 items-center">
+                <span className="text-[12px] text-[var(--color-fg-2)]">Match alpha</span>
+                <Switch
+                  checked={avif.qualityAlpha === -1}
+                  onCheckedChange={(v) => handleSetAvif('qualityAlpha', v ? -1 : Math.max(0, settings.q ?? 50))}
+                />
+              </div>
+              {avif.qualityAlpha !== -1 && (
+                <div className="grid grid-cols-[100px_1fr] gap-2 mb-2 items-center">
+                  <span className="text-[12px] text-[var(--color-fg-2)]">Alpha quality</span>
+                  <div className="grid grid-cols-[1fr_42px] gap-2 items-center">
+                    <Slider2
+                      min={0} max={100} step={1}
+                      value={[avif.qualityAlpha]}
+                      onValueChange={([v]) => handleSetAvif('qualityAlpha', v)}
+                      className="w-full"
+                    />
+                    <span className="text-right font-mono text-[12px] font-semibold text-[var(--color-fg-0)] tabular-nums">
+                      {avif.qualityAlpha}
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* Denoise (0..50) */}
+              <div className="grid grid-cols-[100px_1fr] gap-2 mb-2 items-center">
+                <span className="text-[12px] text-[var(--color-fg-2)]">Denoise</span>
+                <div className="grid grid-cols-[1fr_42px] gap-2 items-center">
+                  <Slider2
+                    min={0} max={50} step={1}
+                    value={[avif.denoiseLevel]}
+                    onValueChange={([v]) => handleSetAvif('denoiseLevel', v)}
+                    className="w-full"
+                  />
+                  <span className="text-right font-mono text-[12px] font-semibold text-[var(--color-fg-0)] tabular-nums">
+                    {avif.denoiseLevel}
+                  </span>
+                </div>
+              </div>
+
+              {/* Sharpness (0..7) */}
+              <div className="grid grid-cols-[100px_1fr] gap-2 mb-2 items-center">
+                <span className="text-[12px] text-[var(--color-fg-2)]">Sharpness</span>
+                <div className="grid grid-cols-[1fr_42px] gap-2 items-center">
+                  <Slider2
+                    min={0} max={7} step={1}
+                    value={[avif.sharpness]}
+                    onValueChange={([v]) => handleSetAvif('sharpness', v)}
+                    className="w-full"
+                  />
+                  <span className="text-right font-mono text-[12px] font-semibold text-[var(--color-fg-0)] tabular-nums">
+                    {avif.sharpness}
+                  </span>
+                </div>
+              </div>
+
+              {/* Tile rows (log2) 0..6 */}
+              <div className="grid grid-cols-[100px_1fr] gap-2 mb-2 items-center">
+                <span className="text-[12px] text-[var(--color-fg-2)]">Tile rows</span>
+                <div className="grid grid-cols-[1fr_42px] gap-2 items-center">
+                  <Slider2
+                    min={0} max={6} step={1}
+                    value={[avif.tileRowsLog2]}
+                    onValueChange={([v]) => handleSetAvif('tileRowsLog2', v)}
+                    className="w-full"
+                  />
+                  <span className="text-right font-mono text-[12px] font-semibold text-[var(--color-fg-0)] tabular-nums">
+                    {1 << avif.tileRowsLog2}
+                  </span>
+                </div>
+              </div>
+
+              {/* Tile cols (log2) 0..6 */}
+              <div className="grid grid-cols-[100px_1fr] gap-2 mb-2 items-center">
+                <span className="text-[12px] text-[var(--color-fg-2)]">Tile cols</span>
+                <div className="grid grid-cols-[1fr_42px] gap-2 items-center">
+                  <Slider2
+                    min={0} max={6} step={1}
+                    value={[avif.tileColsLog2]}
+                    onValueChange={([v]) => handleSetAvif('tileColsLog2', v)}
+                    className="w-full"
+                  />
+                  <span className="text-right font-mono text-[12px] font-semibold text-[var(--color-fg-0)] tabular-nums">
+                    {1 << avif.tileColsLog2}
+                  </span>
+                </div>
+              </div>
+
+              {/* Chroma delta Q */}
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[12px] text-[var(--color-fg-2)]">Chroma delta Q</span>
+                <Switch checked={avif.chromaDeltaQ} onCheckedChange={(v) => handleSetAvif('chromaDeltaQ', v)} />
+              </div>
+
+              {/* Sharp YUV */}
+              <div className="flex items-center justify-between">
+                <span className="text-[12px] text-[var(--color-fg-2)]">Sharp YUV</span>
+                <Switch checked={avif.enableSharpYUV} onCheckedChange={(v) => handleSetAvif('enableSharpYUV', v)} />
+              </div>
+            </Section>
+          )}
 
           {/* INSP-04 — Resize */}
           <Section title="Resize">

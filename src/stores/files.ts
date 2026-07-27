@@ -2,11 +2,12 @@
 // Phase 09 — Plan 01: per-file settings actions (D-01/D-03/D-13) + buffer/error actions
 // Phase 10 — Plan 02: D-04 — empty seed (app starts with no demo files); queue-order sort uses createdAt
 import { map, computed } from 'nanostores'
-import type { FileEntry, FileSettings, SortKey } from '@/lib/settings'
-import { defaultFileSettings } from '@/lib/settings'
+import type { FileEntry, FileSettings, SortKey, AvifOptions, AvifTune } from '@/lib/settings'
+import { defaultFileSettings, DEFAULT_AVIF_OPTIONS } from '@/lib/settings'
 
 // Re-export types so components import from store barrel, not from stub-data directly (STORE-08 convention)
-export type { FileEntry, FileSettings, SortKey }
+export type { FileEntry, FileSettings, SortKey, AvifOptions, AvifTune }
+export { DEFAULT_AVIF_OPTIONS }
 
 // Quick 260726-3cp: setFileResult records the codec that produced the buffer; import the
 // Codec type so the setFileResult signature can type-check without pulling stub-data.
