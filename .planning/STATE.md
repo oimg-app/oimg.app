@@ -78,3 +78,4 @@ progress:
 |----|------|------|--------|-------|
 | 260726-3cp | svg-encoded-layer | 2026-07-26 | ✅ complete | Codec-mismatch gate in CompareStage encoded-layer — `FileEntry.encodedCodec` tags each buffer with its producing codec; render placeholder on mismatch. Commit `05e3290`. |
 | gsd-fast | avif-advanced-options | 2026-07-27 | ✅ complete | Expose full `@jsquash/avif` EncodeOptions surface as inspector Advanced (AVIF) section — nested `FileSettings.avif`, worker clamps each knob, canonical Squoosh defaults. Bundle 197.9 KB (+0.7 vs pre). Commit `c72cafe`. |
+| gsd-fast | avif-advanced-optin-switch | 2026-07-27 | ✅ complete | Gate the Advanced (AVIF) knobs behind an opt-in switch (off by default). When off, worker sends only baseline `{quality, speed, lossless}` — byte-for-byte identical to pre-advanced behavior. Bundle 198.0 KB. Commit `08f05d7`. |
