@@ -84,7 +84,10 @@ export interface AvifOptions {
     sharpness: number; // 0..7
     enableSharpYUV: boolean;
     tune: AvifTune; // stored as string; worker maps to AVIFTune enum int
-    bitDepth: number; // 8 | 10 | 12
+    // bitDepth intentionally omitted: jSquash requires Uint16Array (ImageData16bit) input
+    // for bitDepth 10/12, but our decode → resize → quantize → encode pipeline produces
+    // only 8-bit ImageData. Exposing a 10/12 toggle would throw at runtime
+    // ("Invalid image data for bit depth"). Re-add when a 16-bit path lands.
 }
 
 export const DEFAULT_AVIF_OPTIONS: AvifOptions = {
@@ -97,7 +100,6 @@ export const DEFAULT_AVIF_OPTIONS: AvifOptions = {
     sharpness: 0,
     enableSharpYUV: false,
     tune: "auto",
-    bitDepth: 8,
 };
 
 // Phase 09, Plan 01 — D-01/D-03: per-file settings shape (mirrors SettingsState in settings.ts)

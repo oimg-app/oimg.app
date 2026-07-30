@@ -190,7 +190,6 @@ export function CodecPanel() {
   }
   const SUBSAMPLE_LABELS = ['4:4:4', '4:2:2', '4:2:0', '4:0:0'] as const
   const TUNE_OPTIONS: readonly AvifTune[] = ['auto', 'psnr', 'ssim'] as const
-  const BIT_DEPTH_OPTIONS = ['8', '10', '12'] as const
 
   return (
     <div>
@@ -310,17 +309,6 @@ export function CodecPanel() {
                   value={avif.tune}
                   onChange={(v) => handleSetAvif('tune', v as AvifTune)}
                   aria-label="Tune"
-                />
-              </div>
-
-              {/* Bit depth */}
-              <div className="grid grid-cols-[100px_1fr] gap-2 mb-2 items-center">
-                <span className="text-[12px] text-[var(--color-fg-2)]">Bit depth</span>
-                <SegControl
-                  options={BIT_DEPTH_OPTIONS as unknown as string[]}
-                  value={String(avif.bitDepth)}
-                  onChange={(v) => handleSetAvif('bitDepth', Number(v))}
-                  aria-label="Bit depth"
                 />
               </div>
 

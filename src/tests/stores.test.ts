@@ -36,6 +36,8 @@ try {
     cmdkSel: 0,
     rowMenu: null,
     theme: 'dark' as const,
+    stageBg: 'checker-dark' as const,
+    panes: { batch: true, compare: true, inspector: true },
   }
 
   // Reset before each block

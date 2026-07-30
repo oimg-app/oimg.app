@@ -247,13 +247,16 @@ async function optimize(job: EncodeJob): Promise<EncodeResult> {
           // Advanced knobs are only merged when the user explicitly opted in via the
           // per-file Advanced (AVIF) switch. When off, jSquash's own defaults fill the
           // rest of EncodeOptions — same behavior as before this feature landed.
-          let encodeOpts: Parameters<typeof encode>[1] = baseOpts
+          // Typed as a plain object (not Parameters<typeof encode>[1]) because that
+          // resolves to the union of jSquash's overloads and TS ends up picking the
+          // 10/12-bit variant which requires ImageData16bit. Our pipeline is always
+          // 8-bit; the encode call below casts to the 8-bit overload's options shape.
+          let encodeOpts: Record<string, unknown> = baseOpts
           if (job.settings.avifAdvancedOn) {
             // Clamp each to libavif's valid range so a corrupted per-file value
             // (e.g. tileRowsLog2:-1) can't produce garbage output.
             const a = job.settings.avif ?? DEFAULT_AVIF_OPTIONS
             const tuneEnum = a.tune === 'psnr' ? 1 : a.tune === 'ssim' ? 2 : 0
-            const bitDepth = a.bitDepth === 10 || a.bitDepth === 12 ? a.bitDepth : 8
             // qualityAlpha: -1 sentinel = "match main quality"; otherwise clamp to 0..100
             const qualityAlpha = a.qualityAlpha === -1
               ? -1
@@ -269,10 +272,14 @@ async function optimize(job: EncodeJob): Promise<EncodeResult> {
               sharpness: Math.min(7, Math.max(0, Number(a.sharpness) || 0)),
               enableSharpYUV: !!a.enableSharpYUV,
               tune: tuneEnum,
-              bitDepth,
+              // bitDepth omitted — jSquash 10/12-bit path requires ImageData16bit
+              // (Uint16Array). Our pipeline only produces 8-bit ImageData; encoder
+              // would throw. Left at jSquash's default (8).
             }
           }
-          const result = await encode(imageData, encodeOpts)
+          // Cast to the 8-bit overload's expected options shape. See encodeOpts note
+          // above — we always call encode() with 8-bit ImageData in this branch.
+          const result = await encode(imageData, encodeOpts as Parameters<typeof encode>[1] & { bitDepth?: 8 })
           return Comlink.transfer(
             { buffer: result, originalSize: job.buffer.byteLength, optimizedSize: result.byteLength },
             [result],
