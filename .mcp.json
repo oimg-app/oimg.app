@@ -6,6 +6,36 @@
         "shadcn@latest",
         "mcp"
       ]
+    },
+    "gsd-workflow": {
+      "command": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+      "args": [
+        "/Users/jilizart/.npm-global/lib/node_modules/@opengsd/gsd-pi/packages/mcp-server/dist/cli.js"
+      ],
+      "cwd": "/Users/jilizart/Projects/oimg.app",
+      "env": {
+        "GSD_CLI_PATH": "/Users/jilizart/.npm-global/bin/gsd",
+        "GSD_BIN_PATH": "/Users/jilizart/.npm-global/bin/gsd",
+        "GSD_WORKFLOW_EXECUTORS_MODULE": "/Users/jilizart/.gsd/agent/extensions/gsd/tools/workflow-tool-executors.js",
+        "GSD_WORKFLOW_WRITE_GATE_MODULE": "/Users/jilizart/.gsd/agent/extensions/gsd/bootstrap/write-gate.js",
+        "GSD_PERSIST_WRITE_GATE_STATE": "1",
+        "GSD_WORKFLOW_PROJECT_ROOT": "/Users/jilizart/Projects/oimg.app"
+      }
+    },
+    "gsd-browser": {
+      "command": "gsd-browser",
+      "args": [
+        "mcp",
+        "--session",
+        "gsd-oimg.app-2e90ad5a",
+        "--identity-scope",
+        "project",
+        "--identity-key",
+        "gsd-oimg.app-2e90ad5a",
+        "--identity-project",
+        "gsd-oimg.app-2e90ad5a"
+      ],
+      "cwd": "/Users/jilizart/Projects/oimg.app"
     }
   }
 }
