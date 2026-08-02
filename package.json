@@ -10,8 +10,7 @@
     "test": "npx playwright test",
     "test:ui": "npx playwright test --ui",
     "test:headed": "npx playwright test --headed",
-    "test:bundle": "node --experimental-strip-types src/tests/build.test.ts",
-    "postinstall": "node ./scripts/ensure-rollup-binding.mjs"
+    "test:bundle": "node --experimental-strip-types src/tests/build.test.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.4.1",
