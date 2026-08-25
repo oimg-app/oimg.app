@@ -18,7 +18,7 @@ export function SegControl({ options, value, onChange, 'aria-label': ariaLabel, 
       aria-label={ariaLabel}
       aria-disabled={disabled || undefined}
       className={cn(
-        'flex h-6 rounded-[4px] border border-[var(--color-line)] overflow-hidden bg-[var(--color-bg-1)]',
+        'flex h-6 rounded-[4px] border border-[var(--color-line)] overflow-hidden bg-color-bg-1',
         disabled && 'pointer-events-none opacity-40',
       )}
     >
@@ -34,7 +34,7 @@ export function SegControl({ options, value, onChange, 'aria-label': ariaLabel, 
             'flex-1 px-2 text-[11px] font-mono transition-colors',
             i > 0 && 'border-l border-[var(--color-line)]',
             o === value
-              ? 'bg-[var(--color-bg-3)] text-[var(--color-fg-0)] font-semibold'
+              ? 'bg-color-bg-3 text-[var(--color-fg-0)] font-semibold'
               : 'text-[var(--color-fg-2)] font-normal hover:text-[var(--color-fg-0)]',
           )}
         >

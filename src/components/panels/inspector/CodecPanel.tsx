@@ -429,7 +429,7 @@ export function CodecPanel() {
                   <Input
                     value={settings.w}
                     onChange={(e) => handleSetResizeDimensions(e.target.value, settings.h)}
-                    className="h-6 font-mono text-[12px] bg-[var(--color-bg-2)] border-[var(--color-line)]"
+                    className="h-6 font-mono text-[12px] bg-color-bg-2 border-[var(--color-line)]"
                   />
                 </div>
                 <div className="grid grid-cols-[100px_1fr] gap-2 items-center">
@@ -437,7 +437,7 @@ export function CodecPanel() {
                   <Input
                     value={settings.h}
                     onChange={(e) => handleSetResizeDimensions(settings.w, e.target.value)}
-                    className="h-6 font-mono text-[12px] bg-[var(--color-bg-2)] border-[var(--color-line)]"
+                    className="h-6 font-mono text-[12px] bg-color-bg-2 border-[var(--color-line)]"
                   />
                 </div>
                 <div className="grid grid-cols-[100px_1fr] gap-2 items-center">

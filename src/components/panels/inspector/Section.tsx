@@ -18,7 +18,7 @@ export function Section({ title, badge, children }: SectionProps) {
               'text-[10px] font-mono font-semibold px-1.5 py-0.5 rounded',
               badge.acc
                 ? 'bg-[var(--color-accent-dim)] text-[var(--color-accent)]'
-                : 'bg-[var(--color-bg-2)] text-[var(--color-fg-1)]',
+                : 'bg-color-bg-2 text-[var(--color-fg-1)]',
             )}
           >
             {badge.text}

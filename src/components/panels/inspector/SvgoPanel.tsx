@@ -62,14 +62,14 @@ export function SvgoPanel() {
               key={p.id}
               aria-pressed={p.on}
               onClick={() => handleTogglePlugin(p.id)}
-              className="grid grid-cols-[16px_1fr_auto] gap-2 items-center py-1.5 px-1 rounded cursor-default hover:bg-[var(--color-bg-1)] w-full text-left transition-colors"
+              className="grid grid-cols-[16px_1fr_auto] gap-2 items-center py-1.5 px-1 rounded cursor-default hover:bg-color-bg-1 w-full text-left transition-colors"
             >
               <div
                 className={cn(
                   'w-[13px] h-[13px] rounded-[3px] flex items-center justify-center shrink-0 border transition-colors',
                   p.on
-                    ? 'bg-[var(--color-accent)] border-[var(--color-accent)]'
-                    : 'bg-[var(--color-bg-1)] border-[var(--color-line-strong)]'
+                    ? 'bg-color-accent border-[var(--color-accent)]'
+                    : 'bg-color-bg-1 border-[var(--color-line-strong)]'
                 )}
               >
                 {p.on && (

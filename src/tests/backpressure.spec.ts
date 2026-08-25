@@ -54,7 +54,7 @@ test.describe('BackpressureIndicator — SHELL-02', () => {
     // Click Optimize all — this triggers startRun which sets running = true
     // (derived from runningJobs > 0 once Plan 03 lands).
     await page.getByRole('button', { name: 'Optimize all' }).click()
-    // Indicator must transition to active state (bg-[var(--color-accent)] animate-pulse,
+    // Indicator must transition to active state (bg-color-accent animate-pulse,
     // not opacity-0) — this holds when at least one job is running.
     const indicator = page.getByTestId('backpressure-indicator')
     await expect(indicator).not.toHaveClass(/opacity-0/)

@@ -102,7 +102,7 @@ function Snippet({ file, id, title, ariaLabel, builder, onCopy, isCopied }: Snip
   } else if (status === 'processing' || !hasBytes) {
     body = (
       <div
-        className="h-[60px] rounded-md bg-[var(--color-bg-2)] animate-pulse mb-2"
+        className="h-[60px] rounded-md bg-color-bg-2 animate-pulse mb-2"
         aria-label="Encoding in progress"
       />
     )
@@ -112,7 +112,7 @@ function Snippet({ file, id, title, ariaLabel, builder, onCopy, isCopied }: Snip
       <pre
         className={cn(
           'px-3 py-2 mb-2',
-          'text-[var(--color-fg-1)] bg-[var(--color-bg-2)]',
+          'text-[var(--color-fg-1)] bg-color-bg-2',
           'max-h-[300px] overflow-y-auto',
           'font-mono text-[12px] rounded-md overflow-x-auto leading-[1.6] whitespace-pre-wrap break-all '
         )}

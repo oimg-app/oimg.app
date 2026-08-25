@@ -86,7 +86,7 @@ export function DeltaStrip() {
   const decodeTime = estimateDownloadTime(selectedFile?.encodedBuffer ?? null);
 
   return (
-    <div className="h-[72px] shrink-0 border-t border-[var(--color-line)] bg-[var(--color-bg-1)] flex">
+    <div className="h-[72px] shrink-0 border-t border-[var(--color-line)] bg-color-bg-1 flex">
       <DeltaCard
         label="ORIGINAL"
         value={fmtBytes(orig)}

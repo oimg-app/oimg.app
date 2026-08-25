@@ -16,7 +16,7 @@ export function CommandPalette() {
         showCloseButton={false}
         data-testid="command-palette"
         aria-label="Command palette"
-        className="w-[560px] max-w-[90vw] max-h-[400px] p-0 bg-[var(--color-bg-1)] border-[var(--color-line)] rounded-[8px] overflow-hidden"
+        className="w-[560px] max-w-[90vw] max-h-[400px] p-0 bg-color-bg-1 border-[var(--color-line)] rounded-[8px] overflow-hidden"
       >
         {/* Search row */}
         <div className="flex items-center border-b border-[var(--color-line)]">
@@ -63,7 +63,7 @@ export function CommandPalette() {
                 role="option"
                 aria-selected={i === cmdkSel}
                 className={cn(
-                  'px-4 py-2 text-[13px] text-[var(--color-fg-0)] cursor-default flex justify-between items-center hover:bg-[var(--color-bg-2)]',
+                  'px-4 py-2 text-[13px] text-[var(--color-fg-0)] cursor-default flex justify-between items-center hover:bg-color-bg-2',
                   i === cmdkSel && 'bg-[var(--color-accent-dim)] border-l-2 border-[var(--color-accent)]',
                 )}
                 onClick={() => {

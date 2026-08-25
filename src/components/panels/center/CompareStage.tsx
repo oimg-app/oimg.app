@@ -326,7 +326,7 @@ export function CompareStage() {
           )
         ) : (
           <div
-            className="absolute inset-0 bg-[var(--color-bg-2)]"
+            className="absolute inset-0 bg-color-bg-2"
             style={{ clipPath: 'inset(0 calc(100% - var(--split)) 0 0)' }}
           />
         )}
@@ -356,18 +356,18 @@ export function CompareStage() {
           )
         ) : (
           <div
-            className="absolute inset-0 bg-[var(--color-bg-3)]"
+            className="absolute inset-0 bg-color-bg-3"
             style={{ clipPath: 'inset(0 0 0 var(--split))' }}
           />
         )}
 
         {/* split-handle */}
         <div
-          className="absolute top-0 bottom-0 w-[1px] cursor-col-resize bg-[var(--color-accent)]"
+          className="absolute top-0 bottom-0 w-[1px] cursor-col-resize bg-color-accent"
           style={{ left: 'var(--split)', transform: 'translateX(-0.5px)' }}
           onMouseDown={handleSplitMouseDown}
         >
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[22px] h-[22px] rounded-full bg-[var(--color-accent)] flex items-center justify-center">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[22px] h-[22px] rounded-full bg-color-accent flex items-center justify-center">
             <span className="font-mono text-[11px] font-semibold text-[var(--color-accent-fg)] pointer-events-none select-none">
               ⇆
             </span>
@@ -382,7 +382,7 @@ export function CompareStage() {
 
         {/* split label right */}
         <div className="absolute bottom-3 right-3 flex items-center gap-1.5 px-2 py-1 rounded-[4px] font-mono text-[11px] font-semibold text-[var(--color-fg-0)] bg-[var(--color-bg-0)]/70 backdrop-blur-sm pointer-events-none">
-          <span className="w-2 h-2 rounded-full bg-[var(--color-accent)] shrink-0" />
+          <span className="w-2 h-2 rounded-full bg-color-accent shrink-0" />
           {optTarget ?? '—'} · {fmtBytes(selectedFile?.opt ?? null)}
         </div>
       </div>

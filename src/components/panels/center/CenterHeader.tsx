@@ -40,7 +40,7 @@ const BG_SWATCHES: Array<{ id: StageBg; label: string; style: React.CSSPropertie
 ]
 
 const FILE_TAG =
-  'font-mono text-[11px] font-semibold bg-[var(--color-bg-2)] text-[var(--color-fg-1)] px-1.5 py-0.5 rounded-[3px] whitespace-nowrap'
+  'font-mono text-[11px] font-semibold bg-color-bg-2 text-[var(--color-fg-1)] px-1.5 py-0.5 rounded-[3px] whitespace-nowrap'
 
 const ZOOM_OPTS = [25, 50, 100, 200, 'fit'] as const
 
@@ -51,7 +51,7 @@ export function CenterHeader() {
   const quality = selectedFile?.settings?.q ?? q
 
   return (
-    <header className="flex items-center justify-between h-9 px-3 border-b border-[var(--color-line)] bg-[var(--color-bg-1)] shrink-0">
+    <header className="flex items-center justify-between h-9 px-3 border-b border-[var(--color-line)] bg-color-bg-1 shrink-0">
       {/* Breadcrumb */}
       <nav className="flex items-center gap-1.5 min-w-0">
         <span className="text-[13px] text-[var(--color-fg-2)]">Queue</span>
@@ -109,18 +109,18 @@ export function CenterHeader() {
           <DropdownMenuTrigger asChild>
             <button
               type="button"
-              className="flex items-center gap-1 h-6 px-2 font-mono text-[11px] text-[var(--color-fg-1)] hover:text-[var(--color-fg-0)] hover:bg-[var(--color-bg-2)] rounded transition-colors"
+              className="flex items-center gap-1 h-6 px-2 font-mono text-[11px] text-[var(--color-fg-1)] hover:text-[var(--color-fg-0)] hover:bg-color-bg-2 rounded transition-colors"
             >
               <EyeIcon size={12} />
               {zoom === 'fit' ? 'Fit' : `${zoom}%`}
               <CaretDownIcon size={10} />
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent side="bottom" align="end" className="w-32 min-w-0 p-1 bg-[var(--color-bg-1)] text-[var(--color-fg-1)] border border-[var(--color-line)] ring-0 shadow-md">
+          <DropdownMenuContent side="bottom" align="end" className="w-32 min-w-0 p-1 bg-color-bg-1 text-[var(--color-fg-1)] border border-[var(--color-line)] ring-0 shadow-md">
             {ZOOM_OPTS.map((opt) => (
               <DropdownMenuItem
                 key={opt}
-                className="flex items-center justify-between h-7 px-2 font-mono text-[11px] rounded cursor-pointer focus:bg-[var(--color-bg-2)] data-[highlighted]:bg-[var(--color-bg-2)] text-[var(--color-fg-1)]"
+                className="flex items-center justify-between h-7 px-2 font-mono text-[11px] rounded cursor-pointer focus:bg-color-bg-2 data-[highlighted]:bg-color-bg-2 text-[var(--color-fg-1)]"
                 onSelect={() => setZoom(opt)}
               >
                 <span>{typeof opt === 'number' ? `${opt}%` : 'Fit'}</span>

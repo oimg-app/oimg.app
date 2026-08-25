@@ -44,19 +44,19 @@ import { pickFromClipboard } from "@/lib/clipboard-ingest";
 import { cn } from "@/lib/utils";
 
 const tbtnClass =
-  "h-7 px-3 text-xs text-[var(--color-fg-0)] bg-[var(--color-bg-2)] border border-[var(--color-line)] rounded-[5px] hover:bg-[var(--color-bg-3)] hover:border-[var(--color-line-strong)] flex items-center gap-1";
+  "h-7 px-3 text-xs text-[var(--color-fg-0)] bg-color-bg-2 border border-[var(--color-line)] rounded-[5px] hover:bg-color-bg-3 hover:border-[var(--color-line-strong)] flex items-center gap-1";
 
 const menuItemClass =
-  "w-full px-3 py-1.5 text-left text-xs text-[var(--color-fg-0)] hover:bg-[var(--color-bg-3)] rounded";
+  "w-full px-3 py-1.5 text-left text-xs text-[var(--color-fg-0)] hover:bg-color-bg-3 rounded";
 
 const popoverContentClass =
-  "w-auto p-2 bg-[var(--color-bg-2)] border-[var(--color-line)] rounded-[6px]";
+  "w-auto p-2 bg-color-bg-2 border-[var(--color-line)] rounded-[6px]";
 
 function ToolbarDivider() {
   return (
     <div
       aria-hidden="true"
-      className="w-px h-[18px] bg-[var(--color-line)] mx-1"
+      className="w-px h-[18px] bg-color-line mx-1"
     />
   );
 }
@@ -98,7 +98,7 @@ export function Toolbar() {
       data-testid="toolbar"
       role="toolbar"
       aria-label="Primary toolbar"
-      className="h-11 bg-[var(--color-bg-1)] border-b border-[var(--color-line)] px-2 flex items-center gap-2 shrink-0"
+      className="h-11 bg-color-bg-1 border-b border-[var(--color-line)] px-2 flex items-center gap-2 shrink-0"
     >
       {/* 1. Add files split group */}
       <div className="flex">
@@ -169,7 +169,7 @@ export function Toolbar() {
       <button
         type="button"
         onClick={runOptimize}
-        className="h-7 px-3 text-xs font-semibold bg-[var(--color-accent)] text-[var(--color-accent-fg)] border-transparent rounded-[5px] hover:brightness-105 flex items-center gap-1"
+        className="h-7 px-3 text-xs font-semibold bg-color-accent text-[var(--color-accent-fg)] border-transparent rounded-[5px] hover:brightness-105 flex items-center gap-1"
       >
         <Lightning size={13} />
         Optimize all
@@ -302,7 +302,7 @@ export function Toolbar() {
       <div
         role="group"
         aria-label="Switch view"
-        className="flex h-7 bg-[var(--color-bg-2)] border border-[var(--color-line)] rounded-[5px]"
+        className="flex h-7 bg-color-bg-2 border border-[var(--color-line)] rounded-[5px]"
       >
         {(["Batch", "Compare", "Report"] as View[]).map((v, i) => (
           <button
@@ -315,7 +315,7 @@ export function Toolbar() {
               "px-3 text-xs rounded-[4px]",
               i > 0 && "border-l border-[var(--color-line)]",
               view === v
-                ? "bg-[var(--color-bg-3)] text-[var(--color-fg-0)]"
+                ? "bg-color-bg-3 text-[var(--color-fg-0)]"
                 : "text-[var(--color-fg-1)]",
             )}
           >
@@ -390,7 +390,7 @@ export function Toolbar() {
       <ToolbarDivider />
 
       {/* 8. Filter input */}
-      <div className="flex items-center h-7 min-w-[220px] bg-[var(--color-bg-2)] border border-[var(--color-line)] rounded-[5px] px-2 gap-2 focus-within:border-[var(--color-accent)]">
+      <div className="flex items-center h-7 min-w-[220px] bg-color-bg-2 border border-[var(--color-line)] rounded-[5px] px-2 gap-2 focus-within:border-[var(--color-accent)]">
         <MagnifyingGlass
           size={12}
           className="text-[var(--color-fg-2)] shrink-0"
@@ -411,7 +411,7 @@ export function Toolbar() {
         type="button"
         aria-label="Toggle theme"
         onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-        className="h-7 w-7 grid place-items-center rounded-[5px] text-[var(--color-fg-1)] hover:bg-[var(--color-bg-2)] hover:text-[var(--color-fg-0)]"
+        className="h-7 w-7 grid place-items-center rounded-[5px] text-[var(--color-fg-1)] hover:bg-color-bg-2 hover:text-[var(--color-fg-0)]"
       >
         {theme === "dark" ? <Sun size={13} /> : <Moon size={13} />}
       </button>
@@ -425,7 +425,7 @@ export function Toolbar() {
           <button
             type="button"
             aria-label="Open settings"
-            className="h-7 w-7 grid place-items-center rounded-[5px] text-[var(--color-fg-1)] hover:bg-[var(--color-bg-2)] hover:text-[var(--color-fg-0)]"
+            className="h-7 w-7 grid place-items-center rounded-[5px] text-[var(--color-fg-1)] hover:bg-color-bg-2 hover:text-[var(--color-fg-0)]"
           >
             <GearSix size={13} />
           </button>

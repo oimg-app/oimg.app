@@ -198,3 +198,27 @@ body {
   scrollbar-color: var(--muted) transparent;
   scrollbar-width: thin;
 }
+
+.bg-color-bg-1 {
+  background-color: var(--color-bg-1);
+}
+
+.bg-color-bg-2 {
+  background-color: var(--color-bg-2);
+}
+
+.bg-color-bg-3 {
+  background-color: var(--color-bg-3);
+}
+
+.bg-color-accent {
+  background-color: var(--color-accent);
+}
+
+.bg-color-info {
+  background-color: var(--color-info);
+}
+
+.bg-color-line {
+  background-color: var(--color-line);
+}

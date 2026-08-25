@@ -41,14 +41,14 @@ export function StatusBar() {
       data-testid="statusbar"
       role="status"
       aria-live="polite"
-      className="h-[22px] bg-[var(--color-bg-1)] border-t border-[var(--color-line)] px-3 flex items-center gap-3 text-[11px] text-[var(--color-fg-2)] shrink-0"
+      className="h-[22px] bg-color-bg-1 border-t border-[var(--color-line)] px-3 flex items-center gap-3 text-[11px] text-[var(--color-fg-2)] shrink-0"
     >
       <span
         data-testid="worker-pip"
         aria-label={`Worker status: ${running ? 'Running' : 'Idle'}`}
         className={cn(
           'w-2 h-2 rounded-full inline-block',
-          running ? 'bg-[var(--color-info)] motion-safe:animate-pulse' : 'bg-[var(--color-accent)]'
+          running ? 'bg-color-info motion-safe:animate-pulse' : 'bg-color-accent'
         )}
       />
       <span>{running ? 'Running' : 'Idle'}</span>
