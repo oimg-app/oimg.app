@@ -65,6 +65,7 @@ try {
   // but the file might still carry orphan field declarations.
   const fs = await import('node:fs')
   const src = fs.readFileSync(
+      /* @vite-ignore */
     new URL('../stores/runtime.ts', import.meta.url),
     'utf-8',
   )
@@ -85,6 +86,7 @@ try {
     try {
       const fs = await import('node:fs')
       const src = fs.readFileSync(
+          /* @vite-ignore */
         new URL('../stores/runtime.ts', import.meta.url),
         'utf-8',
       )

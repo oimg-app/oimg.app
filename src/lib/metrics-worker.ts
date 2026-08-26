@@ -17,6 +17,7 @@ export function getMetricsWorker(): Comlink.Remote<MetricsApi> {
   if (_proxy) return _proxy
   // CRITICAL: literal URL string — no template literals; Vite static analysis
   // requires this exact shape to detect the worker entry at build time.
+  /* @vite-ignore */
   _worker = new Worker(new URL('../workers/metrics.worker.ts', import.meta.url), { type: 'module' })
   _proxy = Comlink.wrap<MetricsApi>(_worker)
   return _proxy

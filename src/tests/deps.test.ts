@@ -19,6 +19,7 @@ function assert(name: string, cond: boolean): void {
 
 try {
   // Resolve package.json relative to this file (src/tests/deps.test.ts → ../../package.json)
+  /* @vite-ignore */
   const here = dirname(fileURLToPath(import.meta.url))
   const pkgPath = resolve(here, '../../package.json')
   const raw = await readFile(pkgPath, 'utf8')

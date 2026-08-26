@@ -1,6 +1,7 @@
 // Phase 04 — STORE-02: settingsAtom. Source: 04-01-PLAN.md
 // CIRCULAR ESM GUARD: settings.ts MUST NOT import ui.ts, files.ts, or runtime.ts
 import { map } from 'nanostores'
+import { filesAtom } from '@/stores/files'
 // Use relative path so Node --experimental-strip-types can resolve the value import
 import type { SvgoPlugin, Codec } from '../lib/settings'
 import { SVGO_PLUGINS } from '../lib/settings'
@@ -76,16 +77,15 @@ export function togglePlugin(id: string): void {
 // add `progressive: true` (SettingsState has no progressive field, so a JPEG override was being
 // dropped) and deep-copy `plugins` via initFileSettings-style mapping so entries never alias the
 // shared global plugin objects.
-export function applyToAll(): Promise<void> {
-  return import('@/stores/files').then(({ filesAtom }) => {
-    const defaults = settingsAtom.get()
-    filesAtom.setKey('entries', filesAtom.get().entries.map(e => ({
-      ...e,
-      settings: {
-        ...defaults,
-        progressive: true,
-        plugins: defaults.plugins.map(p => ({ ...p })),
-      },
-    })))
-  })
+export async function applyToAll() {
+  const defaults = settingsAtom.get()
+
+  filesAtom.setKey('entries', filesAtom.get().entries.map(e => ({
+    ...e,
+    settings: {
+      ...defaults,
+      progressive: true,
+      plugins: defaults.plugins.map(p => ({ ...p })),
+    },
+  })))
 }

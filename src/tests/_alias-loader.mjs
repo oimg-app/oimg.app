@@ -20,12 +20,14 @@ const REG_FLAG = '__oimg_alias_loader_registered'
 if (!(REG_FLAG in globalThis)) {
   Object.defineProperty(globalThis, REG_FLAG, { value: true, configurable: true })
   try {
+    /* @vite-ignore */
     register(import.meta.url, pathToFileURL('./'))
   } catch {
     // If register fails (e.g. already wired as a loader-hook flag), fall through silently.
   }
 }
 
+/* @vite-ignore */
 const here = dirname(fileURLToPath(import.meta.url))
 const srcRoot = resolve(here, '..')
 

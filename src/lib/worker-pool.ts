@@ -1,5 +1,6 @@
 // Phase 08 — PIPE-01/04: WorkerPool — bounded concurrency + job queue. Source: 08-02-PLAN.md
 import * as Comlink from 'comlink'
+import { setJobCounts } from '@/stores/runtime'
 import type { EncodeJob, EncodeResult } from '@/workers/codec.worker'
 
 type WorkerApi = { optimize: (job: EncodeJob) => Promise<EncodeResult> }
@@ -26,6 +27,7 @@ export class WorkerPool {
   ) {
     for (let i = 0; i < size; i++) {
       // CRITICAL: literal URL string — no template literals; Vite static analysis requires this form
+      /* @vite-ignore */
       const w = new Worker(new URL('../workers/codec.worker.ts', import.meta.url), { type: 'module' })
       const proxy = Comlink.wrap<WorkerApi>(w)
       this.workers.push(proxy)
@@ -77,8 +79,7 @@ export function getPool(): WorkerPool {
   if (!_instance) {
     const size = Math.min(navigator.hardwareConcurrency ?? 4, 4)
     _instance = new WorkerPool(size, (active, queued) => {
-      // Lazy import avoids circular dep: worker-pool → stores/runtime
-      import('@/stores/runtime').then(({ setJobCounts }) => setJobCounts(active, queued))
+      setJobCounts(active, queued)
     })
   }
   return _instance

@@ -112,6 +112,7 @@ async function maybeResize(imageData: ImageData, settings: FileSettings): Promis
 }
 
 // imagequant's default `quantize()` spawns a nested Web Worker (imagequant.worker.js) via
+// /* @vite-ignore */
 // new URL('../../imagequant/dist/…', import.meta.url), which resolves to a non-existent path
 // when the package is served from /node_modules and produces the "text/html MIME" error
 // (Vite's SPA fallback). We're already in a worker, so run it in-thread with the 'client'

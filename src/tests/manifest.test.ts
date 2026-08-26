@@ -20,6 +20,7 @@ import { readFileSync, existsSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, resolve } from 'node:path'
 
+/* @vite-ignore */
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const MANIFEST_PATH = resolve(__dirname, '../../public/manifest.webmanifest')
 
