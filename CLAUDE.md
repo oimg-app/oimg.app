@@ -9,7 +9,7 @@ A 100% client-side, zero-server browser tool that lets web developers batch-opti
 
 If everything else fails, the upload → adjust → download-with-snippets pipeline must work flawlessly for SVG and PNG.
 
-**Status:** v1.0 (UI port) and v1.1 (real optimization pipeline) shipped. v1.2 (Polish, Diagnostics, PWA + Quality Metrics — installable PWA, real SSIM/Butteraugli metrics, URL/paste ingest, queue hygiene) is active. See `.planning/ROADMAP.md`.
+**Status:** v1.0, v1.1, and v1.2 shipped and archived. No active milestone. Planning has migrated from GSD to OpenSpec — historical roadmaps and phase artifacts live under `openspec/changes/archive/`. Current capability specs live under `openspec/specs/`.
 
 ### Constraints
 
@@ -116,7 +116,7 @@ zustand (→ nanostores), Vite 8 (→ Vite 7), individual `@radix-ui/react-*` pa
 - Per-file failures reject only that job's promise (caught → `setFileError` + toast); a batch never aborts on one bad file.
 
 **Comments**
-- Source carries `Phase NN — …` / `Quick …` provenance tags tied to `.planning/` artifacts and decision IDs (D-xx, WR-xx, T-xx, CR-xx). Keep this style when editing — it links code to its plan/decision.
+- Source carries `Phase NN — …` / `Quick …` provenance tags tied to historical planning artifacts (now under `openspec/changes/archive/`) and decision IDs (D-xx, WR-xx, T-xx, CR-xx). Keep tags on existing lines; new work tags with the OpenSpec change slug instead (e.g., `// change:add-web-share-target — …`).
 
 **Imports**: use the `@/` alias (→ `src/`) everywhere except `settings.ts`'s value import of `stub-data`, which uses a relative `../lib/stub-data.ts` path so the Node `--experimental-strip-types` unit runner can resolve it.
 <!-- GSD:conventions-end -->
@@ -177,24 +177,24 @@ Two test kinds live in `src/tests/`:
 No project skills found. Add skills to any of: `.claude/skills/`, `.agents/skills/`, `.cursor/skills/`, `.github/skills/`, or `.codex/skills/` with a `SKILL.md` index file.
 <!-- GSD:skills-end -->
 
-<!-- GSD:workflow-start source:GSD defaults -->
-## GSD Workflow Enforcement
+<!-- OpenSpec:workflow-start -->
+## OpenSpec Workflow
 
-Planning artifacts live in `.planning/` (`ROADMAP.md`, `STATE.md`, `PROJECT.md`, phase dirs). Before using Edit/Write, start work through a GSD command so planning artifacts and execution context stay in sync.
+Planning lives in `openspec/`:
+- `openspec/project.md` — project context (tech stack, conventions, constraints) that OpenSpec skills read first.
+- `openspec/specs/<capability>/spec.md` — source-of-truth requirements for shipped capabilities.
+- `openspec/changes/<slug>/` — active change proposals (delta specs + tasks). Archived under `openspec/changes/archive/`.
 
-Use these entry points:
-- `/gsd-quick` for small fixes, doc updates, and ad-hoc tasks
-- `/gsd-debug` for investigation and bug fixing
-- `/gsd-execute-phase` for planned phase work
+Before non-trivial edits, drive work through an OpenSpec skill so specs and code stay coherent:
+- `openspec-explore` — think through an idea or investigate a problem before proposing.
+- `openspec-propose` — draft a new change (proposal + delta specs + tasks) in one shot.
+- `openspec-apply-change` — implement the tasks of an approved change.
+- `openspec-update-change` — revise a change's artifacts to keep them consistent.
+- `openspec-sync-specs` — fold a change's delta into main specs without archiving.
+- `openspec-archive-change` — finalize and archive a shipped change.
 
-Do not make direct repo edits outside a GSD workflow unless the user explicitly asks to bypass it.
-<!-- GSD:workflow-end -->
+Small doc-only edits and trivial fixes may bypass the workflow; anything that touches behavior should ride through it.
+<!-- OpenSpec:workflow-end -->
 
 
 
-<!-- GSD:profile-start -->
-## Developer Profile
-
-> Profile not yet configured. Run `/gsd-profile-user` to generate your developer profile.
-> This section is managed by `generate-claude-profile` -- do not edit manually.
-<!-- GSD:profile-end -->
