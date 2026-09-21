@@ -22,7 +22,7 @@ import { ingestFixtureFiles } from './fixtures/ingest-helper'
 async function resetAllToQueued(page: Page): Promise<void> {
   await page.evaluate(async () => {
     
-    const mod = (await import('../stores/files'))
+    const mod = (await import('/src/stores/files.ts'))
     const { filesAtom } = mod
     const { entries } = filesAtom.get()
     filesAtom.setKey('entries', entries.map((e) => ({ ...e, status: 'queued' as const })))
@@ -37,7 +37,7 @@ async function waitForHasDone(page: Page, expected: boolean): Promise<void> {
   await page.waitForFunction(
     async (want) => {
       
-      const mod = (await import('../stores/files'))
+      const mod = (await import('/src/stores/files.ts'))
       return mod.filesAtom.get().entries.some((e) => e.status === 'done') === want
     },
     expected,
@@ -93,7 +93,7 @@ test.describe('D-13 — Export disable-then-explain', () => {
     await page.keyboard.press('Escape')
     await page.evaluate(async () => {
       
-      const mod = (await import('../stores/files'))
+      const mod = (await import('/src/stores/files.ts'))
       const { filesAtom } = mod
       const { entries } = filesAtom.get()
       filesAtom.setKey('entries', entries.map((e) => ({ ...e, status: 'done' as const })))

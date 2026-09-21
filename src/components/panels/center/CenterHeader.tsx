@@ -58,22 +58,27 @@ export function CenterHeader() {
         <span className="text-[13px] text-[var(--color-fg-3)]">/</span>
         {selectedFile && (
           <>
-            <span className="text-[13px] font-medium text-[var(--color-fg-0)] truncate max-w-[200px]">
+            <span
+              className="text-[13px] font-medium text-[var(--color-fg-0)] truncate max-w-[200px]"
+              data-testid="center-breadcrumb-name"
+            >
               {selectedFile.name}
             </span>
             {/* type→codec from inspector */}
-            <span className={FILE_TAG}>
+            <span className={FILE_TAG} data-testid="center-breadcrumb-type-codec">
               {selectedFile.type.toUpperCase()}→{selectedFile.settings?.codec.toUpperCase() || codec.toUpperCase()}
             </span>
             {/* dim — extended with resize target when resizeOn */}
-            <span className={FILE_TAG}>
+            <span className={FILE_TAG} data-testid="center-breadcrumb-dim">
               {resizeOn ? `${selectedFile.dim}→${w}×${h}` : selectedFile.dim}
             </span>
             {/* quality from inspector slider — hidden for SVG */}
             {codec !== 'SVG' && (
                 <>
-                  <span className={FILE_TAG}>q{quality}</span>
-                  <span className={FILE_TAG}>e{selectedFile?.settings?.method}</span>
+                  <span className={FILE_TAG} data-testid="center-breadcrumb-quality">q{quality}</span>
+                  <span className={FILE_TAG} data-testid="center-breadcrumb-effort">
+                    e{selectedFile?.settings?.method}
+                  </span>
                 </>
             )}
           </>
@@ -92,6 +97,7 @@ export function CenterHeader() {
               aria-checked={stageBg === s.id}
               aria-label={s.label}
               title={s.label}
+              data-testid={`center-swatch-${s.id}`}
               onClick={() => setStageBg(s.id)}
               className={cn(
                 'w-4 h-4 rounded-full border transition-colors overflow-hidden',
@@ -109,6 +115,7 @@ export function CenterHeader() {
           <DropdownMenuTrigger asChild>
             <button
               type="button"
+              data-testid="center-zoom-trigger"
               className="flex items-center gap-1 h-6 px-2 font-mono text-[11px] text-[var(--color-fg-1)] hover:text-[var(--color-fg-0)] hover:bg-color-bg-2 rounded transition-colors"
             >
               <EyeIcon size={12} />
@@ -120,6 +127,7 @@ export function CenterHeader() {
             {ZOOM_OPTS.map((opt) => (
               <DropdownMenuItem
                 key={opt}
+                data-testid={`center-zoom-item-${opt}`}
                 className="flex items-center justify-between h-7 px-2 font-mono text-[11px] rounded cursor-pointer focus:bg-color-bg-2 data-[highlighted]:bg-color-bg-2 text-[var(--color-fg-1)]"
                 onSelect={() => setZoom(opt)}
               >

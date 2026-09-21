@@ -5,11 +5,16 @@ interface SectionProps {
   title: string
   badge?: { text: string; acc?: boolean }
   children: React.ReactNode
+  // change:add-black-box-e2e-suite — lets a caller root a scoped query on one section.
+  'data-testid'?: string
 }
 
-export function Section({ title, badge, children }: SectionProps) {
+export function Section({ title, badge, children, 'data-testid': testId }: SectionProps) {
   return (
-    <div className="border-b border-[var(--color-line)] px-3.5 pt-2.5 pb-3.5">
+    <div
+      data-testid={testId}
+      className="border-b border-[var(--color-line)] px-3.5 pt-2.5 pb-3.5"
+    >
       <h3 className="flex items-center justify-between font-mono text-[11px] font-semibold text-[var(--color-fg-2)] uppercase tracking-wider mb-2.5">
         <span>{title}</span>
         {badge && (

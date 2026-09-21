@@ -39,7 +39,10 @@ export function InspectorPane() {
       </header>
 
       {!selectedFile ? (
-        <div className="flex items-center justify-center h-full text-[11px] font-mono text-[var(--color-fg-3)]">
+        <div
+          data-testid="inspector-empty"
+          className="flex items-center justify-center h-full text-[11px] font-mono text-[var(--color-fg-3)]"
+        >
           Select a file to adjust settings
         </div>
       ) : (
@@ -50,6 +53,8 @@ export function InspectorPane() {
               <button
                 key={t}
                 type="button"
+                data-testid={`inspector-tab-${t}`}
+                data-active={tab === t || undefined}
                 onClick={() => setTab(t)}
                 className={cn(
                   'appearance-none bg-transparent font-mono text-[11px] font-medium tracking-[0.06em] uppercase py-[9px] px-2.5 border-b-2 -mb-px cursor-default transition-colors',
@@ -94,6 +99,7 @@ export function InspectorPane() {
               <button
                 type="button"
                 aria-label="Apply global codec settings to all files in queue"
+                data-testid="inspector-apply-to-all"
                 onClick={handleApplyToAll}
                 className="w-full h-7 rounded-[4px] bg-[var(--color-accent-dim)] hover:bg-color-accent text-[var(--color-accent)] hover:text-[var(--color-accent-fg)] font-mono text-[11px] font-semibold transition-colors cursor-default"
               >

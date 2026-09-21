@@ -9,14 +9,29 @@ interface SegControlProps {
   'aria-label'?: string
   /** When true, renders as visually disabled (pointer-events-none + opacity) */
   disabled?: boolean
+  /**
+   * change:add-black-box-e2e-suite — lands on the radiogroup root. Each option
+   * button carries `data-value`, so a spec scopes per-option queries as
+   * `[data-testid="codec-seg-fit"] [data-value="contain"]` without touching
+   * visible text.
+   */
+  'data-testid'?: string
 }
 
-export function SegControl({ options, value, onChange, 'aria-label': ariaLabel, disabled }: SegControlProps) {
+export function SegControl({
+  options,
+  value,
+  onChange,
+  'aria-label': ariaLabel,
+  disabled,
+  'data-testid': testId,
+}: SegControlProps) {
   return (
     <div
       role="radiogroup"
       aria-label={ariaLabel}
       aria-disabled={disabled || undefined}
+      data-testid={testId}
       className={cn(
         'flex h-6 rounded-[4px] border border-[var(--color-line)] overflow-hidden bg-color-bg-1',
         disabled && 'pointer-events-none opacity-40',
@@ -28,6 +43,7 @@ export function SegControl({ options, value, onChange, 'aria-label': ariaLabel, 
           type="button"
           role="radio"
           aria-checked={o === value}
+          data-value={o}
           disabled={disabled}
           onClick={() => onChange(o)}
           className={cn(

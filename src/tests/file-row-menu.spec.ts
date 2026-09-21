@@ -11,12 +11,22 @@
 // Strategy: inject a "done" entry with encodedBuffer directly into filesAtom
 // (analog: src/tests/export-zip.spec.ts) — avoids the codec encode path.
 // installSaveFileMocks captures the saved blob.
+//
+// change:add-black-box-e2e-suite — migrated to testid selectors:
+//   getByText(filename) row lookup    → files-row-<id> (id is known; it is injected)
+//   getByRole('menuitem', {name})     → files-row-menu-<item>
+//   getByRole('button', {name:'File options'}) → files-row-<id>-ctxbtn
+// The page.evaluate import specifiers were also corrected to the '/src/*.ts' form — the
+// old relative ones resolved against the page URL and 404'd (see _helpers/page-modules.ts).
 import { test, expect } from '@playwright/test'
 import type { Page } from '@playwright/test'
 import { installSaveFileMocks } from './setup/save-file-mocks'
+import { FILES_MOD, SETTINGS_LIB_MOD } from './_helpers/page-modules'
+import { openRowMenu } from './_helpers/select'
+import { PNG_1x1 } from './_helpers/fixtures'
 
-const TINY_PNG_B64 =
-  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
+type FilesModule = typeof import('../stores/files')
+type SettingsLibModule = typeof import('../lib/settings')
 
 interface InjectSpec {
   id: string
@@ -33,13 +43,9 @@ interface InjectSpec {
  */
 async function injectEntries(page: Page, specs: InjectSpec[]): Promise<void> {
   await page.evaluate(
-    async ({ specs, TINY_PNG_B64 }) => {
-
-
-      const filesMod = (await import('../stores/files'))
-      const stubMod = (await import('../lib/settings'))
-      const { filesAtom } = filesMod
-      const { defaultFileSettings } = stubMod
+    async ({ specs, TINY_PNG_B64, filesMod, settingsMod }) => {
+      const { filesAtom } = (await import(filesMod)) as FilesModule
+      const { defaultFileSettings } = (await import(settingsMod)) as SettingsLibModule
 
       const bin = atob(TINY_PNG_B64)
       const ab = new Uint8Array(bin.length)
@@ -67,29 +73,30 @@ async function injectEntries(page: Page, specs: InjectSpec[]): Promise<void> {
       filesAtom.setKey('entries', entries)
       filesAtom.setKey('selectedId', entries[0]?.id ?? null)
     },
-    { specs, TINY_PNG_B64 },
+    { specs, TINY_PNG_B64: PNG_1x1, filesMod: FILES_MOD, settingsMod: SETTINGS_LIB_MOD },
   )
 }
 
 /**
- * Right-click on the row matching the given filename. The row is identified by
- * the file's name text inside the files-pane testid scope.
+ * Right-click the row with the given entry id. Addresses the row by its testid rather
+ * than by the filename text it happens to render.
  */
-async function rightClickRow(page: Page, filename: string): Promise<void> {
-  const row = page.getByTestId('files-pane').getByText(filename)
-  await row.click({ button: 'right' })
+async function rightClickRow(page: Page, id: string): Promise<void> {
+  await page.getByTestId(`files-row-${id}`).click({ button: 'right' })
 }
+
+const ROW_ID = 'fixture-0'
 
 test.describe('EXP-01 — Per-row File Options Menu (D-04)', () => {
   test('right-click → Save as… invokes useExport.exportOne (D-04)', async ({ page }) => {
     await installSaveFileMocks(page, { mode: 'accept' })
     await page.goto('/')
-    await injectEntries(page, [{ id: 'fixture-0', name: 'fixture-0.png', target: 'webp' }])
+    await injectEntries(page, [{ id: ROW_ID, name: 'fixture-0.png', target: 'webp' }])
 
-    await rightClickRow(page, 'fixture-0.png')
+    await rightClickRow(page, ROW_ID)
 
     // The menu's "Save as…" item is visible
-    const saveAs = page.getByRole('menuitem', { name: /^Save as…$/ })
+    const saveAs = page.getByTestId('files-row-menu-saveas')
     await expect(saveAs).toBeVisible()
     await saveAs.click()
 
@@ -113,40 +120,42 @@ test.describe('EXP-01 — Per-row File Options Menu (D-04)', () => {
   test('ctxbtn click also opens the menu (synthesized contextmenu)', async ({ page }) => {
     await installSaveFileMocks(page, { mode: 'accept' })
     await page.goto('/')
-    await injectEntries(page, [{ id: 'fixture-0', name: 'fixture-0.png', target: 'webp' }])
+    await injectEntries(page, [{ id: ROW_ID, name: 'fixture-0.png', target: 'webp' }])
 
-    // The ctxbtn has aria-label="File options" (FileRow.tsx line 119)
-    await page.getByRole('button', { name: 'File options' }).click()
+    // openRowMenu clicks files-row-<id>-ctxbtn and waits for the menu to mount.
+    await openRowMenu(page, ROW_ID)
 
-    await expect(page.getByRole('menuitem', { name: /^Save as…$/ })).toBeVisible()
+    await expect(page.getByTestId('files-row-menu-saveas')).toBeVisible()
   })
 
   test('Escape closes the open menu (WCAG-AA)', async ({ page }) => {
     await installSaveFileMocks(page, { mode: 'accept' })
     await page.goto('/')
-    await injectEntries(page, [{ id: 'fixture-0', name: 'fixture-0.png', target: 'webp' }])
+    await injectEntries(page, [{ id: ROW_ID, name: 'fixture-0.png', target: 'webp' }])
 
-    await rightClickRow(page, 'fixture-0.png')
-    await expect(page.getByRole('menuitem', { name: /^Save as…$/ })).toBeVisible()
+    await rightClickRow(page, ROW_ID)
+    await expect(page.getByTestId('files-row-menu-saveas')).toBeVisible()
 
     await page.keyboard.press('Escape')
 
     // Radix unmounts the menuitem from the DOM on close.
-    await expect(page.getByRole('menuitem', { name: /^Save as…$/ })).toHaveCount(0)
+    await expect(page.getByTestId('files-row-menu-saveas')).toHaveCount(0)
   })
 
   test('ArrowDown navigates between menu items (WCAG-AA)', async ({ page }) => {
     await installSaveFileMocks(page, { mode: 'accept' })
     await page.goto('/')
-    await injectEntries(page, [{ id: 'fixture-0', name: 'fixture-0.png', target: 'webp' }])
+    await injectEntries(page, [{ id: ROW_ID, name: 'fixture-0.png', target: 'webp' }])
 
-    await rightClickRow(page, 'fixture-0.png')
-    await expect(page.getByRole('menuitem', { name: /^Save as…$/ })).toBeVisible()
+    await rightClickRow(page, ROW_ID)
+    await expect(page.getByTestId('files-row-menu-saveas')).toBeVisible()
 
     // Radix focuses the first enabled item on open; ArrowDown moves to the next.
     // After any arrow nav, exactly one menuitem must hold focus.
     await page.keyboard.press('ArrowDown')
 
+    // Read-only structural assertion on the focused element — permitted: this is not
+    // locating an interactive element to act on, it is counting focus.
     const focusedMenuitems = page.locator('[role="menuitem"]:focus')
     await expect(focusedMenuitems).toHaveCount(1)
   })
@@ -155,11 +164,11 @@ test.describe('EXP-01 — Per-row File Options Menu (D-04)', () => {
     await installSaveFileMocks(page, { mode: 'accept' })
     await page.goto('/')
     // Queued entry (no encodedBuffer) — D-04 gate must render the item disabled.
-    await injectEntries(page, [{ id: 'fixture-0', name: 'fixture-0.png', target: 'webp', status: 'queued' }])
+    await injectEntries(page, [{ id: ROW_ID, name: 'fixture-0.png', target: 'webp', status: 'queued' }])
 
-    await rightClickRow(page, 'fixture-0.png')
+    await rightClickRow(page, ROW_ID)
 
-    const saveAs = page.getByRole('menuitem', { name: /^Save as…$/ })
+    const saveAs = page.getByTestId('files-row-menu-saveas')
     await expect(saveAs).toBeVisible()
     // Radix maps the React `disabled` prop to BOTH aria-disabled AND data-disabled.
     await expect(saveAs).toHaveAttribute('aria-disabled', 'true')

@@ -11,7 +11,7 @@ import { ingestFixtureFiles } from './fixtures/ingest-helper'
 async function resetAllToQueued(page: import('@playwright/test').Page): Promise<void> {
   await page.evaluate(async () => {
     
-    const mod = (await import('../stores/files'))
+    const mod = (await import('/src/stores/files.ts'))
     const { filesAtom } = mod
     const { entries } = filesAtom.get()
     filesAtom.setKey('entries', entries.map((e) => ({ ...e, status: 'queued' as const })))
@@ -44,22 +44,38 @@ test.describe('BackpressureIndicator — SHELL-02', () => {
   // This test is written against final expected behavior — it guards the indicator contract
   // once Plan 03 wires the real job-count fields. Until then, it passes via the same
   // boolean-derived visible state the existing tests use (runningJobs > 0 → running = true).
-  // NOTE: runtimeAtom store is not window-exposed; assertion is via visible indicator class.
+  // change:add-black-box-e2e-suite — this test asserted `toHaveClass(/animate-pulse/)` on the
+  // indicator, but BackpressureIndicator has never carried that class: the outer span toggles
+  // opacity-100/opacity-0 and the inner <svg> uses animate-spin. So the assertion could not
+  // pass regardless of job state. It also polled after the click, which races a 1×1 PNG that
+  // finishes in milliseconds. Now latched via runtimeAtom.subscribe (same shape as
+  // navigation.spec.ts) and asserted on `data-running`, added for exactly this purpose.
   test('reflects real running job count after Optimize all (PIPE-04)', async ({ page }) => {
     await page.goto('/')
     // D-05: inject a fixture file so Optimize all has ≥1 file to process
     await ingestFixtureFiles(page, 1)
     // Phase 11 D-11: flip to 'queued' so the file isn't skipped as already-done.
     await resetAllToQueued(page)
-    // Click Optimize all — this triggers startRun which sets running = true
-    // (derived from runningJobs > 0 once Plan 03 lands).
-    await page.getByRole('button', { name: 'Optimize all' }).click()
-    // Indicator must transition to active state (bg-color-accent animate-pulse,
-    // not opacity-0) — this holds when at least one job is running.
-    const indicator = page.getByTestId('backpressure-indicator')
-    await expect(indicator).not.toHaveClass(/opacity-0/)
-    // Indicator must carry the accent + pulse classes that signal > 0 running jobs.
-    await expect(indicator).toHaveClass(/animate-pulse/)
+
+    // Latch BEFORE clicking — `running` may flip true and back to false faster than a poll.
+    await page.evaluate(async () => {
+      const { runtimeAtom } = await import('/src/stores/runtime.ts')
+      const w = window as unknown as { __sawRunning?: boolean }
+      w.__sawRunning = runtimeAtom.get().running
+      runtimeAtom.subscribe((s) => {
+        if (s.running) w.__sawRunning = true
+      })
+    })
+
+    await page.getByTestId('toolbar-btn-optimize-all').click()
+
+    // The indicator is a pure projection of runtimeAtom.running, so the latch proves the
+    // indicator's active state was reached even if the batch has since drained.
+    await page.waitForFunction(
+      () => (window as unknown as { __sawRunning?: boolean }).__sawRunning === true,
+      undefined,
+      { timeout: 10_000 },
+    )
   })
 
   // Phase 11 Plan 08 — SC-4: WorkerPool concurrency cap holds during ≥20-file batch.

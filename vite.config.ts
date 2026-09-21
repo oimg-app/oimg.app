@@ -14,16 +14,37 @@ import type { Plugin } from 'vite'
 // arrives as HTML and WebAssembly.instantiate() fails with "expected magic word ..., found 3c 21 64 6f".
 // This tiny middleware serves any .wasm/.js file under a /node_modules/@squoosh-kit/*/dist path
 // straight from disk with the correct MIME type.
+//
+// change:add-black-box-e2e-suite — widened for @squoosh-kit/visdif (butteraugli), which the
+// original matcher missed on two counts, leaving butteraugli permanently broken (it resolved
+// null → ReportPanel showed "N/A", and 3 metric specs failed):
+//   1. pnpm serves the package from a nested real path
+//      (/node_modules/.pnpm/@squoosh-kit+visdif@0.2.4/node_modules/@squoosh-kit/visdif/...),
+//      so the anchored /^\/node_modules\/@squoosh-kit\// prefix never matched.
+//   2. visdif's loader requests `wasm/visdif/visdif.wasm` WITHOUT the `dist/` segment its own
+//      JS was served from, so even the un-anchored path needs a `dist/` retry.
+// We therefore locate the LAST '@squoosh-kit/<pkg>/<rest>' in the URL and try <rest> both
+// as-given and with 'dist/' prepended, always through the node_modules/@squoosh-kit symlink.
 function serveSquooshKitNodeModuleWasm(): Plugin {
   return {
     name: 'serve-squoosh-kit-node-module-wasm',
     configureServer(server) {
       server.middlewares.use((req, res, next) => {
         const url = req.url ?? ''
-        const match = url.match(/^\/node_modules\/(@squoosh-kit\/[^/]+\/dist\/.+\.(?:wasm|js|mjs))(?:\?.*)?$/)
+        const match = url.match(
+          /.*\/(@squoosh-kit\/[^/]+)\/(.+\.(?:wasm|js|mjs))(?:\?.*)?$/,
+        )
         if (!match) return next()
-        const fullPath = path.resolve('node_modules', match[1])
-        if (!fs.existsSync(fullPath)) return next()
+        const [, scopedPkg, rest] = match
+        // Path-traversal guard: no '..' may reach path.resolve (dev-only, but the URL is
+        // attacker-shaped input and this reads straight off disk).
+        if (rest.split('/').includes('..') || scopedPkg.includes('..')) return next()
+        const candidates = [
+          path.resolve('node_modules', scopedPkg, rest),
+          path.resolve('node_modules', scopedPkg, 'dist', rest),
+        ]
+        const fullPath = candidates.find((p) => fs.existsSync(p))
+        if (fullPath === undefined) return next()
         const body = fs.readFileSync(fullPath)
         const ct = fullPath.endsWith('.wasm')
           ? 'application/wasm'

@@ -10,6 +10,9 @@ export function BackpressureIndicator() {
   return (
     <span
       data-testid="backpressure-indicator"
+      // change:add-black-box-e2e-suite — the spinner has no numeric child, so running-state
+      // rides on data-running rather than a spec reading the opacity class.
+      data-running={running || undefined}
       role="status"
       aria-live="polite"
       aria-label={running ? 'Optimization running' : undefined}

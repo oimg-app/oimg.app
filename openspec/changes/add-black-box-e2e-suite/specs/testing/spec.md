@@ -1,6 +1,6 @@
 ## Purpose
 
-Establish a black-box Playwright test discipline for the app: every interactive UI element carries a stable `data-testid`, specs address them by testid only (no text or role coupling for interactive queries), and a coverage-audit script keeps the testid map and the spec references in sync in both directions.
+Establish the testability substrate for a black-box Playwright discipline: every interactive UI element carries a stable `data-testid` following a fixed naming convention, the vendored shadcn primitives forward that attribute, and a shared helper harness gives specs one place to get fixtures, ingest, selection, and encode waiters. Specs written against this substrate address interactive elements by testid only — no text or role coupling.
 
 ## ADDED Requirements
 
@@ -20,14 +20,14 @@ The system SHALL name every `data-testid` in the pattern `{area}-{component}-{el
 
 #### Scenario: Convention audit passes
 - **WHEN** a grep of `data-testid=` across `src/` runs against the allowed-prefix regex
-- **THEN** every match either uses an allowed area prefix or is one of the pre-existing 27 testids preserved by the next requirement
+- **THEN** every match either uses an allowed area prefix or is one of the pre-existing 25 testids preserved by the next requirement
 
 ### Requirement: Existing testids preserved
-The system SHALL preserve the 27 testids already shipped as of this change: `titlebar`, `toolbar`, `statusbar`, `worker-pip`, `agg-counter`, `install-button`, `status-filecount`, `status-totals`, `backpressure-indicator`, `command-palette`, `files-pane`, `file-input`, `center-pane`, `inspector-pane`, `output-empty`, `output-panel`, `report-empty`, `report-panel`, `inspector-download`, `report-bar`, `ssim-row`, `ssim-score`, `butteraugli-row`, `butteraugli-score`, `format-row`, plus any other testids present in the pre-change tree. New testids SHALL supplement these, never rename them.
+The system SHALL preserve the 25 testids already shipped as of this change: `agg-counter`, `backpressure-indicator`, `butteraugli-row`, `butteraugli-score`, `center-pane`, `command-palette`, `file-input`, `files-pane`, `format-row`, `inspector-download`, `inspector-pane`, `install-button`, `output-empty`, `output-panel`, `report-bar`, `report-empty`, `report-panel`, `ssim-row`, `ssim-score`, `status-filecount`, `status-totals`, `statusbar`, `titlebar`, `toolbar`, `worker-pip`. New testids SHALL supplement these, never rename them.
 
 #### Scenario: A pre-existing testid stays valid after the change lands
-- **WHEN** a spec written before this change addresses an element via one of the 27 pre-existing testids (e.g. `page.getByTestId('backpressure-indicator')`)
-- **THEN** that testid still resolves in source after the change; the coverage audit records no rename
+- **WHEN** a spec written before this change addresses an element via one of the 25 pre-existing testids (e.g. `page.getByTestId('backpressure-indicator')`)
+- **THEN** that testid still resolves in source after the change, and the 25 existing specs that reference it keep passing untouched
 
 ### Requirement: Vendored shadcn primitives forward data-testid
 The `SegControl` and `Switch` primitives in `src/components/panels/inspector/` SHALL forward `data-testid` to their root element, and `SegControl` SHALL additionally attach `data-value` to each option button. A call site can then scope queries either at the root (`getByTestId('codec-seg-fit')`) or at an option (`locator('[data-testid="codec-seg-fit"] [data-value="contain"]')`).
@@ -37,42 +37,48 @@ The `SegControl` and `Switch` primitives in `src/components/panels/inspector/` S
 - **THEN** `page.locator('[data-testid="codec-seg-fit"] [data-value="contain"]').click()` selects it without any visible-text fallback
 
 ### Requirement: No text or role coupling for interactive queries
-Playwright specs (`src/tests/*.spec.ts`) SHALL NOT use `getByRole(...)` or `getByText(...)` to LOCATE interactive elements. These matchers are allowed only for read-only assertions on landmark roles (e.g. `page.getByRole('status')` for an ARIA-live region) or for verifying the visible label of an already-testid-located element.
+The four specs migrated by this change (`inspector-tabs.spec.ts`, `output-panel.spec.ts`, `file-row-menu.spec.ts`, `navigation.spec.ts`) and every Playwright spec added after it SHALL NOT use `getByRole(...)` or `getByText(...)` to LOCATE interactive elements. These matchers are allowed only for read-only assertions on landmark roles (e.g. `page.getByRole('status')` for an ARIA-live region) or for verifying the visible label of an already-testid-located element.
 
-#### Scenario: Interactive-query audit passes
-- **WHEN** a grep across `src/tests/*.spec.ts` looks for `getByRole(` / `getByText(` used against interactive elements
+The remaining pre-existing specs are explicitly out of scope: they keep their role/text queries and migrate opportunistically, whenever a spec is touched for another reason. This requirement is a review convention, not a mechanically enforced gate.
+
+#### Scenario: Interactive-query audit passes on the migrated specs
+- **WHEN** a grep across the four migrated specs looks for `getByRole(` / `getByText(` used against interactive elements
 - **THEN** it returns zero violations; every legitimate use is a read-only landmark assertion documented in a spec comment
 
+#### Scenario: An untouched legacy spec is not a violation
+- **WHEN** a pre-existing spec outside the migrated four still locates a button via `getByRole('button', { name: … })`
+- **THEN** it remains conformant; the obligation attaches only once that spec is edited for another purpose
+
 ### Requirement: Shared test helper module
-The system SHALL expose a `src/tests/_helpers/` module set covering: base64 image fixtures, ingest helpers (drop / URL / paste), row selection, inspector navigation, encode-and-metric waiters, clipboard read/write, `showDirectoryPicker` mocking, PWA readiness, and a store-inspection helper. Every new Playwright spec SHALL import from this module rather than re-implement the same primitives inline.
+The system SHALL expose a `src/tests/_helpers/` module set covering: base64 image fixtures, ingest helpers (drop / URL / paste), row selection, inspector navigation, encode-and-metric waiters, clipboard read/write, `showDirectoryPicker` mocking, PWA readiness, and a store-inspection helper. The four migrated specs and every Playwright spec added after this change SHALL import from this module rather than re-implement the same primitives inline.
 
 #### Scenario: A new spec depends only on the helpers plus Playwright
 - **WHEN** a new spec is added under `src/tests/*.spec.ts`
 - **THEN** its imports come from `@playwright/test` and `./_helpers/*` — not from ad-hoc inline fixture buffers or duplicated setup blocks
 
-### Requirement: Bidirectional coverage audit script
-The system SHALL ship a coverage-audit script (Node, run via a dedicated npm script) that fails the build in both directions: any `data-testid` present in `src/` (excluding `src/tests/`) that no spec references, AND any testid a spec references that no source file exports.
-
-#### Scenario: Adding an orphan testid fails the build
-- **WHEN** a developer adds `data-testid="new-thing"` in a component but no spec references it
-- **THEN** the audit script exits non-zero, blocking the merge
-
-#### Scenario: Removing a source testid without updating specs fails the build
-- **WHEN** a developer removes `data-testid="codec-slider-quality"` from source but a spec still references it
-- **THEN** the audit script exits non-zero, blocking the merge
+#### Scenario: A helper with no caller yet is still conformant
+- **WHEN** a helper module in the set (e.g. `pwa.ts`) has no importing spec at the time this change lands
+- **THEN** it still satisfies this requirement; the module set is specified as a complete harness so later specs find one home for these primitives rather than growing a second set
 
 ### Requirement: Suite green on chromium CI
-`npm test` SHALL exit 0 on the chromium project in CI after this change lands. At most one automatic retry per test is permitted, and only for the known metrics-worker warmup case (extended waiters in `_helpers/encode.ts`).
+`npm test` SHALL exit 0 on the chromium project in CI after this change lands. Because this change adds only inert markup attributes, helper modules, and four spec migrations, no pre-existing spec may regress. At most one automatic retry per test is permitted, and only for the known metrics-worker warmup case (extended waiters in `_helpers/encode.ts`).
 
 #### Scenario: CI run of the full suite passes
 - **WHEN** CI runs `npm test` on chromium against `main` after this change is merged
 - **THEN** the job exits 0; the report shows no permanent failure and at most one retry per test, always attributable to metrics-worker warmup
 
+#### Scenario: Unmigrated specs are unaffected
+- **WHEN** the change lands and the 25 specs outside the migrated four run unchanged
+- **THEN** each passes exactly as before, since adding a `data-testid` attribute alters no rendered text, role, or layout
+
 ## Non-goals
 
+- **New spec coverage for the uncovered feature areas** (TitleBar menus, CommandPalette navigation, CodecPanel knobs, SvgoPanel plugins, CenterHeader swatches, CompareStage split handle). This change ships the substrate that makes those specs cheap to write; writing them is separate work, to be proposed on its own merits rather than bundled here.
+- **A bidirectional testid ↔ spec coverage-audit gate.** Deliberately dropped: it enforces a coverage metric, not a correctness property, and would break the build whenever a developer adds a testid during unrelated UI work. Revisit only if testid drift is observed in practice.
+- **Migrating the 25 pre-existing specs** off role/text queries wholesale — they migrate opportunistically when touched.
 - Node unit tests (`src/tests/*.test.ts`) — untouched; they cover pure logic (`clipboard`, `snippets`, `metrics-bands`, `versions`, `settings`, `stores`, etc.) and don't fit the black-box charter.
 - Real `beforeinstallprompt` click faking in `pwa.spec.ts` — the `install-button` presence is asserted but click-through remains deferred (browser user-gesture requirement).
-- Full `DeltaStrip.tsx` testid enumeration — the Wave 5 implementer applies the same convention to the DeltaStrip cards; not enumerated up-front here.
+- Full `DeltaStrip.tsx` testid enumeration — the same convention applies to the DeltaStrip cards whenever they are addressed; not enumerated up-front here.
 - CI infrastructure changes — no new GitHub Actions workflow, no new reporter, no test-sharding.
 - Testids intended solely for visual regression / screenshot diffing — a separate concern.
 - Per-capability spec deltas that duplicate the testid → element map. The map lives in the archived companion doc at `openspec/changes/archive/quick/260826-e2e/PLAN.md`; the requirement here is "every interactive element carries a testid that follows the convention", not "here is the exhaustive per-element list".

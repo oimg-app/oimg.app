@@ -68,10 +68,14 @@ export function StatusBar() {
       </span>
 
       <span aria-hidden="true">·</span>
-      <span className="font-mono text-[11px] font-semibold">SVGO {versions.svgo}</span>
+      <span data-testid="status-version-svgo" className="font-mono text-[11px] font-semibold">
+        SVGO {versions.svgo}
+      </span>
 
       <span aria-hidden="true">·</span>
-      <span className="font-mono text-[11px] font-semibold">jSquash · webp {versions.jsquash.webp}</span>
+      <span data-testid="status-version-jsquash" className="font-mono text-[11px] font-semibold">
+        jSquash · webp {versions.jsquash.webp}
+      </span>
 
       <span aria-hidden="true">·</span>
       <span>{wasmStr}</span>

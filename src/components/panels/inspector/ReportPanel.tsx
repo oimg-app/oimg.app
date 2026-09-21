@@ -100,7 +100,7 @@ export function ReportPanel() {
             <span className="font-mono text-[10px] uppercase tracking-wider text-[var(--color-fg-2)]">
               Before
             </span>
-            <span className="text-[14px] font-semibold font-mono">
+            <span className="text-[14px] font-semibold font-mono" data-testid="report-savings-before">
               {fmtBytes(origTotal)}
             </span>
           </div>
@@ -109,7 +109,7 @@ export function ReportPanel() {
             <span className="font-mono text-[10px] uppercase tracking-wider text-[var(--color-fg-2)]">
               After
             </span>
-            <span className="text-[14px] font-semibold font-mono">
+            <span className="text-[14px] font-semibold font-mono" data-testid="report-savings-after">
               {fmtBytes(optTotal)}
             </span>
           </div>
@@ -121,6 +121,7 @@ export function ReportPanel() {
             <span
               className="text-[14px] font-semibold font-mono"
               style={{ color: 'var(--color-accent)' }}
+              data-testid="report-savings-saved"
             >
               {'−' + fmtBytes(savedTotal)}
             </span>
@@ -130,7 +131,7 @@ export function ReportPanel() {
             <span className="font-mono text-[10px] uppercase tracking-wider text-[var(--color-fg-2)]">
               Files
             </span>
-            <span className="text-[14px] font-semibold font-mono">
+            <span className="text-[14px] font-semibold font-mono" data-testid="report-savings-files">
               {String(entries.length)}
             </span>
           </div>

@@ -16,12 +16,19 @@ interface DeltaCardProps {
 }
 
 function DeltaCard({ label, value, sub, accent, shimmer }: DeltaCardProps) {
+  // change:add-black-box-e2e-suite — card testids derive from the label so the set stays
+  // in step with the cards themselves; no separate id list to drift.
+  const slug = label.toLowerCase()
   return (
-    <div className="flex flex-col items-center justify-center flex-1 gap-0.5 border-r border-[var(--color-line)] last:border-r-0 px-2 min-w-0">
+    <div
+      data-testid={`center-delta-card-${slug}`}
+      className="flex flex-col items-center justify-center flex-1 gap-0.5 border-r border-[var(--color-line)] last:border-r-0 px-2 min-w-0"
+    >
       <span className="font-mono text-[11px] font-normal text-[var(--color-fg-2)] uppercase tracking-[0.04em]">
         {label}
       </span>
       <span
+        data-testid={`center-delta-value-${slug}`}
         className={
           'font-mono text-[13px] font-semibold tabular-nums ' +
           (shimmer
@@ -86,7 +93,10 @@ export function DeltaStrip() {
   const decodeTime = estimateDownloadTime(selectedFile?.encodedBuffer ?? null);
 
   return (
-    <div className="h-[72px] shrink-0 border-t border-[var(--color-line)] bg-color-bg-1 flex">
+    <div
+      data-testid="center-delta-strip"
+      className="h-[72px] shrink-0 border-t border-[var(--color-line)] bg-color-bg-1 flex"
+    >
       <DeltaCard
         label="ORIGINAL"
         value={fmtBytes(orig)}

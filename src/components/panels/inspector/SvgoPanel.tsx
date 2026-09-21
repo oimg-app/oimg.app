@@ -47,6 +47,7 @@ export function SvgoPanel() {
             size="sm"
             checked={settings.aggressive}
             onCheckedChange={handleSetAggressive}
+            data-testid="svgo-switch-aggressive"
           />
         </div>
         <p className="text-[10px] font-mono text-[var(--color-fg-3)] mt-1 leading-[1.5]">
@@ -55,12 +56,13 @@ export function SvgoPanel() {
       </Section>
 
       <Section title={`Plugins · ${onCount} / ${settings.plugins.length}`}>
-        <div className="flex flex-col">
+        <div className="flex flex-col" data-testid="svgo-plugin-list" data-on-count={onCount}>
           {settings.plugins.map(p => (
             <button
               type="button"
               key={p.id}
               aria-pressed={p.on}
+              data-testid={`svgo-plugin-${p.id}`}
               onClick={() => handleTogglePlugin(p.id)}
               className="grid grid-cols-[16px_1fr_auto] gap-2 items-center py-1.5 px-1 rounded cursor-default hover:bg-color-bg-1 w-full text-left transition-colors"
             >
