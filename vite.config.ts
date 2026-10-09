@@ -7,6 +7,8 @@ import squooshVitePlugin from '@squoosh-kit/vite-plugin';
 import { VitePWA } from 'vite-plugin-pwa'
 import type { Plugin } from 'vite'
 
+import { cloudflare } from "@cloudflare/vite-plugin";
+
 // @squoosh-kit/imagequant's client-mode loader fetches WASM via
 // `./wasm/imagequant/imagequant.wasm` relative to the served index.browser.mjs URL —
 // which resolves to /node_modules/@squoosh-kit/imagequant/dist/wasm/imagequant/imagequant.wasm.
@@ -56,7 +58,7 @@ function serveSquooshKitNodeModuleWasm(): Plugin {
         res.end(body)
       })
     },
-  }
+  };
 }
 
 // Phase 13 — DIA-01 (D-01/D-02): build-time version injection.
@@ -117,6 +119,7 @@ export default defineConfig({
         maximumFileSizeToCacheInBytes: 2 * 1024 * 1024,
       },
     }),
+    cloudflare()
   ],
   resolve: {
     alias: {
