@@ -8,6 +8,12 @@ import { test, expect } from '@playwright/test'
 const TINY_PNG_B64 =
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
 
+// 16×16 solid blue. Needed by ENC-01: a 1×1 PNG is too small for "optimizing must not
+// inflate" to hold, since fixed chunk overhead outweighs any pixel-data saving.
+// Same bytes as _helpers/fixtures.ts PNG_16x16.
+const BLUE_16_PNG_B64 =
+  'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGUlEQVR4nGOQSznxnxLMMGrAqAGjBgwXAwAOHUkf5QU4ZwAAAABJRU5ErkJggg=='
+
 // // Smallest valid 1×1 JPEG (baseline, 631 bytes)
 // const TINY_JPEG_B64 =
 //   '/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAABAAEDASIAAhEBAxEB/8QAFgABAQEAAAAAAAAAAAAAAAAABgUEA/8QAHxAAAQQCAwEAAAAAAAAAAAAAAQIDBAURITFB/8QAFAEBAAAAAAAAAAAAAAAAAAAAAP/EABQRAQAAAAAAAAAAAAAAAAAAAAD/2gAMAwEAAhEDEQA/AKtqtqmS5bEVqxJFWjduYjbud3OT6lKUpSlKUpSv/9k='
@@ -30,7 +36,7 @@ test.describe('Codec Encoders — ENC-01..06', () => {
       for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i)
       const buffer = bytes.buffer
 
-      const { getPool } = await import('../lib/worker-pool.ts')
+      const { getPool } = await import('/src/lib/worker-pool.ts')
       const pool = getPool()
       const job = {
         codec: 'PNG' as const,
@@ -42,10 +48,15 @@ test.describe('Codec Encoders — ENC-01..06', () => {
       }
       const res = await pool.run(job)
       return { byteLength: res.buffer.byteLength, optimizedSize: res.optimizedSize, originalSize: res.originalSize }
-    }, TINY_PNG_B64)
+    }, BLUE_16_PNG_B64)
 
     expect(result.byteLength).toBeGreaterThan(0)
-    // OxiPNG should not inflate a valid PNG
+    // OxiPNG should not inflate a valid PNG.
+    // change:add-black-box-e2e-suite — this used TINY_PNG_B64, a 1×1 image, where the claim
+    // is simply false: OxiPNG emitted 73 bytes for the 70-byte fixture because fixed PNG
+    // chunk overhead dominates at that size, so the test failed on correct encoder output.
+    // A 16×16 source is the smallest fixture where "optimizing must not make it bigger" is
+    // a meaningful contract, so the assertion now tests the claim it intends.
     expect(result.optimizedSize).toBeLessThanOrEqual(result.originalSize)
   })
 
@@ -58,7 +69,7 @@ test.describe('Codec Encoders — ENC-01..06', () => {
       for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i)
       const buffer = bytes.buffer
 
-      const { getPool } = await import('../lib/worker-pool.ts')
+      const { getPool } = await import('/src/lib/worker-pool.ts')
       const pool = getPool()
       const job = {
         codec: 'WebP' as const,
@@ -86,7 +97,7 @@ test.describe('Codec Encoders — ENC-01..06', () => {
       for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i)
       const buffer = bytes.buffer
 
-      const { getPool } = await import('../lib/worker-pool.ts')
+      const { getPool } = await import('/src/lib/worker-pool.ts')
       const pool = getPool()
       const job = {
         codec: 'JPEG' as const,
@@ -112,7 +123,7 @@ test.describe('Codec Encoders — ENC-01..06', () => {
       for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i)
       const buffer = bytes.buffer
 
-      const { getPool } = await import('../lib/worker-pool.ts')
+      const { getPool } = await import('/src/lib/worker-pool.ts')
       const pool = getPool()
       const job = {
         codec: 'AVIF' as const,
@@ -136,7 +147,7 @@ test.describe('Codec Encoders — ENC-01..06', () => {
       const encoder = new TextEncoder()
       const buffer = encoder.encode(svgStr).buffer
 
-      const { getPool } = await import('../lib/worker-pool.ts')
+      const { getPool } = await import('/src/lib/worker-pool.ts')
       const pool = getPool()
       const job = {
         codec: 'SVG' as const,
@@ -168,7 +179,7 @@ test.describe('Codec Encoders — ENC-01..06', () => {
       const bytes = new Uint8Array(binary.length)
       for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i)
 
-      const { getPool } = await import('../lib/worker-pool.ts')
+      const { getPool } = await import('/src/lib/worker-pool.ts')
       const pool = getPool()
 
       const baseSettings = { codec: 'WebP', method: 4, lossless: false, resizeOn: false,
@@ -200,7 +211,7 @@ test.describe('Codec Encoders — ENC-01..06', () => {
     await page.goto('/')
 
     const rejected = await page.evaluate(async () => {
-      const { getPool } = await import('../lib/worker-pool.ts')
+      const { getPool } = await import('/src/lib/worker-pool.ts')
       const pool = getPool()
       const job = {
         codec: 'WebP' as const,

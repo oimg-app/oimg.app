@@ -3,6 +3,10 @@
 // Analog: src/tests/per-file-settings.spec.ts (page.evaluate store-injection pattern)
 // DO NOT import production logic here — test fixture only; excluded from production bundle.
 import type { Page } from '@playwright/test'
+import { FILES_MOD, SETTINGS_LIB_MOD } from '../_helpers/page-modules'
+
+type FilesModule = typeof import('../../stores/files')
+type SettingsLibModule = typeof import('../../lib/settings')
 
 /**
  * Injects `count` synthetic PNG FileEntry objects into `filesAtom` via page.evaluate.
@@ -11,17 +15,15 @@ import type { Page } from '@playwright/test'
  * After this call, `filesAtom.get().entries.length === count` and `selectedId === 'fixture-0'`.
  */
 export async function ingestFixtureFiles(page: Page, count = 1): Promise<void> {
-  await page.evaluate(async (n: number) => {
-    // Browser-side: page.evaluate runs in the page context; relative imports resolve from
-    // page.url() (the app root '/'), so we use absolute /src/... paths per MEMORY note
-    // "/src/... page.evaluate imports are an accepted Vite pattern". The /src/* form is
-    // how Vite serves source modules during dev (see http://localhost:5174/src/...).
-    // Use a computed specifier so TS doesn't try to statically resolve the dev-server URL
-    // (the bundler resolver doesn't know about /src/* — that's a Vite dev-only contract).
-    const filesMod = (await import('../../stores/files'))
-    const { filesAtom, setFileRawBuffer } = filesMod
-    const stubMod = (await import('../../lib/settings'))
-    const { defaultFileSettings } = stubMod
+  await page.evaluate(async ({ n, filesMod, settingsMod }: { n: number; filesMod: string; settingsMod: string }) => {
+    // Browser-side: page.evaluate runs in the page context, so these imports resolve
+    // against the page URL — NOT this file. The relative form used here previously
+    // ('../../stores/files') resolved to /stores/files and 404'd, failing every spec that
+    // called this helper. Vite dev-serves source under /src/, extension included.
+    // The specifier arrives as a parameter so tsc leaves it alone; the cast restores types.
+    // See src/tests/_helpers/page-modules.ts for the full rule.
+    const { filesAtom, setFileRawBuffer } = (await import(filesMod)) as FilesModule
+    const { defaultFileSettings } = (await import(settingsMod)) as SettingsLibModule
 
     // Reuse the same 1×1 PNG base64 string as TINY_PNG_B64 in stub-data.ts (line 135-136)
     const TINY_PNG_B64 =
@@ -58,5 +60,5 @@ export async function ingestFixtureFiles(page: Page, count = 1): Promise<void> {
     for (const e of entries) {
       if (e.rawBuffer) setFileRawBuffer(e.id, e.rawBuffer)
     }
-  }, count)
+  }, { n: count, filesMod: FILES_MOD, settingsMod: SETTINGS_LIB_MOD })
 }

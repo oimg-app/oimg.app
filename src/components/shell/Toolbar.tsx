@@ -105,6 +105,7 @@ export function Toolbar() {
         <button
           type="button"
           className={cn(tbtnClass, "rounded-r-none border-r-0")}
+          data-testid="toolbar-btn-add-files"
           onClick={() => {
             openPicker();
             setOpen(null);
@@ -121,6 +122,7 @@ export function Toolbar() {
             <button
               type="button"
               aria-label="Add files options"
+              data-testid="toolbar-btn-add-menu"
               className={cn(tbtnClass, "rounded-l-none px-1.5")}
             >
               <CaretDown size={11} />
@@ -131,6 +133,7 @@ export function Toolbar() {
               <button
                 type="button"
                 className={menuItemClass}
+                data-testid="toolbar-item-add-device"
                 onClick={() => {
                   openPicker();
                   setOpen(null);
@@ -141,6 +144,7 @@ export function Toolbar() {
               <button
                 type="button"
                 className={menuItemClass}
+                data-testid="toolbar-item-add-watch-folder"
                 onClick={() => {
                   void startWatching();
                   setOpen(null);
@@ -151,6 +155,7 @@ export function Toolbar() {
               <button
                 type="button"
                 className={menuItemClass}
+                data-testid="toolbar-item-add-clip-url"
                 // Phase 15 — ING-01: clipboard → ingest dispatcher.
                 // G-15-01: setOpen first → rAF → dispatcher (Popover-unmount race)
                 onClick={() => {
@@ -169,6 +174,7 @@ export function Toolbar() {
       <button
         type="button"
         onClick={runOptimize}
+        data-testid="toolbar-btn-optimize-all"
         className="h-7 px-3 text-xs font-semibold bg-color-accent text-[var(--color-accent-fg)] border-transparent rounded-[5px] hover:brightness-105 flex items-center gap-1"
       >
         <Lightning size={13} />
@@ -184,6 +190,7 @@ export function Toolbar() {
             "rounded-r-none border-r-0",
             !hasDone && "opacity-50 cursor-not-allowed",
           )}
+          data-testid="toolbar-btn-export"
           onClick={() => {
             selectedFile && exportOne(selectedFile);
             setOpen(null);
@@ -203,6 +210,7 @@ export function Toolbar() {
             <button
               type="button"
               aria-label="Export options"
+              data-testid="toolbar-btn-export-menu"
               className={cn(tbtnClass, "rounded-l-none px-1.5")}
             >
               <CaretDown size={11} />
@@ -216,6 +224,7 @@ export function Toolbar() {
                   menuItemClass,
                   !hasDone && "opacity-50 cursor-not-allowed",
                 )}
+                data-testid="toolbar-item-export-zip"
                 onClick={() => {
                   void exportZip();
                   setOpen(null);
@@ -232,6 +241,7 @@ export function Toolbar() {
                   menuItemClass,
                   !hasDone && "opacity-50 cursor-not-allowed",
                 )}
+                data-testid="toolbar-item-export-individual"
                 onClick={() => {
                   void exportIndividually();
                   setOpen(null);
@@ -248,6 +258,7 @@ export function Toolbar() {
                   menuItemClass,
                   !hasDone && "opacity-50 cursor-not-allowed",
                 )}
+                data-testid="toolbar-item-export-copy-picture"
                 onClick={() => {
                   void copyPictureBulk();
                   setOpen(null);
@@ -264,6 +275,7 @@ export function Toolbar() {
                   menuItemClass,
                   !hasDone && "opacity-50 cursor-not-allowed",
                 )}
+                data-testid="toolbar-item-export-copy-datauris"
                 onClick={() => {
                   void copyDataUrisBulk();
                   setOpen(null);
@@ -280,6 +292,7 @@ export function Toolbar() {
                   menuItemClass,
                   !hasDone && "opacity-50 cursor-not-allowed",
                 )}
+                data-testid="toolbar-item-export-manifest"
                 onClick={() => {
                   void copyManifestJson();
                   setOpen(null);
@@ -310,6 +323,7 @@ export function Toolbar() {
             type="button"
             role="radio"
             aria-checked={view === v}
+            data-testid={`toolbar-view-${v.toLowerCase()}`}
             onClick={() => setView(v)}
             className={cn(
               "px-3 text-xs rounded-[4px]",
@@ -329,6 +343,7 @@ export function Toolbar() {
         <button
           type="button"
           className={cn(tbtnClass, "rounded-r-none border-r-0")}
+          data-testid="toolbar-btn-auto"
           onClick={() => {
             setAutoTarget(1.4);
             setOpen(null);
@@ -344,6 +359,7 @@ export function Toolbar() {
             <button
               type="button"
               aria-label="Auto mode options"
+              data-testid="toolbar-btn-auto-menu"
               className={cn(tbtnClass, "rounded-l-none px-1.5")}
             >
               <CaretDown size={11} />
@@ -354,6 +370,7 @@ export function Toolbar() {
               <button
                 type="button"
                 className={menuItemClass}
+                data-testid="toolbar-item-auto-14"
                 onClick={() => {
                   setAutoTarget(1.4);
                   setOpen(null);
@@ -364,6 +381,7 @@ export function Toolbar() {
               <button
                 type="button"
                 className={menuItemClass}
+                data-testid="toolbar-item-auto-10"
                 onClick={() => {
                   setAutoTarget(1.0);
                   setOpen(null);
@@ -374,6 +392,7 @@ export function Toolbar() {
               <button
                 type="button"
                 className={menuItemClass}
+                data-testid="toolbar-item-auto-20"
                 onClick={() => {
                   setAutoTarget(2.0);
                   setOpen(null);
@@ -398,6 +417,7 @@ export function Toolbar() {
         <input
           type="search"
           aria-label="Filter files"
+          data-testid="toolbar-input-filter"
           placeholder="Filter files…"
           value={filterQuery}
           onChange={(e) => setFilter(e.target.value)}
@@ -410,6 +430,7 @@ export function Toolbar() {
       <button
         type="button"
         aria-label="Toggle theme"
+        data-testid="toolbar-btn-theme"
         onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
         className="h-7 w-7 grid place-items-center rounded-[5px] text-[var(--color-fg-1)] hover:bg-color-bg-2 hover:text-[var(--color-fg-0)]"
       >
@@ -425,6 +446,7 @@ export function Toolbar() {
           <button
             type="button"
             aria-label="Open settings"
+            data-testid="toolbar-btn-settings"
             className="h-7 w-7 grid place-items-center rounded-[5px] text-[var(--color-fg-1)] hover:bg-color-bg-2 hover:text-[var(--color-fg-0)]"
           >
             <GearSix size={13} />
@@ -437,13 +459,16 @@ export function Toolbar() {
               Copy diagnostics button routed through the Phase 12 copyToClipboard chokepoint. */}
           <Tabs defaultValue="general" className="w-[280px]">
             <TabsList variant="line" className="w-full">
-              <TabsTrigger value="general">General</TabsTrigger>
-              <TabsTrigger value="diagnostics">Diagnostics</TabsTrigger>
+              <TabsTrigger value="general" data-testid="settings-tab-general">General</TabsTrigger>
+              <TabsTrigger value="diagnostics" data-testid="settings-tab-diagnostics">
+                Diagnostics
+              </TabsTrigger>
             </TabsList>
             <TabsContent value="general" className="p-2">
               <button
                 type="button"
                 className={menuItemClass}
+                data-testid="settings-btn-workers"
                 onClick={() => {
                   setWorkerCount(4);
                   setOpen(null);
@@ -459,6 +484,7 @@ export function Toolbar() {
                   menuItemClass,
                   queueEmpty && "opacity-50 cursor-not-allowed",
                 )}
+                data-testid="settings-btn-clear-all"
                 onClick={() => {
                   handleClearAll();
                   setOpen(null);
@@ -473,7 +499,10 @@ export function Toolbar() {
             <TabsContent value="diagnostics" className="p-2">
               {/* Phase 13 — D-11: Read-only diagnostic surface. T-13-04 mitigation:
                   no dangerouslySetInnerHTML — React's default escaping handles all values. */}
-              <dl className="grid grid-cols-2 gap-x-2 gap-y-0.5 font-mono text-[10px]">
+              <dl
+                data-testid="settings-dl-diagnostics"
+                className="grid grid-cols-2 gap-x-2 gap-y-0.5 font-mono text-[10px]"
+              >
                 <dt>svgo</dt>
                 <dd>{versions.svgo}</dd>
                 <dt>jsquash png</dt>
@@ -506,6 +535,7 @@ export function Toolbar() {
               <button
                 type="button"
                 className={cn(menuItemClass, "mt-2")}
+                data-testid="settings-btn-copy-diagnostics"
                 onClick={() =>
                   void copyToClipboard(
                     JSON.stringify({ versions, caps }, null, 2),

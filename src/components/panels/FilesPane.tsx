@@ -21,6 +21,10 @@ const SORT_OPTIONS: { label: string; key: SortKey }[] = [
   { label: 'Format',      key: 'format' },
 ]
 
+// change:add-black-box-e2e-suite — SortKey values carry spaces and '%', neither of which
+// belongs in a testid. Kebab-cases the key so `savings %` addresses as `files-sort-item-savings-pct`.
+const sortSlug = (key: SortKey) => key.replace('%', 'pct').trim().replace(/\s+/g, '-')
+
 // D-06 accept string: all supported ext + MIME combos
 // Quick 260610-lby: added .heic,.heif,image/heic,image/heif (decode-only input)
 const ACCEPT = '.png,.jpg,.jpeg,.webp,.svg,.avif,.heic,.heif,image/png,image/jpeg,image/webp,image/svg+xml,image/avif,image/heic,image/heif'
@@ -92,6 +96,7 @@ export function FilesPane() {
               queueEmpty && 'opacity-50 cursor-not-allowed'
             )}
             aria-label="Clear all files"
+            data-testid="files-btn-clear-all"
             title={queueEmpty ? 'No files to clear' : 'Clear all files'}
             onClick={() => handleClearAll()}
             disabled={queueEmpty}
@@ -104,6 +109,7 @@ export function FilesPane() {
               <button
                 className="w-[22px] h-[22px] grid place-items-center rounded text-[var(--fg-2)] hover:bg-[var(--bg-3)] hover:text-[var(--fg-0)]"
                 aria-label="Sort files"
+                data-testid="files-btn-sort"
               >
                 <Funnel size={13} />
               </button>
@@ -114,6 +120,7 @@ export function FilesPane() {
                   <button
                     key={key}
                     className="text-xs px-2 py-1 rounded hover:bg-[var(--bg-2)] text-left w-full"
+                    data-testid={`files-sort-item-${sortSlug(key)}`}
                     onClick={() => setSortBy(key)}
                   >
                     {label}
@@ -125,6 +132,7 @@ export function FilesPane() {
           <button
             className="w-[22px] h-[22px] grid place-items-center rounded text-[var(--fg-2)] hover:bg-[var(--bg-3)] hover:text-[var(--fg-0)]"
             aria-label="Add files"
+            data-testid="files-btn-add"
             onClick={() => openPicker(() => inputRef.current?.click())}
           >
             <Plus size={13} />
@@ -148,6 +156,7 @@ export function FilesPane() {
         role="button"
         tabIndex={0}
         aria-label="Drop images to optimize, or click to browse"
+        data-testid="files-dropzone"
         onClick={() => openPicker(() => inputRef.current?.click())}
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
@@ -163,7 +172,14 @@ export function FilesPane() {
       </div>
 
       {/* FILES-03: File list */}
-      <ul aria-label="File queue" className="flex-1 overflow-y-auto">
+      {/* change:add-black-box-e2e-suite — emptiness is transient, so it rides on `data-empty`
+          rather than a second testid; the list stays addressable in both states. */}
+      <ul
+        aria-label="File queue"
+        data-testid="files-list"
+        data-empty={files.length === 0 || undefined}
+        className="flex-1 overflow-y-auto"
+      >
         {files.map(f => (
           <li key={f.id}>
             <FileRow file={f} />

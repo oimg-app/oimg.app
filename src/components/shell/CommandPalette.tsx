@@ -25,6 +25,7 @@ export function CommandPalette() {
             autoFocus
             role="searchbox"
             aria-label="Search commands"
+            data-testid="cmdk-input"
             placeholder="Search commands…"
             value={cmdkQ}
             className="flex-1 h-12 px-4 text-sm text-[var(--color-fg-0)] bg-transparent outline-none placeholder:text-[var(--color-fg-2)]"
@@ -50,11 +51,14 @@ export function CommandPalette() {
         <ul
           role="listbox"
           aria-label="Commands"
+          data-testid="cmdk-listbox"
           aria-activedescendant={cmdFlat[cmdkSel] ? 'cmd-item-' + cmdkSel : undefined}
           className="max-h-[320px] overflow-y-auto"
         >
           {cmdFlat.length === 0 ? (
-            <li className="px-4 py-3 text-[13px] text-[var(--color-fg-2)]">No commands match</li>
+            <li data-testid="cmdk-empty" className="px-4 py-3 text-[13px] text-[var(--color-fg-2)]">
+              No commands match
+            </li>
           ) : (
             cmdFlat.map((item, i) => (
               <li
@@ -62,6 +66,7 @@ export function CommandPalette() {
                 id={'cmd-item-' + i}
                 role="option"
                 aria-selected={i === cmdkSel}
+                data-testid={`cmdk-option-${i}`}
                 className={cn(
                   'px-4 py-2 text-[13px] text-[var(--color-fg-0)] cursor-default flex justify-between items-center hover:bg-color-bg-2',
                   i === cmdkSel && 'bg-[var(--color-accent-dim)] border-l-2 border-[var(--color-accent)]',

@@ -29,7 +29,7 @@ async function injectEntries(page: Page, specs: InjectSpec[]): Promise<void> {
       // @ts-expect-error — Vite dev-server runtime path, not a TS-resolvable specifier
       const filesMod = (await import(/* @vite-ignore */ '/src/stores/files.ts'))
       // @ts-expect-error — Vite dev-server runtime path, not a TS-resolvable specifier
-      const stubMod = (await import(/* @vite-ignore */ '/src/lib/stub-data.ts'))
+      const stubMod = (await import(/* @vite-ignore */ '/src/lib/settings.ts'))
       const { filesAtom } = filesMod
       const { defaultFileSettings } = stubMod
 

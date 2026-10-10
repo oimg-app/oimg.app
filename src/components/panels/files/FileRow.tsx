@@ -77,6 +77,9 @@ export function FileRow({ file }: { file: FileEntry }) {
     <ContextMenu onOpenChange={(open) => setRowMenu(open ? file.id : null)}>
       <ContextMenuTrigger
         ref={rowRef}
+        data-testid={`files-row-${file.id}`}
+        data-status={file.status}
+        data-selected={isSelected || undefined}
         onClick={() => selectFile(file.id)}
         className={cn(
           'grid grid-cols-[28px_1fr_auto] gap-[10px] items-center px-3 py-[7px] border-b border-[var(--line)] relative cursor-default group',
@@ -91,15 +94,21 @@ export function FileRow({ file }: { file: FileEntry }) {
             BADGE_CLASS[file.type] ?? ''
           )}
           aria-hidden="true"
+          data-testid={`files-row-${file.id}-badge`}
         >
           {file.type.toUpperCase()}
         </div>
 
         {/* File meta */}
         <div className="min-w-0">
-          <div className="text-[12px] font-semibold text-[var(--fg-0)] truncate">{file.name}</div>
+          <div
+            className="text-[12px] font-semibold text-[var(--fg-0)] truncate"
+            data-testid={`files-row-${file.id}-name`}
+          >
+            {file.name}
+          </div>
           <div className="font-mono text-[12px] text-[var(--fg-2)] flex gap-[6px] items-center mt-[2px]">
-            <span>{fmtBytes(file.orig)}</span>
+            <span data-testid={`files-row-${file.id}-size`}>{fmtBytes(file.orig)}</span>
             <span className="text-[var(--fg-3)]">→</span>
             <span>{fmtBytes(file.opt)}</span>
             <span className={cn('font-semibold', savingsPct < 30 ? 'text-[var(--warn)]' : 'text-[var(--primary)]')}>
@@ -121,6 +130,7 @@ export function FileRow({ file }: { file: FileEntry }) {
           <button
             className="w-[22px] h-[22px] grid place-items-center rounded text-[var(--fg-2)] hover:bg-[var(--bg-3)] cursor-pointer hover:text-[var(--fg-0)]"
             aria-label="File options"
+            data-testid={`files-row-${file.id}-ctxbtn`}
             onClick={handleCtxBtn}
           >
             <DotsThreeVertical size={12} />
@@ -128,16 +138,24 @@ export function FileRow({ file }: { file: FileEntry }) {
           <div
             className={cn('w-2 h-2 rounded-full', STATUS_DOT[file.status] ?? 'bg-[var(--fg-3)]')}
             aria-label={`Status: ${file.status}`}
+            data-testid={`files-row-${file.id}-status`}
+            data-status={file.status}
           />
         </div>
       </ContextMenuTrigger>
 
-      <ContextMenuContent>
-        <ContextMenuItem onSelect={() => { /* @TODO Phase 3 — pushToast('Re-optimize') */ }}>
+      {/* change:add-black-box-e2e-suite — menu items take bare testids, not per-row ones:
+          Radix keeps only the active row's menu mounted, so there is never a second match. */}
+      <ContextMenuContent data-testid="files-row-menu">
+        <ContextMenuItem
+          data-testid="files-row-menu-reoptimize"
+          onSelect={() => { /* @TODO Phase 3 — pushToast('Re-optimize') */ }}
+        >
           <ArrowCounterClockwise size={14} />
           Re-optimize
         </ContextMenuItem>
         <ContextMenuItem
+          data-testid="files-row-menu-saveas"
           disabled={file.status !== 'done'}
           title={file.status !== 'done' ? 'Optimize this file first' : undefined}
           onSelect={() => { void exportOne(file) }}
@@ -146,6 +164,7 @@ export function FileRow({ file }: { file: FileEntry }) {
           Save as…
         </ContextMenuItem>
         <ContextMenuItem
+          data-testid="files-row-menu-copy-datauri"
           disabled={file.status !== 'done'}
           title={file.status !== 'done' ? 'Optimize this file first' : undefined}
           onSelect={() => { void copyDataUriOne(file) }}
@@ -154,6 +173,7 @@ export function FileRow({ file }: { file: FileEntry }) {
           Copy data-URI
         </ContextMenuItem>
         <ContextMenuItem
+          data-testid="files-row-menu-copy-picture"
           disabled={file.status !== 'done'}
           title={file.status !== 'done' ? 'Optimize this file first' : undefined}
           onSelect={() => { void copyPictureOne(file) }}
@@ -161,17 +181,27 @@ export function FileRow({ file }: { file: FileEntry }) {
           <Code size={14} />
           {'Copy <picture>'}
         </ContextMenuItem>
-        <ContextMenuItem onSelect={() => { /* @TODO Phase 3 — pushToast('Reveal in compare') */ }}>
+        <ContextMenuItem
+          data-testid="files-row-menu-reveal"
+          onSelect={() => { /* @TODO Phase 3 — pushToast('Reveal in compare') */ }}
+        >
           <Eye size={14} />
           Reveal in compare
         </ContextMenuItem>
         <ContextMenuSeparator />
-        <ContextMenuItem onSelect={() => { /* @TODO Phase 3 — pushToast('Apply same settings to all') */ }}>
+        <ContextMenuItem
+          data-testid="files-row-menu-apply-to-all"
+          onSelect={() => { /* @TODO Phase 3 — pushToast('Apply same settings to all') */ }}
+        >
           <Stack size={14} />
           Apply same settings to all
         </ContextMenuItem>
         <ContextMenuSeparator />
-        <ContextMenuItem variant="destructive" onSelect={() => removeFile(file.id)}>
+        <ContextMenuItem
+          data-testid="files-row-menu-remove"
+          variant="destructive"
+          onSelect={() => removeFile(file.id)}
+        >
           <Trash size={14} />
           Remove from queue
         </ContextMenuItem>

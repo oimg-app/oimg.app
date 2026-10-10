@@ -18,9 +18,20 @@ import { BackpressureIndicator } from './BackpressureIndicator'
 const menuItemClass =
   'px-3 py-1.5 text-xs text-[var(--color-fg-0)] rounded cursor-pointer flex items-center justify-between focus:bg-color-bg-3 data-[highlighted]:bg-color-bg-3'
 
-function MenuItem({ label, shortcut, onSelect }: { label: string; shortcut?: string; onSelect?: () => void }) {
+function MenuItem({
+  label,
+  shortcut,
+  onSelect,
+  testId,
+}: {
+  label: string
+  shortcut?: string
+  onSelect?: () => void
+  // change:add-black-box-e2e-suite — lets callers tag an item without coupling specs to its label.
+  testId?: string
+}) {
   return (
-    <DropdownMenuItem className={menuItemClass} onSelect={onSelect}>
+    <DropdownMenuItem className={menuItemClass} onSelect={onSelect} data-testid={testId}>
       {label}
       {shortcut && (
         <Kbd className="ml-2 text-[11px] font-mono font-semibold">{shortcut}</Kbd>
@@ -60,23 +71,27 @@ export function TitleBar() {
         {/* Codec menu */}
         <DropdownMenu modal={false} open={open === 'menu-codec'} onOpenChange={(o) => setOpen(o ? 'menu-codec' : null)}>
           <DropdownMenuTrigger asChild>
-            <button type="button" className={triggerClass}>Codec</button>
+            <button type="button" className={triggerClass} data-testid="titlebar-menu-codec">Codec</button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className={menuContentClass}>
-            <MenuItem label="WebP" onSelect={() => selectCodec('webp')} />
-            <MenuItem label="AVIF" onSelect={() => selectCodec('avif')} />
-            <MenuItem label="JPEG" onSelect={() => selectCodec('jpeg')} />
-            <MenuItem label="PNG" onSelect={() => selectCodec('png')} />
-            <MenuItem label="SVG" onSelect={() => selectCodec('svg')} />
+            <MenuItem label="WebP" onSelect={() => selectCodec('webp')} testId="titlebar-item-codec-webp" />
+            <MenuItem label="AVIF" onSelect={() => selectCodec('avif')} testId="titlebar-item-codec-avif" />
+            <MenuItem label="JPEG" onSelect={() => selectCodec('jpeg')} testId="titlebar-item-codec-jpeg" />
+            <MenuItem label="PNG" onSelect={() => selectCodec('png')} testId="titlebar-item-codec-png" />
+            <MenuItem label="SVG" onSelect={() => selectCodec('svg')} testId="titlebar-item-codec-svg" />
             <DropdownMenuSeparator className="bg-color-line" />
-            <MenuItem label="Auto (Butteraugli target)" onSelect={() => selectCodec('auto')} />
+            <MenuItem
+              label="Auto (Butteraugli target)"
+              onSelect={() => selectCodec('auto')}
+              testId="titlebar-item-codec-auto"
+            />
           </DropdownMenuContent>
         </DropdownMenu>
 
         {/* View menu */}
         <DropdownMenu modal={false} open={open === 'menu-view'} onOpenChange={(o) => setOpen(o ? 'menu-view' : null)}>
           <DropdownMenuTrigger asChild>
-            <button type="button" className={triggerClass}>View</button>
+            <button type="button" className={triggerClass} data-testid="titlebar-menu-view">View</button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className={menuContentClass}>
             {/* Pane visibility toggles — checked = visible. onSelect preventDefault
@@ -86,6 +101,7 @@ export function TitleBar() {
               checked={panes.batch}
               onCheckedChange={() => togglePane('batch')}
               onSelect={(e) => e.preventDefault()}
+              data-testid="titlebar-check-pane-batch"
             >
               Batch view
             </DropdownMenuCheckboxItem>
@@ -94,6 +110,7 @@ export function TitleBar() {
               checked={panes.compare}
               onCheckedChange={() => togglePane('compare')}
               onSelect={(e) => e.preventDefault()}
+              data-testid="titlebar-check-pane-compare"
             >
               Compare view
             </DropdownMenuCheckboxItem>
@@ -102,26 +119,30 @@ export function TitleBar() {
               checked={panes.inspector}
               onCheckedChange={() => togglePane('inspector')}
               onSelect={(e) => e.preventDefault()}
+              data-testid="titlebar-check-pane-inspector"
             >
               Inspector view
             </DropdownMenuCheckboxItem>
             <DropdownMenuSeparator className="bg-color-line" />
-            <MenuItem label="Light theme" onSelect={() => setTheme('light')} />
-            <MenuItem label="Dark theme" onSelect={() => setTheme('dark')} />
+            <MenuItem label="Light theme" onSelect={() => setTheme('light')} testId="titlebar-item-theme-light" />
+            <MenuItem label="Dark theme" onSelect={() => setTheme('dark')} testId="titlebar-item-theme-dark" />
           </DropdownMenuContent>
         </DropdownMenu>
 
         {/* Help menu */}
         <DropdownMenu modal={false} open={open === 'menu-help'} onOpenChange={(o) => setOpen(o ? 'menu-help' : null)}>
           <DropdownMenuTrigger asChild>
-            <button type="button" className={triggerClass}>Help</button>
+            <button type="button" className={triggerClass} data-testid="titlebar-menu-help">Help</button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className={menuContentClass}>
-            <MenuItem label="Documentation" onSelect={() => openDocs()} />
-            <MenuItem label="Keyboard shortcuts" onSelect={() => openShortcuts()} />
-            <MenuItem label="What's new" onSelect={() => openChangelog()} />
+            <MenuItem label="Documentation" onSelect={() => openDocs()} testId="titlebar-item-help-docs" />
+            <MenuItem label="Keyboard shortcuts" onSelect={() => openShortcuts()} testId="titlebar-item-help-shortcuts" />
+            <MenuItem label="What's new" onSelect={() => openChangelog()} testId="titlebar-item-help-changelog" />
             <DropdownMenuSeparator className="bg-color-line" />
-            <DropdownMenuLabel className="px-3 py-1.5 text-xs font-normal text-[var(--color-fg-2)]">
+            <DropdownMenuLabel
+              className="px-3 py-1.5 text-xs font-normal text-[var(--color-fg-2)]"
+              data-testid="titlebar-version-label"
+            >
               v0.1.0 · 2026
             </DropdownMenuLabel>
           </DropdownMenuContent>
@@ -137,6 +158,7 @@ export function TitleBar() {
         <button
           type="button"
           aria-label="Open command palette"
+          data-testid="titlebar-btn-cmdk"
           onClick={openCmdk}
           className="flex items-center gap-2 px-2 py-1 rounded text-xs text-[var(--color-fg-1)] hover:bg-color-bg-2 hover:text-[var(--color-fg-0)]"
         >

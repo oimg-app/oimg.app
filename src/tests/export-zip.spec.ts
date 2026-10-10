@@ -46,8 +46,8 @@ async function injectEntries(page: Page, specs: InjectSpec[]): Promise<void> {
     async ({ specs, TINY_PNG_B64 }) => {
 
 
-      const filesMod = (await import('../stores/files'))
-      const stubMod = (await import('../lib/settings'))
+      const filesMod = (await import('/src/stores/files.ts'))
+      const stubMod = (await import('/src/lib/settings.ts'))
       const { filesAtom } = filesMod
       const { defaultFileSettings } = stubMod
 
@@ -161,7 +161,11 @@ test.describe('EXP-02 — Batch ZIP', () => {
       { id: 'e', name: 'five.png', target: 'webp' },
     ])
 
-    await page.getByRole('button', { name: 'Export' }).first().click()
+    // The primary Export button is exportOne(selectedFile) — a single file. Batch ZIP
+    // lives behind the split-button menu, so these specs must open it and pick "All as ZIP".
+    // Previously this clicked the primary button and asserted a ZIP, so it saved one PNG.
+    await page.getByTestId('toolbar-btn-export-menu').click()
+    await page.getByTestId('toolbar-item-export-zip').click()
 
     await page.waitForFunction(
       () => (window as unknown as { __savedFiles?: Array<unknown> }).__savedFiles?.length === 1,
@@ -190,7 +194,11 @@ test.describe('EXP-02 — Batch ZIP', () => {
     await page.goto('/')
     await injectEntries(page, [{ id: 'a', name: 'lonely.png', target: 'webp' }])
 
-    await page.getByRole('button', { name: 'Export' }).first().click()
+    // The primary Export button is exportOne(selectedFile) — a single file. Batch ZIP
+    // lives behind the split-button menu, so these specs must open it and pick "All as ZIP".
+    // Previously this clicked the primary button and asserted a ZIP, so it saved one PNG.
+    await page.getByTestId('toolbar-btn-export-menu').click()
+    await page.getByTestId('toolbar-item-export-zip').click()
     await page.waitForFunction(
       () => (window as unknown as { __savedFiles?: Array<unknown> }).__savedFiles?.length === 1,
       undefined,
@@ -210,7 +218,11 @@ test.describe('EXP-02 — Batch ZIP', () => {
       { id: 'c', name: 'dup.png', target: 'webp' },
     ])
 
-    await page.getByRole('button', { name: 'Export' }).first().click()
+    // The primary Export button is exportOne(selectedFile) — a single file. Batch ZIP
+    // lives behind the split-button menu, so these specs must open it and pick "All as ZIP".
+    // Previously this clicked the primary button and asserted a ZIP, so it saved one PNG.
+    await page.getByTestId('toolbar-btn-export-menu').click()
+    await page.getByTestId('toolbar-item-export-zip').click()
     await page.waitForFunction(
       () => (window as unknown as { __savedFiles?: Array<unknown> }).__savedFiles?.length === 1,
       undefined,
@@ -233,7 +245,11 @@ test.describe('EXP-02 — Batch ZIP', () => {
       { id: 'c', name: 'c.png', target: 'webp' },
     ])
 
-    await page.getByRole('button', { name: 'Export' }).first().click()
+    // The primary Export button is exportOne(selectedFile) — a single file. Batch ZIP
+    // lives behind the split-button menu, so these specs must open it and pick "All as ZIP".
+    // Previously this clicked the primary button and asserted a ZIP, so it saved one PNG.
+    await page.getByTestId('toolbar-btn-export-menu').click()
+    await page.getByTestId('toolbar-item-export-zip').click()
     await page.waitForFunction(
       () => (window as unknown as { __savedFiles?: Array<unknown> }).__savedFiles?.length === 1,
       undefined,
@@ -254,7 +270,11 @@ test.describe('EXP-02 — Batch ZIP', () => {
       { id: 'b', name: 'flat-two.png', target: 'webp' },
     ])
 
-    await page.getByRole('button', { name: 'Export' }).first().click()
+    // The primary Export button is exportOne(selectedFile) — a single file. Batch ZIP
+    // lives behind the split-button menu, so these specs must open it and pick "All as ZIP".
+    // Previously this clicked the primary button and asserted a ZIP, so it saved one PNG.
+    await page.getByTestId('toolbar-btn-export-menu').click()
+    await page.getByTestId('toolbar-item-export-zip').click()
     await page.waitForFunction(
       () => (window as unknown as { __savedFiles?: Array<unknown> }).__savedFiles?.length === 1,
       undefined,
@@ -280,7 +300,11 @@ test.describe('EXP-02 — Batch ZIP', () => {
       { id: 'e', name: 'broken.png', target: 'webp', status: 'error', error: 'simulated codec failure' },
     ])
 
-    await page.getByRole('button', { name: 'Export' }).first().click()
+    // The primary Export button is exportOne(selectedFile) — a single file. Batch ZIP
+    // lives behind the split-button menu, so these specs must open it and pick "All as ZIP".
+    // Previously this clicked the primary button and asserted a ZIP, so it saved one PNG.
+    await page.getByTestId('toolbar-btn-export-menu').click()
+    await page.getByTestId('toolbar-item-export-zip').click()
     await page.waitForFunction(
       () => (window as unknown as { __savedFiles?: Array<unknown> }).__savedFiles?.length === 1,
       undefined,

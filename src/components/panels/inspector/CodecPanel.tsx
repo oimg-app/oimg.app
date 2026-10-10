@@ -201,12 +201,17 @@ export function CodecPanel() {
             value={settings.codec}
             onChange={(v) => handleSetCodec(v as Codec)}
             aria-label="Output format"
+            data-testid="codec-format"
           />
         </div>
         {!isSvg && (
           <div className="flex items-center justify-between mt-1">
             <span className="text-[12px] text-[var(--color-fg-2)]">Lossless</span>
-            <Switch checked={settings.lossless} onCheckedChange={handleSetLossless} />
+            <Switch
+              checked={settings.lossless}
+              onCheckedChange={handleSetLossless}
+              data-testid="codec-switch-lossless"
+            />
           </div>
         )}
       </Section>
@@ -236,6 +241,7 @@ export function CodecPanel() {
                   onValueChange={([v]) => handleSetQuality(v)}
                   className="w-full"
                   disabled={isPng}
+                  data-testid="codec-slider-quality"
                 />
                 <span className="text-right font-mono text-[12px] font-semibold text-[var(--color-fg-0)] tabular-nums">
                   {settings.q}
@@ -251,6 +257,7 @@ export function CodecPanel() {
                   value={[settings.method]}
                   onValueChange={([v]) => handleSetMethod(v)}
                   className="w-full"
+                  data-testid="codec-slider-effort"
                 />
                 <span className="text-right font-mono text-[12px] font-semibold text-[var(--color-fg-0)] tabular-nums">
                   {settings.method}
@@ -265,6 +272,7 @@ export function CodecPanel() {
                 <Switch
                   checked={settings.progressive ?? true}
                   onCheckedChange={handleSetProgressive}
+                  data-testid="codec-switch-progressive"
                 />
               </div>
             )}
@@ -272,7 +280,14 @@ export function CodecPanel() {
             {settings.codec === 'PNG' && (
               <div className="grid grid-cols-[100px_1fr] gap-2 mb-2 items-center">
                 <span className="text-[12px] text-[var(--color-fg-2)]">Palette</span>
-                <SegControl options={['off', 'auto', 'PNG-8']} value="off" onChange={() => {}} aria-label="Palette" disabled />
+                <SegControl
+                  options={['off', 'auto', 'PNG-8']}
+                  value="off"
+                  onChange={() => {}}
+                  aria-label="Palette"
+                  disabled
+                  data-testid="codec-seg-palette"
+                />
               </div>
             )}
 
@@ -287,7 +302,11 @@ export function CodecPanel() {
                   so users don't accidentally ship non-default encoder settings. */}
               <div className="flex items-center justify-between mb-2">
                 <span className="text-[12px] text-[var(--color-fg-2)]">Enable advanced</span>
-                <Switch checked={avifAdvancedOn} onCheckedChange={handleSetAvifAdvancedOn} />
+                <Switch
+                  checked={avifAdvancedOn}
+                  onCheckedChange={handleSetAvifAdvancedOn}
+                  data-testid="codec-switch-avif-advanced"
+                />
               </div>
               {avifAdvancedOn && <>
               {/* Subsample */}
@@ -298,6 +317,7 @@ export function CodecPanel() {
                   value={SUBSAMPLE_LABELS[Math.min(3, Math.max(0, avif.subsample))]}
                   onChange={(v) => handleSetAvif('subsample', SUBSAMPLE_LABELS.indexOf(v as typeof SUBSAMPLE_LABELS[number]))}
                   aria-label="Subsample"
+                  data-testid="codec-seg-avif-subsample"
                 />
               </div>
 
@@ -309,6 +329,7 @@ export function CodecPanel() {
                   value={avif.tune}
                   onChange={(v) => handleSetAvif('tune', v as AvifTune)}
                   aria-label="Tune"
+                  data-testid="codec-seg-avif-tune"
                 />
               </div>
 
@@ -318,6 +339,7 @@ export function CodecPanel() {
                 <Switch
                   checked={avif.qualityAlpha === -1}
                   onCheckedChange={(v) => handleSetAvif('qualityAlpha', v ? -1 : Math.max(0, settings.q ?? 50))}
+                  data-testid="codec-switch-avif-match-alpha"
                 />
               </div>
               {avif.qualityAlpha !== -1 && (
@@ -329,6 +351,7 @@ export function CodecPanel() {
                       value={[avif.qualityAlpha]}
                       onValueChange={([v]) => handleSetAvif('qualityAlpha', v)}
                       className="w-full"
+                      data-testid="codec-slider-avif-alpha"
                     />
                     <span className="text-right font-mono text-[12px] font-semibold text-[var(--color-fg-0)] tabular-nums">
                       {avif.qualityAlpha}
@@ -346,6 +369,7 @@ export function CodecPanel() {
                     value={[avif.denoiseLevel]}
                     onValueChange={([v]) => handleSetAvif('denoiseLevel', v)}
                     className="w-full"
+                    data-testid="codec-slider-avif-denoise"
                   />
                   <span className="text-right font-mono text-[12px] font-semibold text-[var(--color-fg-0)] tabular-nums">
                     {avif.denoiseLevel}
@@ -362,6 +386,7 @@ export function CodecPanel() {
                     value={[avif.sharpness]}
                     onValueChange={([v]) => handleSetAvif('sharpness', v)}
                     className="w-full"
+                    data-testid="codec-slider-avif-sharpness"
                   />
                   <span className="text-right font-mono text-[12px] font-semibold text-[var(--color-fg-0)] tabular-nums">
                     {avif.sharpness}
@@ -378,6 +403,7 @@ export function CodecPanel() {
                     value={[avif.tileRowsLog2]}
                     onValueChange={([v]) => handleSetAvif('tileRowsLog2', v)}
                     className="w-full"
+                    data-testid="codec-slider-avif-tile-rows"
                   />
                   <span className="text-right font-mono text-[12px] font-semibold text-[var(--color-fg-0)] tabular-nums">
                     {1 << avif.tileRowsLog2}
@@ -394,6 +420,7 @@ export function CodecPanel() {
                     value={[avif.tileColsLog2]}
                     onValueChange={([v]) => handleSetAvif('tileColsLog2', v)}
                     className="w-full"
+                    data-testid="codec-slider-avif-tile-cols"
                   />
                   <span className="text-right font-mono text-[12px] font-semibold text-[var(--color-fg-0)] tabular-nums">
                     {1 << avif.tileColsLog2}
@@ -404,13 +431,21 @@ export function CodecPanel() {
               {/* Chroma delta Q */}
               <div className="flex items-center justify-between mb-2">
                 <span className="text-[12px] text-[var(--color-fg-2)]">Chroma delta Q</span>
-                <Switch checked={avif.chromaDeltaQ} onCheckedChange={(v) => handleSetAvif('chromaDeltaQ', v)} />
+                <Switch
+                  checked={avif.chromaDeltaQ}
+                  onCheckedChange={(v) => handleSetAvif('chromaDeltaQ', v)}
+                  data-testid="codec-switch-avif-chroma-delta"
+                />
               </div>
 
               {/* Sharp YUV */}
               <div className="flex items-center justify-between">
                 <span className="text-[12px] text-[var(--color-fg-2)]">Sharp YUV</span>
-                <Switch checked={avif.enableSharpYUV} onCheckedChange={(v) => handleSetAvif('enableSharpYUV', v)} />
+                <Switch
+                  checked={avif.enableSharpYUV}
+                  onCheckedChange={(v) => handleSetAvif('enableSharpYUV', v)}
+                  data-testid="codec-switch-avif-sharp-yuv"
+                />
               </div>
               </>}
             </Section>
@@ -420,7 +455,11 @@ export function CodecPanel() {
           <Section title="Resize">
             <div className="flex items-center justify-between mb-2">
               <span className="text-[12px] text-[var(--color-fg-2)]">Resize</span>
-              <Switch checked={settings.resizeOn} onCheckedChange={handleSetResizeOn} />
+              <Switch
+                checked={settings.resizeOn}
+                onCheckedChange={handleSetResizeOn}
+                data-testid="codec-switch-resize"
+              />
             </div>
             {settings.resizeOn && (
               <div className="space-y-2">
@@ -428,6 +467,7 @@ export function CodecPanel() {
                   <span className="text-[12px] text-[var(--color-fg-2)]">Width</span>
                   <Input
                     value={settings.w}
+                    data-testid="codec-input-width"
                     onChange={(e) => handleSetResizeDimensions(e.target.value, settings.h)}
                     className="h-6 font-mono text-[12px] bg-color-bg-2 border-[var(--color-line)]"
                   />
@@ -436,17 +476,30 @@ export function CodecPanel() {
                   <span className="text-[12px] text-[var(--color-fg-2)]">Height</span>
                   <Input
                     value={settings.h}
+                    data-testid="codec-input-height"
                     onChange={(e) => handleSetResizeDimensions(settings.w, e.target.value)}
                     className="h-6 font-mono text-[12px] bg-color-bg-2 border-[var(--color-line)]"
                   />
                 </div>
                 <div className="grid grid-cols-[100px_1fr] gap-2 items-center">
                   <span className="text-[12px] text-[var(--color-fg-2)]">Fit</span>
-                  <SegControl options={FIT_MODES} value={settings.fit} onChange={handleSetFit} aria-label="Fit" />
+                  <SegControl
+                    options={FIT_MODES}
+                    value={settings.fit}
+                    onChange={handleSetFit}
+                    aria-label="Fit"
+                    data-testid="codec-seg-fit"
+                  />
                 </div>
                 <div className="grid grid-cols-[100px_1fr] gap-2 items-center">
                   <span className="text-[12px] text-[var(--color-fg-2)]">Algorithm</span>
-                  <SegControl options={RESIZE_ALGS} value={settings.alg} onChange={handleSetAlg} aria-label="Algorithm" />
+                  <SegControl
+                    options={RESIZE_ALGS}
+                    value={settings.alg}
+                    onChange={handleSetAlg}
+                    aria-label="Algorithm"
+                    data-testid="codec-seg-algorithm"
+                  />
                 </div>
               </div>
             )}
@@ -455,7 +508,11 @@ export function CodecPanel() {
           <Section title="Reduce palette">
             <div className="flex items-center justify-between mb-2">
               <span className="text-[12px] text-[var(--color-fg-2)]">Reduce palette</span>
-              <Switch checked={settings.colorsOn} onCheckedChange={handleSetColorsOn} />
+              <Switch
+                checked={settings.colorsOn}
+                onCheckedChange={handleSetColorsOn}
+                data-testid="codec-switch-colors"
+              />
             </div>
             {settings.colorsOn && (
                 <div className="space-y-2">
@@ -467,6 +524,7 @@ export function CodecPanel() {
                           value={[settings.colors]}
                           onValueChange={([v]) => handleSetColors(v)}
                           className="w-full"
+                          data-testid="codec-slider-colors"
                       />
                       <span
                           className="text-right font-mono text-[12px] font-semibold text-[var(--color-fg-0)] tabular-nums">
@@ -482,6 +540,7 @@ export function CodecPanel() {
                           value={[settings.dithering]}
                           onValueChange={([v]) => handleSetDithering(v)}
                           className="w-full"
+                          data-testid="codec-slider-dithering"
                       />
                       <span
                           className="text-right font-mono text-[12px] font-semibold text-[var(--color-fg-0)] tabular-nums">
@@ -501,14 +560,24 @@ export function CodecPanel() {
           <Section title="Metadata">
             <div className="flex items-center justify-between mb-1.5">
               <span className="text-[12px] text-[var(--color-fg-2)]">Strip EXIF / XMP / IPTC</span>
-              <Switch checked disabled aria-label="Strip EXIF / XMP / IPTC (always on)" />
+              <Switch
+                checked
+                disabled
+                aria-label="Strip EXIF / XMP / IPTC (always on)"
+                data-testid="codec-switch-strip-exif"
+              />
             </div>
             <p className="text-[10px] font-mono text-[var(--color-fg-3)] mb-1.5 leading-[1.5]">
               always stripped — metadata is dropped when decoding to pixels
             </p>
             <div className="flex items-center justify-between mb-0.5">
               <span className="text-[12px] text-[var(--color-fg-3)]">Keep ICC profile</span>
-              <Switch checked={false} disabled aria-label="Keep ICC profile (not supported)" />
+              <Switch
+                checked={false}
+                disabled
+                aria-label="Keep ICC profile (not supported)"
+                data-testid="codec-switch-keep-icc"
+              />
             </div>
             <p className="text-[10px] font-mono text-[var(--color-fg-3)] leading-[1.5]">
               not supported by current codecs

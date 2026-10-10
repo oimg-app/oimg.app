@@ -282,6 +282,7 @@ export function CompareStage() {
   return (
     <div
       ref={stageRef}
+      data-testid="compare-stage"
       className="flex-1 min-h-0 overflow-hidden flex items-center justify-center"
       style={stageBgStyle(stageBg)}
       onMouseDown={handleStageMouseDown}
@@ -294,6 +295,7 @@ export function CompareStage() {
       */}
       <div
         ref={frameRef}
+        data-testid="compare-frame"
         className="relative border border-[var(--color-line)] overflow-hidden select-none"
         style={{
           '--split': split + '%',
@@ -309,6 +311,8 @@ export function CompareStage() {
               title="Original SVG"
               sandbox="allow-scripts"
               scrolling="no"
+              data-testid="compare-layer-orig"
+              data-kind="svg"
               className="absolute inset-0 w-full h-full border-0 pointer-events-none"
               style={{ clipPath: 'inset(0 calc(100% - var(--split)) 0 0)' }}
             />
@@ -316,6 +320,8 @@ export function CompareStage() {
             <img
               src={origSrc}
               alt="Original"
+              data-testid="compare-layer-orig"
+              data-kind="raster"
               className="absolute inset-0 w-full h-full object-contain"
               style={{ clipPath: 'inset(0 calc(100% - var(--split)) 0 0)' }}
               draggable={false}
@@ -326,6 +332,8 @@ export function CompareStage() {
           )
         ) : (
           <div
+            data-testid="compare-layer-orig"
+            data-kind="placeholder"
             className="absolute inset-0 bg-color-bg-2"
             style={{ clipPath: 'inset(0 calc(100% - var(--split)) 0 0)' }}
           />
@@ -339,6 +347,8 @@ export function CompareStage() {
               title="Optimized SVG"
               sandbox="allow-scripts"
               scrolling="no"
+              data-testid="compare-layer-opt"
+              data-kind="svg"
               className="absolute inset-0 w-full h-full border-0 pointer-events-none"
               style={{ clipPath: 'inset(0 0 0 var(--split))' }}
             />
@@ -346,6 +356,8 @@ export function CompareStage() {
             <img
               src={encodedSrc}
               alt="Optimized"
+              data-testid="compare-layer-opt"
+              data-kind="raster"
               className="absolute inset-0 w-full h-full object-contain"
               style={{ clipPath: 'inset(0 0 0 var(--split))' }}
               draggable={false}
@@ -356,6 +368,8 @@ export function CompareStage() {
           )
         ) : (
           <div
+            data-testid="compare-layer-opt"
+            data-kind="placeholder"
             className="absolute inset-0 bg-color-bg-3"
             style={{ clipPath: 'inset(0 0 0 var(--split))' }}
           />
@@ -363,6 +377,7 @@ export function CompareStage() {
 
         {/* split-handle */}
         <div
+          data-testid="compare-split-handle"
           className="absolute top-0 bottom-0 w-[1px] cursor-col-resize bg-color-accent"
           style={{ left: 'var(--split)', transform: 'translateX(-0.5px)' }}
           onMouseDown={handleSplitMouseDown}
@@ -375,13 +390,19 @@ export function CompareStage() {
         </div>
 
         {/* split label left */}
-        <div className="absolute bottom-3 left-3 flex items-center gap-1.5 px-2 py-1 rounded-[4px] font-mono text-[11px] font-semibold text-[var(--color-fg-0)] bg-[var(--color-bg-0)]/70 backdrop-blur-sm pointer-events-none">
+        <div
+          data-testid="compare-label-orig"
+          className="absolute bottom-3 left-3 flex items-center gap-1.5 px-2 py-1 rounded-[4px] font-mono text-[11px] font-semibold text-[var(--color-fg-0)] bg-[var(--color-bg-0)]/70 backdrop-blur-sm pointer-events-none"
+        >
           <span className="w-2 h-2 rounded-full bg-[var(--color-fg-3)] shrink-0" />
           ORIGINAL · {fmtBytes(selectedFile?.orig ?? null)}
         </div>
 
         {/* split label right */}
-        <div className="absolute bottom-3 right-3 flex items-center gap-1.5 px-2 py-1 rounded-[4px] font-mono text-[11px] font-semibold text-[var(--color-fg-0)] bg-[var(--color-bg-0)]/70 backdrop-blur-sm pointer-events-none">
+        <div
+          data-testid="compare-label-opt"
+          className="absolute bottom-3 right-3 flex items-center gap-1.5 px-2 py-1 rounded-[4px] font-mono text-[11px] font-semibold text-[var(--color-fg-0)] bg-[var(--color-bg-0)]/70 backdrop-blur-sm pointer-events-none"
+        >
           <span className="w-2 h-2 rounded-full bg-color-accent shrink-0" />
           {optTarget ?? '—'} · {fmtBytes(selectedFile?.opt ?? null)}
         </div>

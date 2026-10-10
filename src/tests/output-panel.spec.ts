@@ -1,5 +1,16 @@
 // Phase 06, Plan 01 — INSP-07 OutputPanel Playwright spec
 // Fully exercised after 06-03 wiring (OutputPanel wired into InspectorPane tab)
+// change:add-black-box-e2e-suite — migrated to testid selectors.
+//
+// SCOPE NOTE: the three tests below were written before OutputPanel was wired up. Each
+// guards its assertions behind `isVisible()` and then closes with `expect(true).toBe(true)`,
+// so the guarded bodies never execute: OutputPanel mounts only once a file is selected AND
+// the output tab is open, and none of these tests do either. They are migrated here
+// selector-for-selector WITHOUT changing their semantics — making them assert for real is a
+// behaviour change beyond this change's scope.
+//
+// Real coverage of these same surfaces now lives in inspector-tabs.spec.ts, which selects a
+// file and asserts the sections, the copy buttons and the clipboard round-trip unguarded.
 import { test, expect } from '@playwright/test'
 
 test('App loads without console errors (OutputPanel baseline)', async ({ page }) => {
@@ -15,7 +26,7 @@ test('App loads without console errors (OutputPanel baseline)', async ({ page })
 })
 
 // The following tests are fully exercised after 06-03 wires OutputPanel into InspectorPane
-// They target data-testid="output-panel" and aria-labels set in OutputPanel.tsx
+// They target data-testid="output-panel" and the per-section testids added by this change.
 
 test('OutputPanel empty state renders when no file selected (fully exercised after 06-03 wiring)', async ({ page }) => {
   await page.goto('/')
@@ -31,17 +42,15 @@ test('OutputPanel empty state renders when no file selected (fully exercised aft
   expect(true).toBe(true)
 })
 
-test('OutputPanel copy buttons have distinct aria-labels (fully exercised after 06-03 wiring)', async ({ page }) => {
+test('OutputPanel copy buttons are individually addressable (fully exercised after 06-03 wiring)', async ({ page }) => {
   await page.goto('/')
   const outputPanel = page.getByTestId('output-panel')
   const isVisible = await outputPanel.isVisible().catch(() => false)
   if (isVisible) {
-    const base64Btn = page.getByRole('button', { name: 'Copy Base64 snippet' })
-    const urlBtn = page.getByRole('button', { name: 'Copy URL-encoded snippet' })
-    const pictureBtn = page.getByRole('button', { name: 'Copy picture snippet' })
-    await expect(base64Btn).toBeVisible()
-    await expect(urlBtn).toBeVisible()
-    await expect(pictureBtn).toBeVisible()
+    // Was: getByRole('button', { name: 'Copy Base64 snippet' }) — aria-label coupling.
+    for (const id of ['base64', 'urlencoded', 'picture']) {
+      await expect(page.getByTestId(`output-btn-copy-${id}`)).toBeVisible()
+    }
   }
   // Pass unconditionally until 06-03 wires the panel
   expect(true).toBe(true)
@@ -52,7 +61,7 @@ test('OutputPanel copy button flashes Copied! for 1500ms (fully exercised after 
   const outputPanel = page.getByTestId('output-panel')
   const isVisible = await outputPanel.isVisible().catch(() => false)
   if (isVisible) {
-    const base64Btn = page.getByRole('button', { name: 'Copy Base64 snippet' })
+    const base64Btn = page.getByTestId('output-btn-copy-base64')
     if (await base64Btn.isVisible()) {
       await base64Btn.click()
       // After click button should flash "Copied!"

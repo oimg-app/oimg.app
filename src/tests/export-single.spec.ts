@@ -28,8 +28,8 @@ async function injectDoneFile(page: Page, id = 'fixture-0', name = 'fixture-0.pn
     async ({ id, name }) => {
 
 
-      const filesMod = (await import('../stores/files'))
-      const stubMod = (await import('../lib/settings'))
+      const filesMod = (await import('/src/stores/files.ts'))
+      const stubMod = (await import('/src/lib/settings.ts'))
       const { filesAtom } = filesMod
       const { defaultFileSettings } = stubMod
 

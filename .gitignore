@@ -1,6 +1,7 @@
 # Reference projects (cloned for inspiration only — separate repos)
 inspired/
 example-ui/
+public/squoosh-kit/
 
 # Editor
 .idea/
@@ -41,3 +42,9 @@ npm-debug.log*
 pnpm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
+!.env.example

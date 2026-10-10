@@ -29,8 +29,8 @@ interface InjectSpec {
 async function injectEntries(page: Page, specs: InjectSpec[]): Promise<void> {
   await page.evaluate(
     async ({ specs }) => {
-      const { filesAtom } = (await import('../stores/files'))
-      const { defaultFileSettings } = (await import('../lib/settings'))
+      const { filesAtom } = (await import('/src/stores/files.ts'))
+      const { defaultFileSettings } = (await import('/src/lib/settings.ts'))
 
       const entries = specs.map((s, i) => {
         const byteArr = new Uint8Array(s.bytes ?? [1, 2, 3])

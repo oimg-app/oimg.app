@@ -110,6 +110,7 @@ function Snippet({ file, id, title, ariaLabel, builder, onCopy, isCopied }: Snip
     // done + bytes — render the real snippet text.
     body = (
       <pre
+        data-testid={`output-pre-${id}`}
         className={cn(
           'px-3 py-2 mb-2',
           'text-[var(--color-fg-1)] bg-color-bg-2',
@@ -123,12 +124,13 @@ function Snippet({ file, id, title, ariaLabel, builder, onCopy, isCopied }: Snip
   }
 
   return (
-    <Section key={id} title={title}>
+    <Section key={id} title={title} data-testid={`output-section-${id}`}>
       {body}
       <Button
         variant="ghost"
         size="sm"
         aria-label={ariaLabel}
+        data-testid={`output-btn-copy-${id}`}
         onClick={() => onCopy(id, text, title)}
         disabled={!canCopy}
         aria-disabled={!canCopy}
