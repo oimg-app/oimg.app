@@ -59,7 +59,14 @@ export class WorkerPool {
       // microtask as the actual transition into running state.
       pending.onDispatch?.()
       worker.optimize(Comlink.transfer(pending.job, [pending.job.buffer])).then(
-        (result) => { pending.resolve(result); this._release(worker) },
+        (result) => {
+          // change:fix-reduce-palette-pipeline — a reply without an encoded buffer (e.g. a
+          // stray `self.onmessage` in the worker answering Comlink's request) is a per-file
+          // failure, not something for callers to dereference.
+          if (result?.buffer instanceof ArrayBuffer) pending.resolve(result)
+          else pending.reject(new Error('Invalid worker result'))
+          this._release(worker)
+        },
         (err) => { pending.reject(err); this._release(worker) },
       )
     }

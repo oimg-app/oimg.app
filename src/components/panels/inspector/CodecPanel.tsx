@@ -520,7 +520,7 @@ export function CodecPanel() {
                     <span className="text-[12px] text-[var(--color-fg-2)]">Colors</span>
                     <div className="grid grid-cols-[1fr_42px] gap-2 items-center">
                       <Slider2
-                          min={1} max={256} step={1}
+                          min={2} max={256} step={1}
                           value={[settings.colors]}
                           onValueChange={([v]) => handleSetColors(v)}
                           className="w-full"

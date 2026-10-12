@@ -2,7 +2,7 @@
 // Phase 09 — Plan 02: Real jSquash + svgo adapters (ENC-01..05). WR-02/WR-03 fold-in.
 import * as Comlink from 'comlink'
 import type {FileSettings} from '@/lib/settings'
-import {SVGO_PLUGINS, DEFAULT_AVIF_OPTIONS} from '@/lib/settings'
+import {SVGO_PLUGINS, DEFAULT_AVIF_OPTIONS, clampPalette} from '@/lib/settings'
 
 // Dev guard: warn if crossOriginIsolated is false (OxiPNG MT will be disabled)
 if (import.meta.env.DEV && !crossOriginIsolated) {
@@ -111,32 +111,42 @@ async function maybeResize(imageData: ImageData, settings: FileSettings): Promis
   })
 }
 
-// imagequant's default `quantize()` spawns a nested Web Worker (imagequant.worker.js) via
-// /* @vite-ignore */
-// new URL('../../imagequant/dist/…', import.meta.url), which resolves to a non-existent path
-// when the package is served from /node_modules and produces the "text/html MIME" error
-// (Vite's SPA fallback). We're already in a worker, so run it in-thread with the 'client'
-// bridge — WASM loads via loadImagequantModule() using ./wasm/… relative to the served
-// index.browser.mjs, which exists in node_modules.
-type Quantizer = (
-  image: ImageData,
-  opts: { numColors: number; dither: number },
-) => Promise<{ data: Uint8Array | Uint8ClampedArray; width: number; height: number }>
+// change:fix-reduce-palette-pipeline — libimagequant is loaded straight from its Emscripten
+// glue, NOT through the @squoosh-kit/imagequant JS wrapper. The wrapper breaks this worker twice:
+//   1. Bundled into /assets/, it resolves its glue relative to that chunk (/assets/wasm/…, then
+//      /wasm/…) — neither exists, so quantize failed in every production build.
+//   2. Its 'client' bridge assigns `self.onmessage` on the first quantize(); that handler then
+//      answers every later Comlink request with a malformed reply, so each subsequent encode
+//      resolved `undefined` on the main thread (same hazard as visdif — see metrics.worker.ts).
+// @squoosh-kit/vite-plugin copies the glue + wasm to public/squoosh-kit/, so one same-origin
+// URL works in dev and in the build. The package's `exports` map hides these files from a
+// normal import, hence the runtime URL (which also keeps them out of the bundle graph).
+interface QuantizerModule {
+  quantize(data: Uint8ClampedArray, width: number, height: number, numColors: number, dither: number): Uint8ClampedArray
+}
 
-let _quantizer: Quantizer | null = null
-async function getQuantizer(): Promise<Quantizer> {
+let _quantizer: Promise<QuantizerModule> | null = null
+function getQuantizer(): Promise<QuantizerModule> {
   if (_quantizer) return _quantizer
-  const { createImagequantQuantizer } = await import('@squoosh-kit/imagequant')
-  _quantizer = createImagequantQuantizer('client') as unknown as Quantizer
+  const dir = new URL(import.meta.env.BASE_URL + 'squoosh-kit/imagequant/wasm/imagequant/', self.location.origin).href
+  const loading = import(/* @vite-ignore */ dir + 'imagequant.js').then(
+    (m: { default: (opts: { locateFile: (file: string) => string }) => Promise<QuantizerModule> }) =>
+      m.default({ locateFile: (file) => dir + file }),
+  )
+  // A failed load must not be cached — the next palette job retries from scratch.
+  loading.catch(() => { _quantizer = null })
+  _quantizer = loading
   return _quantizer
 }
 
 async function maybeReduceColors(imageData: ImageData, settings: FileSettings): Promise<ImageData> {
   if (!settings.colorsOn) return imageData
   try {
-    const quantize = await getQuantizer()
-    const res = await quantize(imageData, { numColors: settings.colors, dither: settings.dithering })
-    return new ImageData(res.data as ImageDataArray, res.width, res.height)
+    const quantizer = await getQuantizer()
+    const { numColors, dither } = clampPalette(settings.colors, settings.dithering)
+    const out = quantizer.quantize(imageData.data, imageData.width, imageData.height, numColors, dither)
+    // Copy: never hand the encoder a view that could alias WASM memory reused by a later call.
+    return new ImageData(new Uint8ClampedArray(out), imageData.width, imageData.height)
   } catch (err) {
     console.error('[maybeReduceColors]', err)
     throw new Error('Failed to reduce colors: ' + String(err))
@@ -286,8 +296,10 @@ async function optimize(job: EncodeJob): Promise<EncodeResult> {
             [result],
           )
         } catch (err) {
-          // D-13: rethrow descriptive error; Plan 03 hook converts to per-file fallback + toast
-          throw new Error('AVIF not supported in this browser: ' + String(err))
+          // D-13: rethrow descriptive error; Plan 03 hook converts to per-file fallback + toast.
+          // change:fix-reduce-palette-pipeline — this catch also sees decode/resize/quantize
+          // failures, so it must not claim the browser lacks AVIF; the cause follows the prefix.
+          throw new Error('AVIF encode failed: ' + String(err))
         }
       }
 

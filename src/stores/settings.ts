@@ -55,7 +55,7 @@ export function setLossless(v: boolean): void { settingsAtom.setKey('lossless', 
 export function setResizeOn(v: boolean): void { settingsAtom.setKey('resizeOn', v) }
 export function setColors(v: number): void { settingsAtom.setKey('colors', v) }
 export function setColorsOn(v: boolean): void { settingsAtom.setKey('colorsOn', v) }
-export function setDithering(v: number): void { settingsAtom.setKey('colors', v) }
+export function setDithering(v: number): void { settingsAtom.setKey('dithering', v) }
 export function setResizeDimensions(w: string, h: string): void {
   settingsAtom.set({ ...settingsAtom.get(), w, h })
 }

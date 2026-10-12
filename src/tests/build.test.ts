@@ -18,7 +18,7 @@
 //   (d) some chunk in dist/assets/ references `ssim` in its filename (positive check that
 //       ssim.js emits as its own chunk somewhere — hash may vary, so we match on name).
 
-import { readFileSync, readdirSync } from 'node:fs'
+import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { spawnSync } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
@@ -49,6 +49,31 @@ try {
   console.warn('[bundle-size] dist/index.html not found — run npm run build first. Skipping.')
   process.exit(0)
 }
+
+// change:fix-reduce-palette-pipeline — the codec worker loads libimagequant by runtime URL
+// from /squoosh-kit/imagequant/wasm/imagequant/. Nothing in the module graph references those
+// files, so a missing copy only fails at runtime in production; assert it here instead. Also
+// assert the @squoosh-kit/imagequant JS wrapper stays out of the bundle: it mis-resolves its
+// WASM once bundled and hijacks the worker's `self.onmessage`.
+// Runs before the size budget so a budget failure cannot mask it.
+for (const file of ['imagequant.js', 'imagequant.wasm']) {
+  const rel = `squoosh-kit/imagequant/wasm/imagequant/${file}`
+  if (!existsSync(resolve(distDir, rel))) {
+    console.error(`[bundle-size] dist/${rel} is missing — Reduce palette will fail in production.`)
+    process.exit(1)
+  }
+}
+const WRAPPER_SENTINEL = 'createImagequantQuantizer'
+const wrapperChunk = readdirSync(distAssetsDir)
+  .filter((n) => n.endsWith('.js'))
+  .find((n) => readFileSync(resolve(distAssetsDir, n), 'utf8').includes(WRAPPER_SENTINEL))
+if (wrapperChunk !== undefined) {
+  console.error(
+    `[bundle-size] assets/${wrapperChunk} contains ${WRAPPER_SENTINEL} — the @squoosh-kit/imagequant wrapper was bundled. Load the glue by URL in getQuantizer() (codec.worker.ts) instead.`,
+  )
+  process.exit(1)
+}
+console.log('[bundle-size] imagequant assets shipped, wrapper not bundled — PASS')
 
 // <script type="module" src="/assets/index-XXXX.js"> AND
 // <link rel="modulepreload" href="/assets/index-YYYY.js">
@@ -230,4 +255,5 @@ const visdifFiles = allDistFiles
 console.log(`[bundle-size] visdif chunk emitted: ${visdifFiles.join(', ')}`)
 
 console.log('[bundle-size] Phase 17 invariants: PASS')
+
 process.exit(0)

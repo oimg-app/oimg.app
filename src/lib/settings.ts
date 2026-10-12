@@ -134,6 +134,18 @@ export function initFileSettings(defaults: FileSettings): FileSettings {
     return { ...defaults, plugins: defaults.plugins.map((p) => ({ ...p })) };
 }
 
+// change:fix-reduce-palette-pipeline — coerce palette parameters to what libimagequant accepts
+// (numColors: integer 2–256, dither: 0–1) so no stored or UI value can make a job throw.
+// Non-numeric input falls back to the defaults (256 colors, full dithering).
+export function clampPalette(colors: unknown, dithering: unknown): { numColors: number; dither: number } {
+    const c = Math.round(Number(colors));
+    const d = Number(dithering);
+    return {
+        numColors: Number.isFinite(c) ? Math.min(256, Math.max(2, c)) : 256,
+        dither: Number.isFinite(d) ? Math.min(1, Math.max(0, d)) : 1,
+    };
+}
+
 // Map a raw FileEntry.type (lowercase, e.g. 'png'/'jpg'/'svg') to its natural output Codec.
 // Used to seed per-file defaults so a freshly-seeded entry encodes to a sane target before
 // the user touches the inspector (CR-01).
