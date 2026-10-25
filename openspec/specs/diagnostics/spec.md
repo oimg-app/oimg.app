@@ -22,6 +22,10 @@ The system SHALL run a capability probe at app boot (`src/lib/caps.ts` / `src/li
 ### Requirement: StatusBar reads live values
 The system SHALL render in the StatusBar: worker running/idle pip, live SVGO version, live per-codec jSquash versions, and a WASM feature summary derived from `capabilitiesAtom` (e.g. "WASM threads on · SIMD"). The StatusBar MUST NOT carry hard-coded version literals.
 
+#### Scenario: StatusBar on a cross-origin-isolated build
+- **WHEN** the app loads with `crossOriginIsolated` true and WASM threads + SIMD available
+- **THEN** the StatusBar shows the SVGO and jSquash versions from `BUILD_VERSIONS` and a WASM summary naming threads and SIMD
+
 ### Requirement: Settings popover with a Diagnostics tab
 The system SHALL render a Toolbar Settings popover with Radix Tabs. A "General" tab holds general controls; a "Diagnostics" tab renders the version + capability dl-list and a "Copy diagnostics" button that copies the whole readout to the clipboard (via the shared clipboard chokepoint — see `snippets`).
 
@@ -32,6 +36,10 @@ The system SHALL render a Toolbar Settings popover with Radix Tabs. A "General" 
 ### Requirement: Offline-ready pill reflects real SW state
 The system SHALL derive the shell's "Offline-ready" pill from the real service-worker registration state (from `src/lib/register-sw.ts`), not a hard-coded string.
 
+#### Scenario: No service worker controls the page
+- **WHEN** the app runs without an active service-worker controller (e.g. the dev server)
+- **THEN** the Offline-ready pill is not shown, and it appears only once the SW reports offline-ready
+
 ### Requirement: `clearFiles()` action
 The system SHALL expose a `clearFiles()` action on the files store, a `$queueEmpty` computed atom, and two surfaces that call the action: the Toolbar Settings popover's "Clear all" button and the FilesPane header's small × / XCircle icon.
 
@@ -41,6 +49,10 @@ The system SHALL expose a `clearFiles()` action on the files store, a `$queueEmp
 
 ### Requirement: Disable-then-explain when the queue is empty
 The system SHALL, when `$queueEmpty === true`, disable both Clear-all surfaces (Toolbar + FilesPane header) with a tooltip. The affordances MUST NOT be hidden.
+
+#### Scenario: App opens with an empty queue
+- **WHEN** no files are queued
+- **THEN** both Clear-all surfaces are visible but disabled, and hovering either shows an explanatory tooltip
 
 ## Non-goals
 

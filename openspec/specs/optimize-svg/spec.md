@@ -22,6 +22,10 @@ The system SHALL enable SVGO's `preset-default` and let the user toggle individu
 ### Requirement: SVG plugin inventory
 The system SHALL surface the plugin grid from the shared `SVGO_PLUGINS` constant, showing each plugin's id, an on/off state, and its measured saved-percentage for the selected file.
 
+#### Scenario: User opens the SVGO tab for an SVG
+- **WHEN** an SVG entry is selected and the SVGO tab is shown
+- **THEN** the plugin grid renders one row per `SVGO_PLUGINS` entry with its id, on/off switch, and saves %
+
 ### Requirement: DOMPurify sanitization
 The system SHALL sanitize SVG markup through `dompurify` before rendering it inline anywhere in the app or exposing it as a snippet, so untrusted source content cannot execute scripts.
 
@@ -31,6 +35,10 @@ The system SHALL sanitize SVG markup through `dompurify` before rendering it inl
 
 ### Requirement: SVG rendering in the compare view uses an isolation boundary
 The system SHALL render SVG layers in the CompareStage inside a sandboxed iframe so styles and scripts in a source SVG cannot leak into the host document.
+
+#### Scenario: Source SVG carries global styles
+- **WHEN** an SVG with a `<style>` block targeting `body` or `*` is shown in the compare view
+- **THEN** it renders inside a sandboxed `<iframe>` (no `allow-same-origin`) and the host document's styles are unchanged
 
 ### Requirement: SVG can export to a raster codec
 The system SHALL allow the user to rasterize an SVG source to a raster codec (PNG/JPEG/WebP/AVIF) using a main-thread canvas step before handing the pixels to the raster codec worker.
@@ -42,8 +50,16 @@ The system SHALL allow the user to rasterize an SVG source to a raster codec (PN
 ### Requirement: SVG-only settings are hidden for raster inputs and vice versa
 The system SHALL show the "SVGO" inspector tab only when the selected entry is an SVG. It SHALL show the "Codec" inspector tab only when the selected entry is a raster source.
 
+#### Scenario: User switches between SVG and raster selections
+- **WHEN** the user selects an SVG entry and then a PNG entry
+- **THEN** the inspector shows the "SVGO" tab (and no "Codec" tab) for the SVG, then the "Codec" tab (and no "SVGO" tab) for the PNG
+
 ### Requirement: Aggressive mode toggle
 The system SHALL expose an "Aggressive mode" switch that enables lossy SVGO transforms (e.g. path merging, precision cuts) with a short info line explaining that visual differences may occur.
+
+#### Scenario: User turns on Aggressive mode
+- **WHEN** the user enables the "Aggressive mode" switch in the SVGO panel
+- **THEN** the setting persists on the selected entry, the SVG is re-optimized with the lossy transforms enabled, and the info line about possible visual differences is visible
 
 ## Non-goals
 

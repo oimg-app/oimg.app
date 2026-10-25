@@ -1,7 +1,7 @@
 # Project Context — oimg.app
 
 > Shared context for AI agents drafting OpenSpec change proposals and specs.
-> Synthesized from `.planning/codebase/*` and kept consistent with `/CLAUDE.md`.
+> Kept consistent with `/CLAUDE.md`. Its key points are inlined in `openspec/config.yaml` `context` (the only part OpenSpec injects automatically).
 > When this file and `CLAUDE.md` disagree, `CLAUDE.md` and `package.json` win.
 
 ## Purpose
@@ -166,7 +166,7 @@ Debounced 200 ms on settings change → pool enqueues `preview-*` job → prior 
 
 ### Comment provenance
 
-Source files carry `Phase NN — …` / `Quick …` / `WR-NN` / `CR-NN` / `D-NN` / `PIPE-NN` / `T-NN-NN` provenance tags tied to `.planning/` artifacts and decision IDs. **Preserve this style when editing** — it links code to its plan / decision. `// CRITICAL:` prefixes non-obvious constraints.
+Source files carry `Phase NN — …` / `Quick …` / `WR-NN` / `CR-NN` / `D-NN` / `PIPE-NN` / `T-NN-NN` provenance tags tied to historical planning artifacts (now under `openspec/changes/archive/`) and decision IDs. **Keep existing tags intact**; new work tags with the OpenSpec change slug instead (`// change:<slug> — …`). `// CRITICAL:` prefixes non-obvious constraints.
 
 ### Imports
 

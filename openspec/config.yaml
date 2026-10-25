@@ -1,32 +1,74 @@
 schema: spec-driven
 
-# Project context (optional)
-# This is shown to AI when creating artifacts.
-# Add your tech stack, conventions, style guides, domain knowledge, etc.
-# Example:
-#   context: |
-#     Tech stack: TypeScript, React, Node.js
-#     We use conventional commits
-#     Domain: e-commerce platform
+# Injected into every artifact's instructions. Keep it short: full detail lives in
+# openspec/project.md and /CLAUDE.md (read both before drafting; CLAUDE.md and
+# package.json win on any disagreement).
+context: |
+  oimg.app — 100% client-side, zero-server batch image optimizer (SVG/PNG/WebP/JPEG/AVIF)
+  that outputs a ZIP plus copy-paste HTML/CSS snippets. Must-never-break path:
+  upload → adjust → download-with-snippets for SVG and PNG.
 
-# Per-artifact rules (optional)
-# Add custom rules for specific artifacts.
-# Example:
-#   rules:
-#     proposal:
-#       - Keep proposals under 500 words
-#       - Always include a "Non-goals" section
-#     tasks:
-#       - Break tasks into chunks of max 2 hours
+  Before drafting, read openspec/project.md (stack, architecture, conventions, deferred
+  features) and the relevant openspec/specs/<capability>/spec.md. Capabilities:
+  color-quantize, command-palette, compare-view, diagnostics, export, ingest,
+  inspector-ui, metrics, optimize-raster, optimize-svg, pwa, resize, snippets,
+  theming, worker-pool.
 
-# Per-operation guidance (optional)
-# Add advisory guidance for how apply and archive work should be conducted.
-# This is separate from artifact rules above.
-# Example:
-#   operations:
-#     apply:
-#       guidance:
-#         - Keep test summaries concise
-#     archive:
-#       guidance:
-#         - Summarize the archive outcome before finishing
+  Stack: React 19, Vite 7, TypeScript 5.9 (tsc -b), Tailwind v4, nanostores (not zustand),
+  jSquash codecs + @squoosh-kit/imagequant + svgo/browser + dompurify, Comlink worker pool,
+  shadcn-style UI on unified radix-ui. Hosted on Cloudflare Pages with COOP/COEP.
+
+  Non-negotiable: zero network calls / telemetry / analytics / remote flags; MIT-compatible
+  deps only; initial route < 200 KB JS gzipped (codec WASM lazy inside its worker switch
+  branch, never hoisted); per-file optimize < 100 ms for files ≤ 2 MB; WCAG AA; locked
+  design tokens in src/index.css; modern browsers only (no legacy fallbacks).
+
+  Code rules: business logic in src/hooks/* and src/stores/*, never in components;
+  components import domain types from @/stores, never src/lib/stub-data; per-entry
+  mutations go through updateEntry(); no module-level cross-store imports between
+  ui/settings and files/runtime (lazy import() inside functions); async hook bodies read
+  filesAtom.get(), not the useStore snapshot; worker URLs and adapter import() paths are
+  string literals.
+
+  Tests: Playwright e2e = src/tests/*.spec.ts (npm test, Chromium only, port 5174);
+  Node tests = src/tests/*.test.ts via node --experimental-strip-types + _alias-loader.mjs;
+  bundle budget = npm run test:bundle. Baseline tsc -b is red with pre-existing debt —
+  compare against baseline, don't claim it's clean.
+
+  Rejected — do not propose: zustand, Vite 8, individual @radix-ui/react-* packages,
+  @squoosh/lib, a second encode path alongside jSquash, any server or SaaS dependency.
+
+rules:
+  proposal:
+    - "Why must cite concrete evidence: repro steps, error text, or a measured number — not a hunch."
+    - Name every affected capability by its openspec/specs/<capability> folder name; say so explicitly when a new capability is introduced.
+    - Include a Non-goals section; check project.md "Deferred features" and don't silently pull those in.
+    - State the impact on the bundle budget and on the zero-network constraint, even if "none".
+    - Any new dependency needs its license, gzipped size, and why an installed package can't do it.
+  specs:
+    - Requirements use SHALL/MUST and describe observable behavior, not implementation.
+    - Every requirement has at least one Scenario in WHEN/THEN form that an e2e or Node test could assert.
+    - Delta specs touch only the capabilities listed in the proposal; MODIFIED requirements copy the full existing text before editing.
+    - UI requirements include the keyboard and screen-reader behavior (WCAG AA).
+  design:
+    - Number decisions D1, D2, … with alternatives considered and why they lost; tasks reference them by ID.
+    - Say which thread each piece runs on (main vs codec worker) and what crosses the Comlink boundary (transfer vs copy).
+    - Call out any change to lazy-loading, COOP/COEP, or the circular-store import graph.
+    - Skip design.md for small fixes with no real tradeoffs.
+  tasks:
+    - Put failing regression tests first for bug fixes; verify they fail on main before the fix.
+    - 'Group headers name the capability and requirement they implement, e.g. "## 2. Quantizer loading (color-quantize: <requirement>)".'
+    - Every task ends with a concrete "Verify …" step (command, test name, grep, or manual check with expected result).
+    - Tasks are small enough to finish and verify in one sitting; reference design decisions by ID.
+    - Final group runs npm test, the Node tests, npm run build, and npm run test:bundle, comparing tsc -b against baseline.
+
+operations:
+  apply:
+    guidance:
+      - Tag new code comments with the change slug (// change:<slug> — …); keep existing Phase/WR/CR/D-xx tags intact.
+      - Tick a task only after its Verify step actually passed; report failures with output instead of ticking.
+      - If implementation diverges from design or specs, update those artifacts in the same change before continuing.
+  archive:
+    guidance:
+      - Sync delta specs into openspec/specs before archiving and confirm openspec validate passes.
+      - List any unticked tasks (e.g. post-deploy checks) in the archive summary instead of dropping them silently.

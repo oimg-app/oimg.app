@@ -50,8 +50,17 @@ The system SHALL be served with `Cross-Origin-Opener-Policy: same-origin` and `C
 ### Requirement: Sibling metrics worker
 The system SHALL run quality-metric work in a separate `src/workers/metrics.worker.ts` module, accessed via a distinct `src/lib/metrics-worker.ts` singleton. Metrics dispatches MUST NOT block the codec pool.
 
+#### Scenario: Metrics run during a batch
+- **WHEN** quality metrics are computed while a codec batch is running
+- **THEN** the metrics job runs in the metrics worker and the codec pool's running/queued counts are unaffected by it
+
 ### Requirement: Codec/metrics WASM stays dynamic (PIPE-02)
 The system SHALL keep every codec and metric WASM import inside the async function body of its worker `switch` branch. Codec imports MUST NOT be hoisted to a worker file's top. A build-time grep on hoist sentinels (`bezkrovny` for SSIM, `VisDiff` for visdif, etc.) fails the build on regression.
+
+#### Scenario: Bundle check guards hoisting
+- **WHEN** `npm run test:bundle` runs after `npm run build`
+- **THEN** the hoist sentinels (`bezkrovny`, `VisDiff`) are absent from the initial-route chunk and the check passes
+- **AND** if a codec/metric import is hoisted to a worker's top, the check fails naming the sentinel
 
 ## Non-goals
 

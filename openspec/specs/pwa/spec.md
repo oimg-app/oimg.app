@@ -41,6 +41,11 @@ The system SHALL capture the `beforeinstallprompt` event in a `useInstallPrompt`
 ### Requirement: Cloudflare Pages headers
 The system SHALL configure `public/_headers` so `sw.js` is served with `Cache-Control: no-cache` and `manifest.webmanifest` with `Cache-Control: public, max-age=86400`. The existing COOP/COEP headers (`Cross-Origin-Opener-Policy: same-origin`, `Cross-Origin-Embedder-Policy: require-corp`) MUST be preserved so `crossOriginIsolated === true` for the codec worker's multithreaded WASMs.
 
+#### Scenario: Production build ships the headers file
+- **WHEN** `npm run build` emits `dist/_headers`
+- **THEN** `sw.js` carries `Cache-Control: no-cache`, `manifest.webmanifest` carries `Cache-Control: public, max-age=86400`
+- **AND** the COOP/COEP headers are still present so `crossOriginIsolated === true`
+
 ### Requirement: SW version-bump flow
 The system SHALL let the SW `skipWaiting` and `clientsClaim` itself so users receive the new bundle without a manual refresh. When a new SW takes over, a toast SHALL surface "New version available — reload?".
 
@@ -50,6 +55,10 @@ The system SHALL let the SW `skipWaiting` and `clientsClaim` itself so users rec
 
 ### Requirement: Registration is idle-scheduled
 The system SHALL register the SW from `App.tsx` on an idle callback (via `src/lib/register-sw.ts`) so registration does not compete with first paint.
+
+#### Scenario: Registration deferred out of the initial route
+- **WHEN** `npm run test:bundle` inspects the initial-route chunk
+- **THEN** `register-sw` is not statically bundled into it; it is loaded via dynamic `import()` inside an idle callback after first paint
 
 ## Non-goals
 

@@ -69,6 +69,10 @@ The system SHALL provide an "Apply to all files" action that pushes the current 
 ### Requirement: Metadata handling
 The system SHALL expose "Strip EXIF / XMP / IPTC" and "Keep ICC profile" toggles per file and honor them at encode time for codecs that carry metadata.
 
+#### Scenario: JPEG with EXIF is re-encoded with Strip on
+- **WHEN** a JPEG source containing an EXIF block is encoded with "Strip EXIF / XMP / IPTC" enabled
+- **THEN** the encoded JPEG contains no EXIF / XMP / IPTC segments
+
 ### Requirement: Live preview re-encode
 The system SHALL debounce inspector setting changes into a background "live encode" of the selected file so the compare view reflects the new bytes without a full batch run.
 
@@ -92,6 +96,10 @@ The system SHALL surface encode failures on the offending entry only (`setFileEr
 
 ### Requirement: Codec WASM stays out of the initial route
 The system SHALL enforce PIPE-02: every codec/metric WASM import lives inside its worker `switch` branch, never hoisted to the file top. A build-time grep asserts on hoist sentinels (e.g. `bezkrovny` for SSIM, `VisDiff` for visdif) to fail the build if the initial JS chunk grows past the 200 KB gzipped budget.
+
+#### Scenario: Bundle-budget check runs
+- **WHEN** `npm run test:bundle` runs against a fresh production build
+- **THEN** it fails if any hoist sentinel appears in the initial JS chunk or the chunk exceeds 200 KB gzipped, and passes otherwise
 
 ## Non-goals
 

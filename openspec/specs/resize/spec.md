@@ -15,6 +15,10 @@ The system SHALL expose a "Resize on export" toggle in the inspector's Codec pan
 ### Requirement: Target dimensions
 The system SHALL accept target width and height inputs when resize is on. Width and height are read/written through the settings store (`FileSettings.w` / `.h`).
 
+#### Scenario: User enters target dimensions
+- **WHEN** the user turns resize on and enters 1200 × 900
+- **THEN** the entry's `FileSettings.w` / `.h` become 1200 / 900 and the re-encoded output uses those dimensions
+
 ### Requirement: Fit modes
 The system SHALL offer at least the fit modes surfaced by `@jsquash/resize`: `stretch` (independent axes, may distort) and `contain` (preserve aspect ratio, fit inside the box).
 
@@ -32,8 +36,17 @@ The system SHALL expose the resize algorithms `@jsquash/resize` provides — `la
 ### Requirement: Resize runs before encode inside the worker
 The system SHALL execute resize inside the codec worker in the same job as the encode step, so the encoder sees the already-resized pixels and never the source resolution.
 
+#### Scenario: Resized encode is smaller
+- **WHEN** a 4000×3000 JPEG is encoded with resize on at 800×600
+- **THEN** a single worker job returns an 800×600 output whose byte size is smaller than the same settings encoded at source resolution
+
 ### Requirement: Resize applies to raster inputs only
 The system SHALL hide the resize UI when the selected entry is an SVG (SVG sizing is driven by `viewBox`/`width`/`height` on the SVG root, not by a raster resampler).
+
+#### Scenario: SVG selected
+- **WHEN** the user selects an SVG entry
+- **THEN** the "Resize on export" toggle and dimension inputs are not rendered in the Codec panel
+- **AND** selecting a raster entry shows them again
 
 ## Non-goals
 

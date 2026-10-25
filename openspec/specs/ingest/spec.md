@@ -95,6 +95,11 @@ The system SHALL decode `.heic` / `.heif` files to `ImageData` at ingest time us
 ### Requirement: Single dispatcher
 The system SHALL route every ingest path (drop, folder, picker, watch, paste, URL, data-URI, HEIC) through a single `useIngest.ingest` dispatcher that produces `FileEntry` records with a uniform shape, so `useOptimize` and the inspector see one contract.
 
+#### Scenario: Different ingest paths produce the same entry shape
+- **WHEN** the same image is added once by drop and once by paste
+- **THEN** both resulting `filesAtom.entries` records have the same `FileEntry` fields (id, name, type, size, `status: 'queued'`, seeded settings)
+- **AND** each entry is optimized by `useOptimize` without path-specific handling
+
 ## Non-goals
 
 - Persistent watch folders across page reload (deferred to v1.3: IDB handle persistence).
