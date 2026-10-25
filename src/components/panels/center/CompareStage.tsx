@@ -383,7 +383,7 @@ export function CompareStage() {
           onMouseDown={handleSplitMouseDown}
         >
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[22px] h-[22px] rounded-full bg-color-accent flex items-center justify-center">
-            <span className="font-mono text-[11px] font-semibold text-[var(--color-accent-fg)] pointer-events-none select-none">
+            <span className="font-mono text-xs font-semibold text-[var(--color-accent-fg)] pointer-events-none select-none">
               ⇆
             </span>
           </div>
@@ -392,7 +392,7 @@ export function CompareStage() {
         {/* split label left */}
         <div
           data-testid="compare-label-orig"
-          className="absolute bottom-3 left-3 flex items-center gap-1.5 px-2 py-1 rounded-[4px] font-mono text-[11px] font-semibold text-[var(--color-fg-0)] bg-[var(--color-bg-0)]/70 backdrop-blur-sm pointer-events-none"
+          className="absolute bottom-3 left-3 flex items-center gap-1.5 px-2 py-1 rounded-[4px] font-mono text-xs font-semibold text-[var(--color-fg-0)] bg-[var(--color-bg-0)]/70 backdrop-blur-sm pointer-events-none"
         >
           <span className="w-2 h-2 rounded-full bg-[var(--color-fg-3)] shrink-0" />
           ORIGINAL · {fmtBytes(selectedFile?.orig ?? null)}
@@ -401,7 +401,7 @@ export function CompareStage() {
         {/* split label right */}
         <div
           data-testid="compare-label-opt"
-          className="absolute bottom-3 right-3 flex items-center gap-1.5 px-2 py-1 rounded-[4px] font-mono text-[11px] font-semibold text-[var(--color-fg-0)] bg-[var(--color-bg-0)]/70 backdrop-blur-sm pointer-events-none"
+          className="absolute bottom-3 right-3 flex items-center gap-1.5 px-2 py-1 rounded-[4px] font-mono text-xs font-semibold text-[var(--color-fg-0)] bg-[var(--color-bg-0)]/70 backdrop-blur-sm pointer-events-none"
         >
           <span className="w-2 h-2 rounded-full bg-color-accent shrink-0" />
           {optTarget ?? '—'} · {fmtBytes(selectedFile?.opt ?? null)}

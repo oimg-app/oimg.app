@@ -5,7 +5,9 @@ import '@fontsource-variable/jetbrains-mono'
 import './index.css'
 import App from './App.tsx'
 import { registerCommands } from '@/stores/ui'
-import { ALL_COMMANDS } from '@/lib/commands'
+import { buildCommands } from '@/lib/commands'
+import { runOptimize } from '@/hooks/useOptimize'
+import { filesAtom } from '@/stores/files'
 import { probeCaps } from '@/lib/caps'
 import { setCaps } from '@/stores/runtime'
 
@@ -25,8 +27,15 @@ if (!isCrossOriginIsolated) {
 // COI is the codec-worker COOP/COEP smoke test; this writes to the atom for UI surface).
 setCaps(probeCaps())
 
-// Inject ALL_COMMANDS into ui.ts before first render so $cmdFlat is populated immediately.
-registerCommands(ALL_COMMANDS.flatMap(g => g.items))
+// Inject the command list into ui.ts before first render so $cmdFlat is populated immediately.
+// change:remove-dead-ui-and-fix-a11y — Optimize all dispatches the Toolbar's own runOptimize and is
+//   unavailable while the queue is empty (design D2).
+registerCommands(
+  buildCommands({
+    optimizeAll: () => void runOptimize(),
+    hasFiles: () => filesAtom.get().entries.length > 0,
+  }).flatMap(g => g.items),
+)
 
 // Phase 11 Plan 00 — Test-only runtimeAtom→window bridge for SC-4 backpressure peak latch.
 // Gated by import.meta.env.MODE === 'test' so this branch (and the dynamic store import)

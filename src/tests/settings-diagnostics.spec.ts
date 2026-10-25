@@ -89,6 +89,9 @@ test.describe('Settings — Tabs + Diagnostics (D-10/D-11/D-12)', () => {
 
     // Plan 05 buttons must remain visible through the Tabs wrapping.
     await expect(page.getByRole('button', { name: /^Clear all$/ })).toBeVisible()
-    await expect(page.getByRole('button', { name: /Workers/ })).toBeVisible()
+    // change:remove-dead-ui-and-fix-a11y — Workers is read-only text now (the count is derived
+    //   from hardware, not a setting), so it is visible but not a button.
+    await expect(page.getByTestId('settings-workers')).toHaveText(/^Workers: \d+ \(auto\)$/)
+    await expect(page.getByRole('button', { name: /Workers/ })).toHaveCount(0)
   })
 })

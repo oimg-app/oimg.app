@@ -1,5 +1,6 @@
 // Phase 08 — PIPE-01/02/03 spec. Source: 08-01-PLAN.md
 import { test, expect } from '@playwright/test'
+import { injectEntries } from './_helpers/ingest'
 
 test.describe('Worker Pipeline — PIPE-01/02/03', () => {
   test('crossOriginIsolated is true (PIPE-03)', async ({ page }) => {
@@ -10,6 +11,8 @@ test.describe('Worker Pipeline — PIPE-01/02/03', () => {
 
   test('UI stays interactive while worker encodes (PIPE-01)', async ({ page }) => {
     await page.goto('/')
+    // change:remove-dead-ui-and-fix-a11y — Optimize all is disabled on an empty queue; give it work.
+    await injectEntries(page, 1, { status: 'queued' })
     await page.getByRole('button', { name: 'Optimize all' }).click()
     // Toolbar should remain visible and accessible — not blocked by main thread
     // This test asserts the final expected behavior; may stay red until Plan 03 wires the pool.

@@ -16,7 +16,7 @@ import {
 import { filesAtom, $selectedFile } from '@/stores/files'
 import { fmtBytes, fmtPct } from '@/lib/format'
 import { useExport } from '@/hooks/useExport'
-import { ssimBand, SSIM_BANDS, butteraugliBand, BUTTERAUGLI_BANDS, type Band } from '@/lib/metrics-bands'
+import { ssimBand, SSIM_BANDS, butteraugliBand, BUTTERAUGLI_BANDS, BAND_COLOR } from '@/lib/metrics-bands'
 
 // Format label color convention — mirrors FileRow BADGE_CLASS.
 // svg=purple, png=blue, jpg/jpeg=orange, webp=cyan, avif=rose
@@ -29,13 +29,7 @@ const FORMAT_COLOR: Record<string, string> = {
   avif: 'text-rose-400',
 }
 
-// Phase 16 — MTR-03: banded SSIM color map. CSS custom properties resolve at render;
-// keep values in one place so 16-02 threshold moves don't fan out to arbitrary text nodes.
-const BAND_COLOR: Record<Band, string> = {
-  green: 'var(--color-accent)',
-  yellow: 'var(--color-warn)',
-  red: 'var(--color-error)',
-}
+// Phase 16 — MTR-03: banded SSIM color map — now shared from @/lib/metrics-bands (change:remove-dead-ui-and-fix-a11y).
 
 export function ReportPanel() {
   const { entries } = useStore(filesAtom)
@@ -49,7 +43,7 @@ export function ReportPanel() {
         className="flex flex-col items-center justify-center h-full gap-2 px-4 py-8 text-center"
       >
         <p className="text-[12px] font-semibold text-[var(--color-fg-1)]">No files in queue</p>
-        <p className="text-[11px] text-[var(--color-fg-2)]">
+        <p className="text-xs text-[var(--color-fg-2)]">
           Drop images into the queue to see savings data.
         </p>
       </div>
@@ -97,7 +91,7 @@ export function ReportPanel() {
         <div className="grid grid-cols-2 gap-3 mb-3">
           {/* Before */}
           <div className="flex flex-col gap-0.5">
-            <span className="font-mono text-[10px] uppercase tracking-wider text-[var(--color-fg-2)]">
+            <span className="font-mono text-xs uppercase tracking-wider text-[var(--color-fg-2)]">
               Before
             </span>
             <span className="text-[14px] font-semibold font-mono" data-testid="report-savings-before">
@@ -106,7 +100,7 @@ export function ReportPanel() {
           </div>
           {/* After */}
           <div className="flex flex-col gap-0.5">
-            <span className="font-mono text-[10px] uppercase tracking-wider text-[var(--color-fg-2)]">
+            <span className="font-mono text-xs uppercase tracking-wider text-[var(--color-fg-2)]">
               After
             </span>
             <span className="text-[14px] font-semibold font-mono" data-testid="report-savings-after">
@@ -115,7 +109,7 @@ export function ReportPanel() {
           </div>
           {/* Saved */}
           <div className="flex flex-col gap-0.5">
-            <span className="font-mono text-[10px] uppercase tracking-wider text-[var(--color-fg-2)]">
+            <span className="font-mono text-xs uppercase tracking-wider text-[var(--color-fg-2)]">
               Saved
             </span>
             <span
@@ -128,7 +122,7 @@ export function ReportPanel() {
           </div>
           {/* Files */}
           <div className="flex flex-col gap-0.5">
-            <span className="font-mono text-[10px] uppercase tracking-wider text-[var(--color-fg-2)]">
+            <span className="font-mono text-xs uppercase tracking-wider text-[var(--color-fg-2)]">
               Files
             </span>
             <span className="text-[14px] font-semibold font-mono" data-testid="report-savings-files">
@@ -177,7 +171,7 @@ export function ReportPanel() {
             data-testid="ssim-row"
             className="flex items-baseline justify-between"
           >
-            <span className="font-mono text-[10px] uppercase tracking-wider text-[var(--color-fg-2)]">
+            <span className="font-mono text-xs uppercase tracking-wider text-[var(--color-fg-2)]">
               SSIM
             </span>
             {selected.metrics?.ssim === undefined ? (
@@ -204,7 +198,7 @@ export function ReportPanel() {
             data-testid="butteraugli-row"
             className="flex items-baseline justify-between mt-2"
           >
-            <span className="font-mono text-[10px] uppercase tracking-wider text-[var(--color-fg-2)]">
+            <span className="font-mono text-xs uppercase tracking-wider text-[var(--color-fg-2)]">
               Butteraugli
             </span>
             {selected.metrics?.butteraugli === undefined ? (
@@ -226,7 +220,7 @@ export function ReportPanel() {
               </span>
             )}
           </div>
-          <p className="text-[10px] text-[var(--color-fg-2)] mt-1">
+          <p className="text-xs text-[var(--color-fg-2)] mt-1">
             SSIM: higher is better · Butteraugli: lower is better
             <br />
             SSIM: Green ≥ {SSIM_BANDS.green} · Yellow ≥ {SSIM_BANDS.yellow} · Red below.
@@ -246,16 +240,16 @@ export function ReportPanel() {
             >
               {/* Format label — colored per convention */}
               <span
-                className={`text-[11px] font-mono uppercase tracking-wider ${FORMAT_COLOR[fmt] ?? 'text-[var(--color-fg-1)]'}`}
+                className={`text-xs font-mono uppercase tracking-wider ${FORMAT_COLOR[fmt] ?? 'text-[var(--color-fg-1)]'}`}
               >
                 {fmt}
               </span>
               {/* File count */}
-              <span className="text-[11px] font-mono text-[var(--color-fg-2)]">
+              <span className="text-xs font-mono text-[var(--color-fg-2)]">
                 {count} {count === 1 ? 'file' : 'files'}
               </span>
               {/* Bytes saved */}
-              <span className="text-[11px] font-mono font-semibold">
+              <span className="text-xs font-mono font-semibold">
                 {fmtBytes(saved)}
               </span>
             </div>

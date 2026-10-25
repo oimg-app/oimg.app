@@ -11,6 +11,9 @@ function Slider2({
   value,
   min = 0,
   max = 100,
+  // change:remove-dead-ui-and-fix-a11y — the focusable element is the Thumb (role="slider"),
+  //   so the accessible name has to land there, not on the Root.
+  "aria-label": ariaLabel,
   ...props
 }: React.ComponentProps<typeof SliderPrimitive.Root>) {
   const _values = React.useMemo(
@@ -49,6 +52,7 @@ function Slider2({
         <SliderPrimitive.Thumb
           data-slot="slider-thumb"
           key={index}
+          aria-label={ariaLabel}
           className="relative block size-3 shrink-0 rounded-none border border-ring bg-white ring-ring/50 transition-[color,box-shadow] select-none after:absolute after:-inset-2 hover:ring-1 focus-visible:ring-1 focus-visible:outline-hidden active:ring-1 disabled:pointer-events-none disabled:opacity-50"
         />
       ))}

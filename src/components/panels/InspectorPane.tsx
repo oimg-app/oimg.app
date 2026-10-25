@@ -33,7 +33,7 @@ export function InspectorPane() {
     >
       {/* Pane header */}
       <header className="flex items-center h-8 px-3.5 border-b border-[var(--color-line)] shrink-0 bg-color-bg-1">
-        <span className="font-mono text-[11px] font-semibold text-[var(--color-fg-2)] uppercase tracking-wider">
+        <span className="font-mono text-xs font-semibold text-[var(--color-fg-2)] uppercase tracking-wider">
           INSPECTOR
         </span>
       </header>
@@ -41,7 +41,7 @@ export function InspectorPane() {
       {!selectedFile ? (
         <div
           data-testid="inspector-empty"
-          className="flex items-center justify-center h-full text-[11px] font-mono text-[var(--color-fg-3)]"
+          className="flex items-center justify-center h-full text-xs font-mono text-[var(--color-fg-3)]"
         >
           Select a file to adjust settings
         </div>
@@ -57,7 +57,7 @@ export function InspectorPane() {
                 data-active={tab === t || undefined}
                 onClick={() => setTab(t)}
                 className={cn(
-                  'appearance-none bg-transparent font-mono text-[11px] font-medium tracking-[0.06em] uppercase py-[9px] px-2.5 border-b-2 -mb-px cursor-default transition-colors',
+                  'appearance-none bg-transparent font-mono text-xs font-medium tracking-[0.06em] uppercase py-[9px] px-2.5 border-b-2 -mb-px cursor-default transition-colors',
                   tab === t
                     ? 'text-[var(--color-fg-0)] border-b-[var(--color-accent)]'
                     : 'text-[var(--color-fg-2)] border-b-transparent hover:text-[var(--color-fg-0)]',
@@ -78,10 +78,10 @@ export function InspectorPane() {
               aria-hidden="true"
               className="w-1.5 h-1.5 rounded-full shrink-0 bg-color-accent"
             />
-            <span className="font-mono text-[11px] font-semibold text-[var(--color-fg-0)] truncate">
+            <span className="font-mono text-xs font-semibold text-[var(--color-fg-0)] truncate">
               {selectedFile.name}
             </span>
-            <span className="font-mono text-[10px] text-[var(--color-fg-3)] shrink-0">
+            <span className="font-mono text-xs text-[var(--color-fg-3)] shrink-0">
               &middot;&nbsp;&nbsp;currently editing
             </span>
           </div>
@@ -101,11 +101,11 @@ export function InspectorPane() {
                 aria-label="Apply global codec settings to all files in queue"
                 data-testid="inspector-apply-to-all"
                 onClick={handleApplyToAll}
-                className="w-full h-7 rounded-[4px] bg-[var(--color-accent-dim)] hover:bg-color-accent text-[var(--color-accent)] hover:text-[var(--color-accent-fg)] font-mono text-[11px] font-semibold transition-colors cursor-default"
+                className="w-full h-7 rounded-[4px] bg-[var(--color-accent-dim)] hover:bg-color-accent text-[var(--color-accent)] hover:text-[var(--color-accent-fg)] font-mono text-xs font-semibold transition-colors cursor-default"
               >
                 Apply to all files
               </button>
-              <p className="font-mono text-[10px] text-[var(--color-fg-3)] pt-1">
+              <p className="font-mono text-xs text-[var(--color-fg-3)] pt-1">
                 Overwrites per-file settings
               </p>
             </div>

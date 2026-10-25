@@ -27,7 +27,6 @@ try {
 
   const DEFAULT_STATE = {
     open: null,
-    view: 'Batch' as const,
     tab: 'codec' as const,
     split: 50,
     zoom: 100,
@@ -38,6 +37,7 @@ try {
     theme: 'dark' as const,
     stageBg: 'checker-dark' as const,
     panes: { batch: true, compare: true, inspector: true },
+    mobilePane: 'files' as const,
   }
 
   // Reset before each block
@@ -66,9 +66,10 @@ try {
   mod.setTheme('dark')
   assert('setTheme("dark") → theme === "dark"', mod.uiAtom.get().theme === 'dark')
 
+  // change:remove-dead-ui-and-fix-a11y — narrow-layout pane switch
   mod.uiAtom.set({ ...DEFAULT_STATE })
-  mod.setView('Compare')
-  assert('setView("Compare") → view === "Compare"', mod.uiAtom.get().view === 'Compare')
+  mod.setMobilePane('preview')
+  assert('setMobilePane("preview") → mobilePane === "preview"', mod.uiAtom.get().mobilePane === 'preview')
 
   mod.uiAtom.set({ ...DEFAULT_STATE })
   mod.setTab('output')
@@ -107,11 +108,12 @@ try {
   // Reset to known state
   rmod.runtimeAtom.set({ running: false, runningJobs: 0, queuedJobs: 0, encodingFileId: null, toasts: [], versions: BUILD_VERSIONS, caps: { ...TEST_CAPS } })
 
-  rmod.startRun()
-  assert('startRun() → running === true', rmod.runtimeAtom.get().running === true)
+  // change:remove-dead-ui-and-fix-a11y — startRun/stopRun removed; `running` derives from pool counts.
+  rmod.setJobCounts(1, 2)
+  assert('setJobCounts(1, 2) → running === true', rmod.runtimeAtom.get().running === true)
 
-  rmod.stopRun()
-  assert('stopRun() → running === false', rmod.runtimeAtom.get().running === false)
+  rmod.setJobCounts(0, 0)
+  assert('setJobCounts(0, 0) → running === false', rmod.runtimeAtom.get().running === false)
 
   rmod.runtimeAtom.set({ running: false, runningJobs: 0, queuedJobs: 0, encodingFileId: null, toasts: [], versions: BUILD_VERSIONS, caps: { ...TEST_CAPS } })
   rmod.pushToast('hi', 'meta')
@@ -138,22 +140,23 @@ try {
   }
 }
 
-// ── STORE-07 + STORE-03 completion: ALL_COMMANDS + $cmdFlat ─────────────────
+// ── STORE-07 + STORE-03 completion: buildCommands + $cmdFlat ────────────────
 try {
   const commands = await import('../lib/commands.ts')
   const ui = await import('../stores/ui.ts')
 
   // Reset cmdkQ to '' and register commands
   ui.uiAtom.set({ ...ui.uiAtom.get(), cmdkQ: '', cmdkSel: 0 })
-  const flat = commands.ALL_COMMANDS.flatMap((g: import('../lib/commands.ts').CommandGroup) => g.items)
+  // change:remove-dead-ui-and-fix-a11y — ALL_COMMANDS → buildCommands(deps); deps are recorded.
+  let optimizeCalls = 0
+  let hasFiles = false
+  const groups = commands.buildCommands({ optimizeAll: () => { optimizeCalls++ }, hasFiles: () => hasFiles })
+  const flat = groups.flatMap((g: import('../lib/commands.ts').CommandGroup) => g.items)
   ui.registerCommands(flat)
 
   // Test 2: ALL_COMMANDS is non-empty, every item has label/group/do
-  assert(
-    'ALL_COMMANDS is non-empty',
-    Array.isArray(commands.ALL_COMMANDS) && commands.ALL_COMMANDS.length > 0,
-  )
-  for (const group of commands.ALL_COMMANDS) {
+  assert('buildCommands is non-empty', Array.isArray(groups) && groups.length > 0)
+  for (const group of groups) {
     for (const item of group.items) {
       assert(
         `item "${item.label}" has string label`,
@@ -172,18 +175,22 @@ try {
 
   // Test 3: Required labels are present
   const allLabels = flat.map((i: import('../lib/commands.ts').CommandItem) => i.label)
-  for (const required of [
-    'Add files',
-    'Optimize all',
-    'Batch view',
-    'Compare view',
-    'Report view',
-    'Light theme',
-    'Dark theme',
-    'Open command palette',
-  ]) {
-    assert(`ALL_COMMANDS contains "${required}"`, allLabels.includes(required))
+  for (const required of ['Optimize all', 'Light theme', 'Dark theme', 'Open command palette']) {
+    assert(`commands contain "${required}"`, allLabels.includes(required))
   }
+  for (const dead of ['Add files', 'Batch view', 'Compare view', 'Report view']) {
+    assert(`commands do not contain dead "${dead}"`, !allLabels.includes(dead))
+  }
+  const metas = flat.map((i: import('../lib/commands.ts').CommandItem) => i.meta).filter(Boolean)
+  assert('only ⌘K carries a shortcut hint', metas.length === 1 && metas[0] === '⌘K')
+
+  // Optimize all: wired to the injected dispatcher, gated on hasFiles
+  const optimize = flat.find((i: import('../lib/commands.ts').CommandItem) => i.label === 'Optimize all')!
+  assert('Optimize all disabled with no files', optimize.enabled?.() === false)
+  hasFiles = true
+  assert('Optimize all enabled with files', optimize.enabled?.() === true)
+  optimize.do()
+  assert('Optimize all calls the injected optimizeAll', optimizeCalls === 1)
 
   // Test 4: After registerCommands, $cmdFlat returns full list
   ui.setCmdkQuery('')
@@ -200,16 +207,6 @@ try {
   // Test 6: setCmdkQuery('') restores full list
   ui.setCmdkQuery('')
   assert('$cmdFlat restores full list when query is empty', ui.$cmdFlat.get().length === flat.length)
-
-  // Test 7: "Optimize all" do() sets runtimeAtom.running to true
-  const { runtimeAtom } = await import('../stores/runtime.ts')
-  runtimeAtom.set({ running: false, runningJobs: 0, queuedJobs: 0, encodingFileId: null, toasts: [], versions: BUILD_VERSIONS, caps: { ...TEST_CAPS } })
-  const optimizeAll = flat.find((i: import('../lib/commands.ts').CommandItem) => i.label === 'Optimize all')
-  assert('"Optimize all" item found', !!optimizeAll)
-  if (optimizeAll) {
-    optimizeAll.do()
-    assert('"Optimize all" do() sets runtimeAtom.running to true', runtimeAtom.get().running === true)
-  }
 
   // Test 8: "Light theme" do() sets uiAtom.theme to 'light'
   ui.setTheme('dark')

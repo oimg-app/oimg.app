@@ -32,7 +32,7 @@ test.describe('BackpressureIndicator — SHELL-02', () => {
     await ingestFixtureFiles(page, 1)
     // Phase 11 D-11: flip to 'queued' so the file isn't skipped as already-done.
     await resetAllToQueued(page)
-    // Toolbar's primary action calls startRun (runtimeAtom.running = true)
+    // Toolbar's primary action runs runOptimize; the pool's counts flip runtimeAtom.running
     await page.getByRole('button', { name: 'Optimize all' }).click()
     // StatusBar also uses role="status"; scope to the indicator via testid.
     const indicator = page.getByTestId('backpressure-indicator')

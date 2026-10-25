@@ -1,14 +1,13 @@
 // Phase 02 — FILES-03 + FILES-04: FileRow with ContextMenu (D-02). Source: 02-02-PLAN.md
+// change:remove-dead-ui-and-fix-a11y — no-op menu items (Re-optimize, Reveal in compare, Apply
+//   same settings to all) removed until they are built.
 import { useRef } from 'react'
 import { useStore } from '@nanostores/react'
 import {
   DotsThreeVertical,
-  ArrowCounterClockwise,
   DownloadSimple,
   Copy,
   Code,
-  Eye,
-  Stack,
   Trash,
 } from '@phosphor-icons/react'
 import {
@@ -40,7 +39,9 @@ const BADGE_CLASS: Record<string, string> = {
   avif: 'bg-[linear-gradient(135deg,oklch(0.60_0.14_320)_0%,oklch(0.45_0.12_290)_100%)] text-[oklch(0.95_0_0)]',
 }
 
-export function FileRow({ file }: { file: FileEntry }) {
+// change:remove-dead-ui-and-fix-a11y — rows are listbox options with a roving tabindex (design D5):
+//   FilesPane owns arrow-key movement; `tabbable` marks the one row in the tab order.
+export function FileRow({ file, tabbable }: { file: FileEntry; tabbable: boolean }) {
   const { rowMenu } = useStore(uiAtom)
   const { selectedId } = useStore(filesAtom)
   const { exportOne } = useExport()
@@ -54,16 +55,30 @@ export function FileRow({ file }: { file: FileEntry }) {
 
   const savingsPct = file.orig > 0 ? ((file.orig - file.opt) / file.orig) * 100 : 0
 
-  function handleCtxBtn(e: React.MouseEvent) {
-    e.stopPropagation()
+  // Radix ContextMenu opens at the event's coordinates. Synthesize them from an element's box,
+  // not the pointer — keyboard activation reports clientX/Y = 0,0 (menu at the viewport origin).
+  function openMenuAt(anchor: Element) {
+    const r = anchor.getBoundingClientRect()
     rowRef.current?.dispatchEvent(
       new MouseEvent('contextmenu', {
         bubbles: true,
         cancelable: true,
-        clientX: e.clientX,
-        clientY: e.clientY,
+        clientX: r.left,
+        clientY: r.bottom,
       })
     )
+  }
+
+  function handleCtxBtn(e: React.MouseEvent<HTMLButtonElement>) {
+    e.stopPropagation()
+    openMenuAt(e.currentTarget)
+  }
+
+  function handleRowKeyDown(e: React.KeyboardEvent<HTMLElement>) {
+    if (e.key === 'ContextMenu' || (e.shiftKey && e.key === 'F10')) {
+      e.preventDefault()
+      if (rowRef.current) openMenuAt(rowRef.current)
+    }
   }
 
   const STATUS_DOT: Record<string, string> = {
@@ -77,12 +92,17 @@ export function FileRow({ file }: { file: FileEntry }) {
     <ContextMenu onOpenChange={(open) => setRowMenu(open ? file.id : null)}>
       <ContextMenuTrigger
         ref={rowRef}
+        role="option"
+        aria-selected={isSelected}
+        tabIndex={tabbable ? 0 : -1}
+        data-row-id={file.id}
+        onKeyDown={handleRowKeyDown}
         data-testid={`files-row-${file.id}`}
         data-status={file.status}
         data-selected={isSelected || undefined}
         onClick={() => selectFile(file.id)}
         className={cn(
-          'grid grid-cols-[28px_1fr_auto] gap-[10px] items-center px-3 py-[7px] border-b border-[var(--line)] relative cursor-default group',
+          'grid grid-cols-[28px_1fr_auto] gap-[10px] items-center px-3 py-[7px] border-b border-[var(--line)] relative cursor-default group outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--color-accent)]',
           !isSelected && 'hover:bg-[var(--bg-2)] cursor-pointer',
           (isSelected || hasMenu) && 'bg-[var(--accent-dim)] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[2px] before:bg-[var(--primary)]'
         )}
@@ -107,9 +127,9 @@ export function FileRow({ file }: { file: FileEntry }) {
           >
             {file.name}
           </div>
-          <div className="font-mono text-[12px] text-[var(--fg-2)] flex gap-[6px] items-center mt-[2px]">
+          <div className="font-mono text-[12px] text-[var(--fg-2)] flex flex-wrap gap-x-[6px] items-center mt-[2px] [&>span]:whitespace-nowrap">
             <span data-testid={`files-row-${file.id}-size`}>{fmtBytes(file.orig)}</span>
-            <span className="text-[var(--fg-3)]">→</span>
+            <span aria-hidden="true" className="text-[var(--fg-3)]">→</span>
             <span>{fmtBytes(file.opt)}</span>
             <span className={cn('font-semibold', savingsPct < 30 ? 'text-[var(--warn)]' : 'text-[var(--primary)]')}>
               {fmtPct(file.orig, file.opt)}
@@ -127,7 +147,11 @@ export function FileRow({ file }: { file: FileEntry }) {
 
         {/* Right column: ctxbtn + status dot */}
         <div className="flex items-center gap-[6px]">
+          {/* Mouse affordance only: keyboard users open the menu with Shift+F10 / ContextMenu on
+              the row, so the option holds no nested tab stop. */}
           <button
+            type="button"
+            tabIndex={-1}
             className="w-[22px] h-[22px] grid place-items-center rounded text-[var(--fg-2)] hover:bg-[var(--bg-3)] cursor-pointer hover:text-[var(--fg-0)]"
             aria-label="File options"
             data-testid={`files-row-${file.id}-ctxbtn`}
@@ -146,14 +170,14 @@ export function FileRow({ file }: { file: FileEntry }) {
 
       {/* change:add-black-box-e2e-suite — menu items take bare testids, not per-row ones:
           Radix keeps only the active row's menu mounted, so there is never a second match. */}
-      <ContextMenuContent data-testid="files-row-menu">
-        <ContextMenuItem
-          data-testid="files-row-menu-reoptimize"
-          onSelect={() => { /* @TODO Phase 3 — pushToast('Re-optimize') */ }}
-        >
-          <ArrowCounterClockwise size={14} />
-          Re-optimize
-        </ContextMenuItem>
+      <ContextMenuContent
+        data-testid="files-row-menu"
+        onCloseAutoFocus={(e) => {
+          // Return focus to the row the menu belongs to (keyboard users land back in the list).
+          e.preventDefault()
+          rowRef.current?.focus()
+        }}
+      >
         <ContextMenuItem
           data-testid="files-row-menu-saveas"
           disabled={file.status !== 'done'}
@@ -180,21 +204,6 @@ export function FileRow({ file }: { file: FileEntry }) {
         >
           <Code size={14} />
           {'Copy <picture>'}
-        </ContextMenuItem>
-        <ContextMenuItem
-          data-testid="files-row-menu-reveal"
-          onSelect={() => { /* @TODO Phase 3 — pushToast('Reveal in compare') */ }}
-        >
-          <Eye size={14} />
-          Reveal in compare
-        </ContextMenuItem>
-        <ContextMenuSeparator />
-        <ContextMenuItem
-          data-testid="files-row-menu-apply-to-all"
-          onSelect={() => { /* @TODO Phase 3 — pushToast('Apply same settings to all') */ }}
-        >
-          <Stack size={14} />
-          Apply same settings to all
         </ContextMenuItem>
         <ContextMenuSeparator />
         <ContextMenuItem

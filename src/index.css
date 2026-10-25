@@ -49,14 +49,19 @@
   --color-line-strong:  oklch(0.74 0.010 250);
   --color-fg-0:         oklch(0.18 0.010 250);
   --color-fg-1:         oklch(0.32 0.010 250);
-  --color-fg-2:         oklch(0.50 0.010 250);
-  --color-fg-3:         oklch(0.66 0.010 250);
-  --color-accent:       oklch(0.62 0.18 145);
-  --color-accent-dim:   oklch(0.62 0.18 145 / 0.14);
+  /* change:remove-dead-ui-and-fix-a11y — WCAG AA retune, lightness only (hue/chroma locked):
+     fg-2 0.50→0.42 (7.2–8.1:1 on bg-0..2), fg-3 0.66→0.50 (5.1–5.7:1), accent 0.62→0.46
+     (white on accent 6.2:1; accent text 5.8:1 on bg-1, 4.7:1 on the selected-row tint). */
+  --color-fg-2:         oklch(0.42 0.010 250);
+  --color-fg-3:         oklch(0.50 0.010 250);
+  --color-accent:       oklch(0.46 0.18 145);
+  --color-accent-dim:   oklch(0.46 0.18 145 / 0.14);
   --color-accent-fg:    oklch(0.99 0 0);
-  --color-warn:         oklch(0.62 0.16 65);
+  /* change:remove-dead-ui-and-fix-a11y — warn 0.62→0.50 (5.3–6.0:1 on bg-0..2, 4.6:1 on the selected-row
+     tint; savings-% text), error 0.58→0.52 (5.2–5.9:1; red SSIM band text). Lightness only. */
+  --color-warn:         oklch(0.50 0.16 65);
   --color-err:          oklch(0.58 0.20 25);
-  --color-error:        oklch(0.58 0.20 25); /* Phase 16 — MTR-03: red band token for ReportPanel SSIM */
+  --color-error:        oklch(0.52 0.20 25); /* Phase 16 — MTR-03: red band token for ReportPanel SSIM */
   --color-info:         oklch(0.55 0.15 235);
 
   /* shadcn semantic aliases — light */
@@ -120,8 +125,11 @@
   --color-line-strong:  oklch(0.40 0.012 250);
   --color-fg-0:         oklch(0.96 0.005 250);
   --color-fg-1:         oklch(0.78 0.008 250);
-  --color-fg-2:         oklch(0.58 0.010 250);
-  --color-fg-3:         oklch(0.42 0.012 250);
+  /* change:remove-dead-ui-and-fix-a11y — WCAG AA retune, lightness only: fg-2 0.58→0.70
+     (6.2–7.2:1 on bg-0..2, 4.8:1 on the selected-row tint), fg-3 0.42→0.62 (4.6–5.3:1 on
+     bg-0..2 — not for text inside selected rows, where it reads 3.5:1). */
+  --color-fg-2:         oklch(0.70 0.010 250);
+  --color-fg-3:         oklch(0.62 0.012 250);
   --color-accent:       oklch(0.80 0.17 145);
   --color-accent-dim:   oklch(0.80 0.17 145 / 0.16);
   --color-accent-fg:    oklch(0.18 0.05 145);

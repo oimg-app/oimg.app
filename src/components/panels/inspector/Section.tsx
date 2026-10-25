@@ -15,12 +15,12 @@ export function Section({ title, badge, children, 'data-testid': testId }: Secti
       data-testid={testId}
       className="border-b border-[var(--color-line)] px-3.5 pt-2.5 pb-3.5"
     >
-      <h3 className="flex items-center justify-between font-mono text-[11px] font-semibold text-[var(--color-fg-2)] uppercase tracking-wider mb-2.5">
+      <h3 className="flex items-center justify-between font-mono text-xs font-semibold text-[var(--color-fg-2)] uppercase tracking-wider mb-2.5">
         <span>{title}</span>
         {badge && (
           <span
             className={cn(
-              'text-[10px] font-mono font-semibold px-1.5 py-0.5 rounded',
+              'text-xs font-mono font-semibold px-1.5 py-0.5 rounded',
               badge.acc
                 ? 'bg-[var(--color-accent-dim)] text-[var(--color-accent)]'
                 : 'bg-color-bg-2 text-[var(--color-fg-1)]',

@@ -5,9 +5,10 @@
 import { map, computed } from 'nanostores'
 import type { CommandItem } from '@/lib/commands'
 
-export type View = 'Batch' | 'Compare' | 'Report'
 export type Tab = 'codec' | 'output' | 'report'
 export type StageBg = 'checker-dark' | 'checker-light' | 'black' | 'white'
+// change:remove-dead-ui-and-fix-a11y — which pane the narrow (< 900 px) layout shows.
+export type MobilePane = 'files' | 'preview' | 'settings'
 
 // Per-pane visibility gate for the three-column shell (Left FilesPane / Center CenterPane / Right InspectorPane).
 // Backed by three independent booleans (not a single "active view" enum) so the user can hide any subset.
@@ -19,7 +20,6 @@ export interface PaneVisibility {
 
 interface UiState {
   open: string | null
-  view: View
   tab: Tab
   split: number
   zoom: number | 'fit'
@@ -30,11 +30,11 @@ interface UiState {
   theme: 'dark' | 'light'
   stageBg: StageBg
   panes: PaneVisibility
+  mobilePane: MobilePane
 }
 
 export const uiAtom = map<UiState>({
   open: null,
-  view: 'Batch',
   tab: 'codec',
   split: 50,
   zoom: 100,
@@ -45,6 +45,7 @@ export const uiAtom = map<UiState>({
   theme: 'dark',
   stageBg: 'checker-dark',
   panes: { batch: true, compare: true, inspector: true },
+  mobilePane: 'files',
 })
 
 // Toggle a single pane's visibility. Guardrail: refuse to hide the last visible pane —
@@ -59,6 +60,10 @@ export function togglePane(key: keyof PaneVisibility): void {
   uiAtom.setKey('panes', next)
 }
 
+export function setMobilePane(p: MobilePane): void {
+  uiAtom.setKey('mobilePane', p)
+}
+
 export function setStageBg(bg: StageBg): void {
   uiAtom.setKey('stageBg', bg)
 }
@@ -69,10 +74,6 @@ export function setRowMenu(id: string | null): void {
 
 export function setOpen(key: string | null): void {
   uiAtom.setKey('open', key)
-}
-
-export function setView(v: View): void {
-  uiAtom.setKey('view', v)
 }
 
 export function setTab(t: Tab): void {
@@ -107,28 +108,6 @@ export function setCmdkSel(n: number): void {
 
 export function setTheme(t: 'dark' | 'light'): void {
   uiAtom.setKey('theme', t)
-}
-
-export function selectCodec(codec: string): void {
-  // stub — real handler wires codec selection in v2
-  void codec
-}
-
-export function openDocs(): void {
-  // stub — open documentation in v2
-}
-
-export function openShortcuts(): void {
-  // stub — open keyboard shortcuts panel in v2
-}
-
-export function openChangelog(): void {
-  // stub — open changelog in v2
-}
-
-export function setAutoTarget(target: number): void {
-  // stub — set quality target for Auto mode in v2
-  void target
 }
 
 // ── STORE-03 completion / STORE-07 injection ────────────────────────────────

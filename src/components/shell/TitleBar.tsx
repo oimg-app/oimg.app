@@ -1,8 +1,10 @@
 // Phase 03 — NAV-01: TitleBar with brand mark, Codec/View/Help menus, pills, ⌘K button. Source: 03-02-PLAN.md
+// change:remove-dead-ui-and-fix-a11y — Codec + Help menus (stub handlers) and the hard-coded
+//   "100% local · Offline-ready" pills removed; the StatusBar carries the real offline state.
 // Phase 07-polish — WCAG AA: menus migrated Popover→DropdownMenu for arrow-key navigation.
 import { useStore } from '@nanostores/react'
 import { MagnifyingGlass } from '@phosphor-icons/react'
-import { uiAtom, setOpen, setTheme, openCmdk, selectCodec, openDocs, openShortcuts, openChangelog, togglePane } from '@/stores/ui'
+import { uiAtom, setOpen, setTheme, openCmdk, togglePane } from '@/stores/ui'
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -10,7 +12,6 @@ import {
   DropdownMenuItem,
   DropdownMenuCheckboxItem,
   DropdownMenuSeparator,
-  DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu'
 import { Kbd } from '@/components/ui/kbd'
 import { BackpressureIndicator } from './BackpressureIndicator'
@@ -34,7 +35,7 @@ function MenuItem({
     <DropdownMenuItem className={menuItemClass} onSelect={onSelect} data-testid={testId}>
       {label}
       {shortcut && (
-        <Kbd className="ml-2 text-[11px] font-mono font-semibold">{shortcut}</Kbd>
+        <Kbd className="ml-2 text-xs font-mono font-semibold">{shortcut}</Kbd>
       )}
     </DropdownMenuItem>
   )
@@ -67,26 +68,6 @@ export function TitleBar() {
             OIMG · image optimizer
           </span>
         </span>
-
-        {/* Codec menu */}
-        <DropdownMenu modal={false} open={open === 'menu-codec'} onOpenChange={(o) => setOpen(o ? 'menu-codec' : null)}>
-          <DropdownMenuTrigger asChild>
-            <button type="button" className={triggerClass} data-testid="titlebar-menu-codec">Codec</button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className={menuContentClass}>
-            <MenuItem label="WebP" onSelect={() => selectCodec('webp')} testId="titlebar-item-codec-webp" />
-            <MenuItem label="AVIF" onSelect={() => selectCodec('avif')} testId="titlebar-item-codec-avif" />
-            <MenuItem label="JPEG" onSelect={() => selectCodec('jpeg')} testId="titlebar-item-codec-jpeg" />
-            <MenuItem label="PNG" onSelect={() => selectCodec('png')} testId="titlebar-item-codec-png" />
-            <MenuItem label="SVG" onSelect={() => selectCodec('svg')} testId="titlebar-item-codec-svg" />
-            <DropdownMenuSeparator className="bg-color-line" />
-            <MenuItem
-              label="Auto (Butteraugli target)"
-              onSelect={() => selectCodec('auto')}
-              testId="titlebar-item-codec-auto"
-            />
-          </DropdownMenuContent>
-        </DropdownMenu>
 
         {/* View menu */}
         <DropdownMenu modal={false} open={open === 'menu-view'} onOpenChange={(o) => setOpen(o ? 'menu-view' : null)}>
@@ -128,33 +109,11 @@ export function TitleBar() {
             <MenuItem label="Dark theme" onSelect={() => setTheme('dark')} testId="titlebar-item-theme-dark" />
           </DropdownMenuContent>
         </DropdownMenu>
-
-        {/* Help menu */}
-        <DropdownMenu modal={false} open={open === 'menu-help'} onOpenChange={(o) => setOpen(o ? 'menu-help' : null)}>
-          <DropdownMenuTrigger asChild>
-            <button type="button" className={triggerClass} data-testid="titlebar-menu-help">Help</button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className={menuContentClass}>
-            <MenuItem label="Documentation" onSelect={() => openDocs()} testId="titlebar-item-help-docs" />
-            <MenuItem label="Keyboard shortcuts" onSelect={() => openShortcuts()} testId="titlebar-item-help-shortcuts" />
-            <MenuItem label="What's new" onSelect={() => openChangelog()} testId="titlebar-item-help-changelog" />
-            <DropdownMenuSeparator className="bg-color-line" />
-            <DropdownMenuLabel
-              className="px-3 py-1.5 text-xs font-normal text-[var(--color-fg-2)]"
-              data-testid="titlebar-version-label"
-            >
-              v0.1.0 · 2026
-            </DropdownMenuLabel>
-          </DropdownMenuContent>
-        </DropdownMenu>
       </div>
 
       {/* Right cluster: pills + ⌘K — ml-auto pushes to right edge */}
       <div className="flex items-center gap-2 ml-auto">
         <BackpressureIndicator />
-        <span className="text-[11px] text-[var(--color-fg-2)]">100% local</span>
-        <span aria-hidden="true" className="text-[var(--color-fg-2)]">·</span>
-        <span className="text-[11px] text-[var(--color-fg-2)]">Offline-ready</span>
         <button
           type="button"
           aria-label="Open command palette"
@@ -163,7 +122,7 @@ export function TitleBar() {
           className="flex items-center gap-2 px-2 py-1 rounded text-xs text-[var(--color-fg-1)] hover:bg-color-bg-2 hover:text-[var(--color-fg-0)]"
         >
           <MagnifyingGlass size={14} />
-          <Kbd className="text-[11px] font-mono font-semibold">⌘K</Kbd>
+          <Kbd className="text-xs font-mono font-semibold">⌘K</Kbd>
         </button>
       </div>
     </header>

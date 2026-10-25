@@ -1,5 +1,7 @@
 // Phase 03 — NAV-02 (full NAV-02: split buttons, segmented control, filter, theme toggle, settings). Source: 03-02-PLAN.md
 // Phase 10 — Plan 04: Add files + From device → openPicker via useIngest. Source: 10-04-PLAN.md
+// change:remove-dead-ui-and-fix-a11y — Batch/Compare/Report seg (wrote an unread `view`), the Auto
+//   split-button and the Workers button (stub handlers) removed; Workers is now read-only text.
 import { useStore } from "@nanostores/react";
 import {
   Plus,
@@ -11,8 +13,7 @@ import {
   GearSix,
   Lightning,
 } from "@phosphor-icons/react";
-import { uiAtom, setOpen, setView, setTheme, setAutoTarget } from "@/stores/ui";
-import type { View } from "@/stores/ui";
+import { uiAtom, setOpen, setTheme } from "@/stores/ui";
 import {
   filesAtom,
   $hasDone,
@@ -21,7 +22,7 @@ import {
   setFilter,
   clearFiles,
 } from "@/stores/files";
-import { runtimeAtom, setWorkerCount } from "@/stores/runtime";
+import { runtimeAtom } from "@/stores/runtime";
 import { toast } from "sonner";
 import { useOptimize } from "@/hooks/useOptimize";
 import { useIngest } from "@/hooks/useIngest";
@@ -62,7 +63,7 @@ function ToolbarDivider() {
 }
 
 export function Toolbar() {
-  const { open, view, theme } = useStore(uiAtom);
+  const { open, theme } = useStore(uiAtom);
   const { filterQuery } = useStore(filesAtom);
   const selectedFile = useStore($selectedFile);
   const hasDone = useStore($hasDone);
@@ -98,7 +99,7 @@ export function Toolbar() {
       data-testid="toolbar"
       role="toolbar"
       aria-label="Primary toolbar"
-      className="h-11 bg-color-bg-1 border-b border-[var(--color-line)] px-2 flex items-center gap-2 shrink-0"
+      className="h-11 bg-color-bg-1 border-b border-[var(--color-line)] px-2 flex items-center gap-2 shrink-0 overflow-x-auto [&>*]:shrink-0"
     >
       {/* 1. Add files split group */}
       <div className="flex">
@@ -171,11 +172,18 @@ export function Toolbar() {
       </div>
 
       {/* 2. Optimize all primary button (UNCHANGED from Plan 01) */}
+      {/* change:remove-dead-ui-and-fix-a11y — disable-then-explain on an empty queue, like Export/Clear all. */}
       <button
         type="button"
         onClick={runOptimize}
         data-testid="toolbar-btn-optimize-all"
-        className="h-7 px-3 text-xs font-semibold bg-color-accent text-[var(--color-accent-fg)] border-transparent rounded-[5px] hover:brightness-105 flex items-center gap-1"
+        disabled={queueEmpty}
+        aria-disabled={queueEmpty}
+        title={queueEmpty ? "No files to optimize" : undefined}
+        className={cn(
+          "h-7 px-3 text-xs font-semibold bg-color-accent text-[var(--color-accent-fg)] border-transparent rounded-[5px] hover:brightness-105 flex items-center gap-1 shrink-0",
+          queueEmpty && "opacity-50 cursor-not-allowed",
+        )}
       >
         <Lightning size={13} />
         Optimize all
@@ -311,105 +319,8 @@ export function Toolbar() {
       {/* 4. Toolbar divider */}
       <ToolbarDivider />
 
-      {/* 5. Segmented control: Batch / Compare / Report */}
-      <div
-        role="group"
-        aria-label="Switch view"
-        className="flex h-7 bg-color-bg-2 border border-[var(--color-line)] rounded-[5px]"
-      >
-        {(["Batch", "Compare", "Report"] as View[]).map((v, i) => (
-          <button
-            key={v}
-            type="button"
-            role="radio"
-            aria-checked={view === v}
-            data-testid={`toolbar-view-${v.toLowerCase()}`}
-            onClick={() => setView(v)}
-            className={cn(
-              "px-3 text-xs rounded-[4px]",
-              i > 0 && "border-l border-[var(--color-line)]",
-              view === v
-                ? "bg-color-bg-3 text-[var(--color-fg-0)]"
-                : "text-[var(--color-fg-1)]",
-            )}
-          >
-            {v}
-          </button>
-        ))}
-      </div>
-
-      {/* 6. Auto split group */}
-      <div className="flex">
-        <button
-          type="button"
-          className={cn(tbtnClass, "rounded-r-none border-r-0")}
-          data-testid="toolbar-btn-auto"
-          onClick={() => {
-            setAutoTarget(1.4);
-            setOpen(null);
-          }}
-        >
-          Auto
-        </button>
-        <Popover
-          open={open === "tb-auto"}
-          onOpenChange={(o) => setOpen(o ? "tb-auto" : null)}
-        >
-          <PopoverTrigger asChild>
-            <button
-              type="button"
-              aria-label="Auto mode options"
-              data-testid="toolbar-btn-auto-menu"
-              className={cn(tbtnClass, "rounded-l-none px-1.5")}
-            >
-              <CaretDown size={11} />
-            </button>
-          </PopoverTrigger>
-          <PopoverContent className={popoverContentClass} align="start">
-            <div className="flex flex-col">
-              <button
-                type="button"
-                className={menuItemClass}
-                data-testid="toolbar-item-auto-14"
-                onClick={() => {
-                  setAutoTarget(1.4);
-                  setOpen(null);
-                }}
-              >
-                1.4 balanced
-              </button>
-              <button
-                type="button"
-                className={menuItemClass}
-                data-testid="toolbar-item-auto-10"
-                onClick={() => {
-                  setAutoTarget(1.0);
-                  setOpen(null);
-                }}
-              >
-                1.0 high quality
-              </button>
-              <button
-                type="button"
-                className={menuItemClass}
-                data-testid="toolbar-item-auto-20"
-                onClick={() => {
-                  setAutoTarget(2.0);
-                  setOpen(null);
-                }}
-              >
-                2.0 aggressive
-              </button>
-            </div>
-          </PopoverContent>
-        </Popover>
-      </div>
-
-      {/* 7. Toolbar divider */}
-      <ToolbarDivider />
-
       {/* 8. Filter input */}
-      <div className="flex items-center h-7 min-w-[220px] bg-color-bg-2 border border-[var(--color-line)] rounded-[5px] px-2 gap-2 focus-within:border-[var(--color-accent)]">
+      <div className="flex items-center h-7 w-[220px] min-w-[160px] bg-color-bg-2 border border-[var(--color-line)] rounded-[5px] px-2 gap-2 focus-within:border-[var(--color-accent)]">
         <MagnifyingGlass
           size={12}
           className="text-[var(--color-fg-2)] shrink-0"
@@ -465,17 +376,14 @@ export function Toolbar() {
               </TabsTrigger>
             </TabsList>
             <TabsContent value="general" className="p-2">
-              <button
-                type="button"
-                className={menuItemClass}
-                data-testid="settings-btn-workers"
-                onClick={() => {
-                  setWorkerCount(4);
-                  setOpen(null);
-                }}
+              {/* change:remove-dead-ui-and-fix-a11y — read-only: the pool derives its size from
+                  hardware (worker-pool spec), so this is a fact, not a setting. */}
+              <p
+                className="px-3 py-1.5 text-xs text-[var(--color-fg-1)]"
+                data-testid="settings-workers"
               >
-                Workers: 4 (auto)
-              </button>
+                Workers: {Math.min(caps.hardwareConcurrency, 4)} (auto)
+              </p>
               {/* Phase 13 — D-14 / CLR-01: Clear all menu item with disable-then-explain triple.
                   Mirrors Export button shape (lines 96-100 + 122-126). */}
               <button
@@ -501,7 +409,7 @@ export function Toolbar() {
                   no dangerouslySetInnerHTML — React's default escaping handles all values. */}
               <dl
                 data-testid="settings-dl-diagnostics"
-                className="grid grid-cols-2 gap-x-2 gap-y-0.5 font-mono text-[10px]"
+                className="grid grid-cols-2 gap-x-2 gap-y-0.5 font-mono text-xs"
               >
                 <dt>svgo</dt>
                 <dd>{versions.svgo}</dd>

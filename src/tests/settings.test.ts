@@ -102,8 +102,8 @@ try {
   // removeDoctype starts on:true per SVGO_PLUGINS
   mod.togglePlugin('removeDoctype')
   const pluginsAfterToggle = mod.settingsAtom.get().plugins
-  const removeDoctype = pluginsAfterToggle.find((p: { id: string; on: boolean; saves: string }) => p.id === 'removeDoctype')
-  const cleanupAttrs = pluginsAfterToggle.find((p: { id: string; on: boolean; saves: string }) => p.id === 'cleanupAttrs')
+  const removeDoctype = pluginsAfterToggle.find((p: { id: string; on: boolean }) => p.id === 'removeDoctype')
+  const cleanupAttrs = pluginsAfterToggle.find((p: { id: string; on: boolean }) => p.id === 'cleanupAttrs')
   assert('togglePlugin("removeDoctype") flips that plugin on → false', removeDoctype?.on === false)
   assert('togglePlugin("removeDoctype") leaves "cleanupAttrs" unchanged (still on:true)', cleanupAttrs?.on === true)
 

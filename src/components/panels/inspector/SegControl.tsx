@@ -1,4 +1,6 @@
 // Phase 04 — shared SegControl for inspector panels. Source: 04-01-PLAN.md
+// change:remove-dead-ui-and-fix-a11y — no container overflow-hidden (it clipped the focus outline);
+//   end items round themselves and focus draws an inset ring that stays inside each option.
 import { cn } from '@/lib/utils'
 
 interface SegControlProps {
@@ -33,7 +35,7 @@ export function SegControl({
       aria-disabled={disabled || undefined}
       data-testid={testId}
       className={cn(
-        'flex h-6 rounded-[4px] border border-[var(--color-line)] overflow-hidden bg-color-bg-1',
+        'flex h-6 rounded-[4px] border border-[var(--color-line)] bg-color-bg-1',
         disabled && 'pointer-events-none opacity-40',
       )}
     >
@@ -47,7 +49,7 @@ export function SegControl({
           disabled={disabled}
           onClick={() => onChange(o)}
           className={cn(
-            'flex-1 px-2 text-[11px] font-mono transition-colors',
+            'flex-1 px-2 text-xs font-mono transition-colors first:rounded-l-[3px] last:rounded-r-[3px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--color-accent)]',
             i > 0 && 'border-l border-[var(--color-line)]',
             o === value
               ? 'bg-color-bg-3 text-[var(--color-fg-0)] font-semibold'
