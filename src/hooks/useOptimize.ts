@@ -57,114 +57,117 @@ function toSourceFormat(type: string): EncodeJob['sourceFormat'] | null {
   }
 }
 
+// change:remove-dead-ui-and-fix-a11y — module scope (design D1) so non-React callers (the command
+// palette, registered in main.tsx) dispatch the exact same path as the Toolbar button. It never
+// used hook state: everything is read live from filesAtom.get() / getPool().
+export async function runOptimize(): Promise<void> {
+  const pool = getPool()
+  // Always read the live atom value — not the stale useStore snapshot
+  const { entries } = filesAtom.get()
+
+  // Build jobs with real bytes — read File handles where rawBuffer not yet cached (D-04)
+  // Pairs: [entryId, name, job] — kept together so streaming .then can map results back to ids
+  const pairs: Array<[id: string, name: string, job: EncodeJob]> = []
+
+  for (const entry of entries) {
+    // Phase 11 — Plan 01 (D-11): skip already-optimized files on Optimize-all. Errored files
+    // (status === 'error') are still retried; only successful 'done' entries are filtered out.
+    if (entry.status === 'done') continue
+
+    // User's chosen output codec (settings.codec) wins — falling through to source-derived
+    // toCodec(entry.type) only when settings.codec is missing (legacy entry). Previously this
+    // was inverted: source-derived codec always took precedence, so picking PNG in Output for
+    // an SVG file dispatched codec=SVG and nothing changed. HEIC/HEIF have no output codec of
+    // their own, so settings.codec (seeded to JPEG by codecForType) is the authoritative source.
+    const codec = entry.settings?.codec ?? toCodec(entry.type)
+    if (codec === null) continue
+
+    // WR-03: validate the source format up front — skip unsupported inputs with a clear toast
+    // instead of dispatching a job that throws "Unknown source format" inside the worker.
+    const sourceFormat = toSourceFormat(entry.type)
+    if (sourceFormat === null) {
+      toast.error('Unsupported input format: ' + entry.name)
+      continue
+    }
+
+    let rawBuffer = entry.rawBuffer ?? null
+
+    // If rawBuffer absent, try reading from the File handle (if entry carries one)
+    if (rawBuffer === null) {
+      const fileHandle = (entry as { file?: File }).file
+      if (fileHandle) {
+        rawBuffer = await fileHandle.arrayBuffer()
+        setFileRawBuffer(entry.id, rawBuffer)
+      }
+    }
+
+    // T-9-V5: never dispatch a 0-byte buffer; skip entries with no bytes available
+    if (!rawBuffer || rawBuffer.byteLength === 0) continue
+
+    // SVG → raster (PNG/WebP/JPEG/AVIF): rasterize on the main thread because
+    // createImageBitmap() on an SVG blob is unreliable in workers (0x0 in Safari/Firefox
+    // when the SVG lacks explicit width/height). See src/lib/svg-rasterize.ts.
+    let dispatchBuffer = rawBuffer.slice(0)
+    let dispatchSourceFormat: EncodeJob['sourceFormat'] = sourceFormat
+    if (sourceFormat === 'svg' && codec !== 'SVG') {
+      try {
+        const settings = entry.settings ?? settingsAtom.get()
+        const targetWidth = settings.resizeOn && Number.isFinite(Number(settings.w))
+          ? Number(settings.w)
+          : undefined
+        dispatchBuffer = await rasterizeSvgToPng(rawBuffer, { targetWidth })
+        dispatchSourceFormat = 'png'
+      } catch (err) {
+        setFileError(entry.id, String(err))
+        toast.error('SVG rasterize failed: ' + entry.name)
+        continue
+      }
+    }
+
+    const job: EncodeJob = {
+      codec,
+      sourceFormat: dispatchSourceFormat,
+      buffer: dispatchBuffer,
+      settings: entry.settings ?? settingsAtom.get(),
+    }
+
+    pairs.push([entry.id, entry.name, job])
+  }
+
+  // Phase 11 — Plan 01 (D-03): per-promise streaming write-back. Each pool.run(job).then(...)
+  // fires setFileResult/setFileError AS the worker returns, so FileRow status dots flip
+  // queued → processing → done LIVE during the batch (not all at once after allSettled).
+  //
+  // Pitfall 1 mitigation: all N promises are created in a single .map(...) synchronously,
+  // THEN awaited as Promise.all — NEVER `await pool.run(job)` inside the loop, which would
+  // serialize to concurrency = 1 and defeat WorkerPool._drain()'s bounded cap (min(hwConc, 4)).
+  //
+  // Per-promise rejection is swallowed inside .then(_, err) → setFileError + toast, so
+  // Promise.all never rejects (D-13 / T-9-FB: per-file failure never aborts the batch).
+  const promises = pairs.map(([id, name, job]) =>
+    // onDispatch fires inside WorkerPool._drain when this job actually starts running
+    // on a worker (not when it's enqueued) — so queued entries stay 'queued' until the
+    // pool's cap (min(hwConc, 4)) lets them through, matching the bounded-concurrency
+    // model the FileRow status dot is meant to surface.
+    pool.run(job, () => setFileProcessing(id)).then(
+      // Quick 260726-3cp: pass job.codec so CompareStage's encoded-layer gate
+      // (encodedCodec === settings.codec) has a truthful producer tag.
+      ({ buffer, optimizedSize }) => setFileResult(id, buffer, optimizedSize, job.codec),
+      (err) => {
+        setFileError(id, String(err))
+        toast.error('Encode failed: ' + name)
+      },
+    ),
+  )
+  await Promise.all(promises)
+}
+
 export function useOptimize() {
   // useStore subscription kept for components that useOptimize for reactive UI (e.g. progress).
   // runOptimize reads filesAtom.get() directly to avoid stale-closure bug: when ingest() calls
   // runOptimize() synchronously after setKey(), the useStore snapshot hasn't re-rendered yet
   // and would be empty. Direct .get() always reflects the current atom value. (Rule 1 fix)
   useStore(filesAtom)
-
-  async function runOptimize(): Promise<void> {
-    const pool = getPool()
-    // Always read the live atom value — not the stale useStore snapshot
-    const { entries } = filesAtom.get()
-
-    // Build jobs with real bytes — read File handles where rawBuffer not yet cached (D-04)
-    // Pairs: [entryId, name, job] — kept together so streaming .then can map results back to ids
-    const pairs: Array<[id: string, name: string, job: EncodeJob]> = []
-
-    for (const entry of entries) {
-      // Phase 11 — Plan 01 (D-11): skip already-optimized files on Optimize-all. Errored files
-      // (status === 'error') are still retried; only successful 'done' entries are filtered out.
-      if (entry.status === 'done') continue
-
-      // User's chosen output codec (settings.codec) wins — falling through to source-derived
-      // toCodec(entry.type) only when settings.codec is missing (legacy entry). Previously this
-      // was inverted: source-derived codec always took precedence, so picking PNG in Output for
-      // an SVG file dispatched codec=SVG and nothing changed. HEIC/HEIF have no output codec of
-      // their own, so settings.codec (seeded to JPEG by codecForType) is the authoritative source.
-      const codec = entry.settings?.codec ?? toCodec(entry.type)
-      if (codec === null) continue
-
-      // WR-03: validate the source format up front — skip unsupported inputs with a clear toast
-      // instead of dispatching a job that throws "Unknown source format" inside the worker.
-      const sourceFormat = toSourceFormat(entry.type)
-      if (sourceFormat === null) {
-        toast.error('Unsupported input format: ' + entry.name)
-        continue
-      }
-
-      let rawBuffer = entry.rawBuffer ?? null
-
-      // If rawBuffer absent, try reading from the File handle (if entry carries one)
-      if (rawBuffer === null) {
-        const fileHandle = (entry as { file?: File }).file
-        if (fileHandle) {
-          rawBuffer = await fileHandle.arrayBuffer()
-          setFileRawBuffer(entry.id, rawBuffer)
-        }
-      }
-
-      // T-9-V5: never dispatch a 0-byte buffer; skip entries with no bytes available
-      if (!rawBuffer || rawBuffer.byteLength === 0) continue
-
-      // SVG → raster (PNG/WebP/JPEG/AVIF): rasterize on the main thread because
-      // createImageBitmap() on an SVG blob is unreliable in workers (0x0 in Safari/Firefox
-      // when the SVG lacks explicit width/height). See src/lib/svg-rasterize.ts.
-      let dispatchBuffer = rawBuffer.slice(0)
-      let dispatchSourceFormat: EncodeJob['sourceFormat'] = sourceFormat
-      if (sourceFormat === 'svg' && codec !== 'SVG') {
-        try {
-          const settings = entry.settings ?? settingsAtom.get()
-          const targetWidth = settings.resizeOn && Number.isFinite(Number(settings.w))
-            ? Number(settings.w)
-            : undefined
-          dispatchBuffer = await rasterizeSvgToPng(rawBuffer, { targetWidth })
-          dispatchSourceFormat = 'png'
-        } catch (err) {
-          setFileError(entry.id, String(err))
-          toast.error('SVG rasterize failed: ' + entry.name)
-          continue
-        }
-      }
-
-      const job: EncodeJob = {
-        codec,
-        sourceFormat: dispatchSourceFormat,
-        buffer: dispatchBuffer,
-        settings: entry.settings ?? settingsAtom.get(),
-      }
-
-      pairs.push([entry.id, entry.name, job])
-    }
-
-    // Phase 11 — Plan 01 (D-03): per-promise streaming write-back. Each pool.run(job).then(...)
-    // fires setFileResult/setFileError AS the worker returns, so FileRow status dots flip
-    // queued → processing → done LIVE during the batch (not all at once after allSettled).
-    //
-    // Pitfall 1 mitigation: all N promises are created in a single .map(...) synchronously,
-    // THEN awaited as Promise.all — NEVER `await pool.run(job)` inside the loop, which would
-    // serialize to concurrency = 1 and defeat WorkerPool._drain()'s bounded cap (min(hwConc, 4)).
-    //
-    // Per-promise rejection is swallowed inside .then(_, err) → setFileError + toast, so
-    // Promise.all never rejects (D-13 / T-9-FB: per-file failure never aborts the batch).
-    const promises = pairs.map(([id, name, job]) =>
-      // onDispatch fires inside WorkerPool._drain when this job actually starts running
-      // on a worker (not when it's enqueued) — so queued entries stay 'queued' until the
-      // pool's cap (min(hwConc, 4)) lets them through, matching the bounded-concurrency
-      // model the FileRow status dot is meant to surface.
-      pool.run(job, () => setFileProcessing(id)).then(
-        // Quick 260726-3cp: pass job.codec so CompareStage's encoded-layer gate
-        // (encodedCodec === settings.codec) has a truthful producer tag.
-        ({ buffer, optimizedSize }) => setFileResult(id, buffer, optimizedSize, job.codec),
-        (err) => {
-          setFileError(id, String(err))
-          toast.error('Encode failed: ' + name)
-        },
-      ),
-    )
-    await Promise.all(promises)
-  }
 
   return { runOptimize }
 }

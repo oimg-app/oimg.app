@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+// change:remove-dead-ui-and-fix-a11y — every Switch/Slider2 carries an aria-label matching its visible label.
 import { useStore } from '@nanostores/react'
 import {$selectedFile, setFileSettings, setFileTarget} from '@/stores/files'
 import {
@@ -208,6 +209,7 @@ export function CodecPanel() {
           <div className="flex items-center justify-between mt-1">
             <span className="text-[12px] text-[var(--color-fg-2)]">Lossless</span>
             <Switch
+              aria-label="Lossless"
               checked={settings.lossless}
               onCheckedChange={handleSetLossless}
               data-testid="codec-switch-lossless"
@@ -236,6 +238,7 @@ export function CodecPanel() {
               </span>
               <div className="grid grid-cols-[1fr_42px] gap-2 items-center">
                 <Slider2
+                  aria-label="Quality"
                   min={0} max={100} step={1}
                   value={[settings.q]}
                   onValueChange={([v]) => handleSetQuality(v)}
@@ -253,6 +256,7 @@ export function CodecPanel() {
               <span className="text-[12px] text-[var(--color-fg-2)]">Effort</span>
               <div className="grid grid-cols-[1fr_42px] gap-2 items-center">
                 <Slider2
+                  aria-label="Effort"
                   min={0} max={6} step={1}
                   value={[settings.method]}
                   onValueChange={([v]) => handleSetMethod(v)}
@@ -270,6 +274,7 @@ export function CodecPanel() {
               <div className="grid grid-cols-[100px_1fr] gap-2 mb-2 items-center">
                 <span className="text-[12px] text-[var(--color-fg-2)]">Progressive</span>
                 <Switch
+                  aria-label="Progressive"
                   checked={settings.progressive ?? true}
                   onCheckedChange={handleSetProgressive}
                   data-testid="codec-switch-progressive"
@@ -303,6 +308,7 @@ export function CodecPanel() {
               <div className="flex items-center justify-between mb-2">
                 <span className="text-[12px] text-[var(--color-fg-2)]">Enable advanced</span>
                 <Switch
+                  aria-label="Enable advanced"
                   checked={avifAdvancedOn}
                   onCheckedChange={handleSetAvifAdvancedOn}
                   data-testid="codec-switch-avif-advanced"
@@ -337,6 +343,7 @@ export function CodecPanel() {
               <div className="grid grid-cols-[100px_1fr] gap-2 mb-2 items-center">
                 <span className="text-[12px] text-[var(--color-fg-2)]">Match alpha</span>
                 <Switch
+                  aria-label="Match alpha"
                   checked={avif.qualityAlpha === -1}
                   onCheckedChange={(v) => handleSetAvif('qualityAlpha', v ? -1 : Math.max(0, settings.q ?? 50))}
                   data-testid="codec-switch-avif-match-alpha"
@@ -347,6 +354,7 @@ export function CodecPanel() {
                   <span className="text-[12px] text-[var(--color-fg-2)]">Alpha quality</span>
                   <div className="grid grid-cols-[1fr_42px] gap-2 items-center">
                     <Slider2
+                      aria-label="Alpha quality"
                       min={0} max={100} step={1}
                       value={[avif.qualityAlpha]}
                       onValueChange={([v]) => handleSetAvif('qualityAlpha', v)}
@@ -365,6 +373,7 @@ export function CodecPanel() {
                 <span className="text-[12px] text-[var(--color-fg-2)]">Denoise</span>
                 <div className="grid grid-cols-[1fr_42px] gap-2 items-center">
                   <Slider2
+                    aria-label="Denoise"
                     min={0} max={50} step={1}
                     value={[avif.denoiseLevel]}
                     onValueChange={([v]) => handleSetAvif('denoiseLevel', v)}
@@ -382,6 +391,7 @@ export function CodecPanel() {
                 <span className="text-[12px] text-[var(--color-fg-2)]">Sharpness</span>
                 <div className="grid grid-cols-[1fr_42px] gap-2 items-center">
                   <Slider2
+                    aria-label="Sharpness"
                     min={0} max={7} step={1}
                     value={[avif.sharpness]}
                     onValueChange={([v]) => handleSetAvif('sharpness', v)}
@@ -399,6 +409,7 @@ export function CodecPanel() {
                 <span className="text-[12px] text-[var(--color-fg-2)]">Tile rows</span>
                 <div className="grid grid-cols-[1fr_42px] gap-2 items-center">
                   <Slider2
+                    aria-label="Tile rows"
                     min={0} max={6} step={1}
                     value={[avif.tileRowsLog2]}
                     onValueChange={([v]) => handleSetAvif('tileRowsLog2', v)}
@@ -416,6 +427,7 @@ export function CodecPanel() {
                 <span className="text-[12px] text-[var(--color-fg-2)]">Tile cols</span>
                 <div className="grid grid-cols-[1fr_42px] gap-2 items-center">
                   <Slider2
+                    aria-label="Tile cols"
                     min={0} max={6} step={1}
                     value={[avif.tileColsLog2]}
                     onValueChange={([v]) => handleSetAvif('tileColsLog2', v)}
@@ -432,6 +444,7 @@ export function CodecPanel() {
               <div className="flex items-center justify-between mb-2">
                 <span className="text-[12px] text-[var(--color-fg-2)]">Chroma delta Q</span>
                 <Switch
+                  aria-label="Chroma delta Q"
                   checked={avif.chromaDeltaQ}
                   onCheckedChange={(v) => handleSetAvif('chromaDeltaQ', v)}
                   data-testid="codec-switch-avif-chroma-delta"
@@ -442,6 +455,7 @@ export function CodecPanel() {
               <div className="flex items-center justify-between">
                 <span className="text-[12px] text-[var(--color-fg-2)]">Sharp YUV</span>
                 <Switch
+                  aria-label="Sharp YUV"
                   checked={avif.enableSharpYUV}
                   onCheckedChange={(v) => handleSetAvif('enableSharpYUV', v)}
                   data-testid="codec-switch-avif-sharp-yuv"
@@ -456,6 +470,7 @@ export function CodecPanel() {
             <div className="flex items-center justify-between mb-2">
               <span className="text-[12px] text-[var(--color-fg-2)]">Resize</span>
               <Switch
+                aria-label="Resize"
                 checked={settings.resizeOn}
                 onCheckedChange={handleSetResizeOn}
                 data-testid="codec-switch-resize"
@@ -468,6 +483,7 @@ export function CodecPanel() {
                   <Input
                     value={settings.w}
                     data-testid="codec-input-width"
+                    aria-label="Width (px)"
                     onChange={(e) => handleSetResizeDimensions(e.target.value, settings.h)}
                     className="h-6 font-mono text-[12px] bg-color-bg-2 border-[var(--color-line)]"
                   />
@@ -477,6 +493,7 @@ export function CodecPanel() {
                   <Input
                     value={settings.h}
                     data-testid="codec-input-height"
+                    aria-label="Height (px)"
                     onChange={(e) => handleSetResizeDimensions(settings.w, e.target.value)}
                     className="h-6 font-mono text-[12px] bg-color-bg-2 border-[var(--color-line)]"
                   />
@@ -509,6 +526,7 @@ export function CodecPanel() {
             <div className="flex items-center justify-between mb-2">
               <span className="text-[12px] text-[var(--color-fg-2)]">Reduce palette</span>
               <Switch
+                aria-label="Reduce palette"
                 checked={settings.colorsOn}
                 onCheckedChange={handleSetColorsOn}
                 data-testid="codec-switch-colors"
@@ -520,6 +538,7 @@ export function CodecPanel() {
                     <span className="text-[12px] text-[var(--color-fg-2)]">Colors</span>
                     <div className="grid grid-cols-[1fr_42px] gap-2 items-center">
                       <Slider2
+                        aria-label="Colors"
                           min={2} max={256} step={1}
                           value={[settings.colors]}
                           onValueChange={([v]) => handleSetColors(v)}
@@ -536,6 +555,7 @@ export function CodecPanel() {
                     <span className="text-[12px] text-[var(--color-fg-2)]">Dithering</span>
                     <div className="grid grid-cols-[1fr_42px] gap-2 items-center">
                       <Slider2
+                        aria-label="Dithering"
                           min={0} max={1} step={0.001}
                           value={[settings.dithering]}
                           onValueChange={([v]) => handleSetDithering(v)}
@@ -567,7 +587,7 @@ export function CodecPanel() {
                 data-testid="codec-switch-strip-exif"
               />
             </div>
-            <p className="text-[10px] font-mono text-[var(--color-fg-3)] mb-1.5 leading-[1.5]">
+            <p className="text-xs font-mono text-[var(--color-fg-3)] mb-1.5 leading-[1.5]">
               always stripped — metadata is dropped when decoding to pixels
             </p>
             <div className="flex items-center justify-between mb-0.5">
@@ -579,7 +599,7 @@ export function CodecPanel() {
                 data-testid="codec-switch-keep-icc"
               />
             </div>
-            <p className="text-[10px] font-mono text-[var(--color-fg-3)] leading-[1.5]">
+            <p className="text-xs font-mono text-[var(--color-fg-3)] leading-[1.5]">
               not supported by current codecs
             </p>
           </Section>

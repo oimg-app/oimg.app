@@ -39,6 +39,10 @@ The system SHALL load and run the libimagequant WASM module inside the codec wor
 - **WHEN** a worker has completed a job with Reduce palette on and then receives a job with Reduce palette off
 - **THEN** the second job returns a normal encoded result
 
+#### Scenario: Quantize loads its WASM in production
+- **WHEN** the production build is served and the user encodes a PNG-8
+- **THEN** imagequant initializes without spawning a nested worker and the encode succeeds without a WASM fetch error
+
 ## ADDED Requirements
 
 ### Requirement: Quantize failure is isolated to its job

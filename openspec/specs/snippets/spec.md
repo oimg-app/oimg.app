@@ -19,14 +19,30 @@ The system SHALL render on the Inspector's "Output" tab three snippet sections b
 ### Requirement: Base64 data-URI builder
 The system SHALL build a Base64 data URI from encoded bytes via a chunked base64 encoder (so large buffers don't blow the call stack). The MIME type SHALL be derived from the entry's `encodedCodec`.
 
+#### Scenario: Large WebP output
+- **WHEN** a multi-megabyte entry encoded as WebP is turned into a Base64 data URI
+- **THEN** the builder returns `data:image/webp;base64,…` without a stack overflow, and the payload decodes back to the exact encoded bytes
+
 ### Requirement: URL-encoded SVG builder
 The system SHALL, for SVG output, produce a Yoksel-style URL-encoded data URI suitable for direct use in a CSS `background-image` value (percent-encoded, minimal escapes).
+
+#### Scenario: SVG background-image snippet
+- **WHEN** the selected file's output is SVG
+- **THEN** the URL-encoded section shows a `data:image/svg+xml,…` URI with characters such as `<`, `>`, `#` and `"` percent-encoded, which renders when pasted into a CSS `background-image: url("…")`
 
 ### Requirement: Responsive `<picture>` shape
 The system SHALL render the `<picture>` snippet as a single-source `<img>` wrapper with sensible defaults: escaped `alt` attribute, real width / height attributes from the entry, and the encoded image as the `src`.
 
+#### Scenario: Picture snippet for a done entry
+- **WHEN** the user views the Responsive `<picture>` section for a `done` 800×600 entry
+- **THEN** the snippet contains an `<img>` whose `src` references the encoded output, with `width="800"`, `height="600"` and an escaped `alt` derived from the filename
+
 ### Requirement: Attribute escaping
 The system SHALL escape any user-visible attribute (filename → `alt`, etc.) using a shared `escapeAttr` helper so a malicious filename cannot break out of the attribute in a copied snippet.
+
+#### Scenario: Malicious filename
+- **WHEN** a file named `x" onerror="alert(1).png` is turned into a snippet
+- **THEN** the `"` characters are emitted as `&quot;` and the snippet contains no injected `onerror` attribute
 
 ### Requirement: Single clipboard chokepoint
 The system SHALL route every clipboard write through a single `copyToClipboard` helper (`src/lib/clipboard.ts`) — the OutputPanel copy buttons, the Toolbar bulk-copy items (Copy `<picture>` / Copy data URIs / Manifest JSON), and the FileRow context-menu items (Copy `<picture>` / Copy data URI). No callsite MUST call `navigator.clipboard.writeText` directly.
@@ -37,6 +53,10 @@ The system SHALL route every clipboard write through a single `copyToClipboard` 
 
 ### Requirement: FileRow context-menu snippet copies
 The system SHALL expose "Copy `<picture>`" and "Copy data URI" siblings to "Save as…" in the per-row context menu, each routing through the chokepoint.
+
+#### Scenario: Copy data URI from a row
+- **WHEN** the user opens a `done` row's context menu and picks "Copy data URI"
+- **THEN** the clipboard receives that entry's data URI via `copyToClipboard` and a confirmation toast fires
 
 ### Requirement: Bulk snippet actions
 The system SHALL provide Toolbar bulk actions: Copy `<picture>` HTML (concatenated for all `done` entries), Copy as data URIs (concatenated), Manifest JSON (metadata for all `done` entries).

@@ -40,7 +40,7 @@ const BG_SWATCHES: Array<{ id: StageBg; label: string; style: React.CSSPropertie
 ]
 
 const FILE_TAG =
-  'font-mono text-[11px] font-semibold bg-color-bg-2 text-[var(--color-fg-1)] px-1.5 py-0.5 rounded-[3px] whitespace-nowrap'
+  'font-mono text-xs font-semibold bg-color-bg-2 text-[var(--color-fg-1)] px-1.5 py-0.5 rounded-[3px] whitespace-nowrap'
 
 const ZOOM_OPTS = [25, 50, 100, 200, 'fit'] as const
 
@@ -116,7 +116,7 @@ export function CenterHeader() {
             <button
               type="button"
               data-testid="center-zoom-trigger"
-              className="flex items-center gap-1 h-6 px-2 font-mono text-[11px] text-[var(--color-fg-1)] hover:text-[var(--color-fg-0)] hover:bg-color-bg-2 rounded transition-colors"
+              className="flex items-center gap-1 h-6 px-2 font-mono text-xs text-[var(--color-fg-1)] hover:text-[var(--color-fg-0)] hover:bg-color-bg-2 rounded transition-colors"
             >
               <EyeIcon size={12} />
               {zoom === 'fit' ? 'Fit' : `${zoom}%`}
@@ -128,7 +128,7 @@ export function CenterHeader() {
               <DropdownMenuItem
                 key={opt}
                 data-testid={`center-zoom-item-${opt}`}
-                className="flex items-center justify-between h-7 px-2 font-mono text-[11px] rounded cursor-pointer focus:bg-color-bg-2 data-[highlighted]:bg-color-bg-2 text-[var(--color-fg-1)]"
+                className="flex items-center justify-between h-7 px-2 font-mono text-xs rounded cursor-pointer focus:bg-color-bg-2 data-[highlighted]:bg-color-bg-2 text-[var(--color-fg-1)]"
                 onSelect={() => setZoom(opt)}
               >
                 <span>{typeof opt === 'number' ? `${opt}%` : 'Fit'}</span>

@@ -28,3 +28,18 @@ export function butteraugliBand(v: number): Band {
   if (v < BUTTERAUGLI_BANDS.yellow) return 'yellow'
   return 'red'
 }
+
+// change:remove-dead-ui-and-fix-a11y — shared band presentation (moved from ReportPanel) so the
+// DeltaStrip and the Report tab color and label a metric the same way. CSS custom properties
+// resolve at render; still no imports, so the Node unit runner can load this module.
+export const BAND_COLOR: Record<Band, string> = {
+  green: 'var(--color-accent)',
+  yellow: 'var(--color-warn)',
+  red: 'var(--color-error)',
+}
+
+export const BAND_LABEL: Record<Band, string> = {
+  green: 'good',
+  yellow: 'fair',
+  red: 'poor',
+}

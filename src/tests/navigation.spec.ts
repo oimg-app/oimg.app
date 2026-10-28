@@ -2,9 +2,9 @@
 // Phase 10, Plan 01 — D-05 migration: inject fixture files before running-state assertions
 // change:add-black-box-e2e-suite — migrated to testid selectors:
 //   getByRole('button', {name:'Optimize all'})  → toolbar-btn-optimize-all
-//   getByRole('button', {name:'Codec'|'View'})  → titlebar-menu-codec / -view
-//   getByRole('menuitem', {name:'WebP'})        → titlebar-item-codec-webp
-//   getByRole('radio', {name:'Batch'})          → toolbar-view-batch
+//   getByRole('button', {name:'View'})          → titlebar-menu-view
+// change:remove-dead-ui-and-fix-a11y — the Codec menu and the Batch/Compare/Report seg are gone;
+//   menu keyboard coverage now runs on the View menu (same Radix DropdownMenu).
 //   getByRole('searchbox', {name:…})            → toolbar-input-filter / cmdk-input
 //   getByRole('option', …)                      → cmdk-option-<i>
 //   getByRole('button', {name:'Toggle theme'})  → toolbar-btn-theme
@@ -64,46 +64,32 @@ test('TitleBar renders (NAV-01)', async ({ page }) => {
   await expect(page.getByTestId('titlebar')).toHaveAttribute('role', 'banner')
 })
 
-test('TitleBar Codec menu opens (NAV-01)', async ({ page }) => {
+test('TitleBar View menu opens (NAV-01)', async ({ page }) => {
   await page.goto('/')
-  await page.getByTestId('titlebar-menu-codec').click()
-  await expect(page.getByTestId('titlebar-item-codec-webp')).toBeVisible()
   await page.getByTestId('titlebar-menu-view').click()
-  await expect(page.getByTestId('titlebar-item-codec-webp')).not.toBeVisible()
   await expect(page.getByTestId('titlebar-item-theme-light')).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(page.getByTestId('titlebar-item-theme-light')).not.toBeVisible()
 })
 
 // Phase 07-polish — WCAG AA: menus are DropdownMenu, arrow keys move highlight between items.
 // Radix focuses the content on pointer-open; the first ArrowDown lands on item 1.
-test('TitleBar Codec menu is keyboard navigable (WCAG AA)', async ({ page }) => {
+test('TitleBar View menu is keyboard navigable (WCAG AA)', async ({ page }) => {
   await page.goto('/')
-  await page.getByTestId('titlebar-menu-codec').click()
-  // ArrowDown moves focus into the list, item by item
+  await page.getByTestId('titlebar-menu-view').click()
   await page.keyboard.press('ArrowDown')
-  await expect(page.getByTestId('titlebar-item-codec-webp')).toBeFocused()
+  await expect(page.getByTestId('titlebar-check-pane-batch')).toBeFocused()
   await page.keyboard.press('ArrowDown')
-  await expect(page.getByTestId('titlebar-item-codec-avif')).toBeFocused()
+  await expect(page.getByTestId('titlebar-check-pane-compare')).toBeFocused()
   await page.keyboard.press('ArrowDown')
-  await expect(page.getByTestId('titlebar-item-codec-jpeg')).toBeFocused()
-  // ArrowUp moves it back
+  await expect(page.getByTestId('titlebar-check-pane-inspector')).toBeFocused()
   await page.keyboard.press('ArrowUp')
-  await expect(page.getByTestId('titlebar-item-codec-avif')).toBeFocused()
-  // Escape closes the menu
+  await expect(page.getByTestId('titlebar-check-pane-compare')).toBeFocused()
   await page.keyboard.press('Escape')
-  await expect(page.getByTestId('titlebar-item-codec-webp')).not.toBeVisible()
+  await expect(page.getByTestId('titlebar-check-pane-batch')).not.toBeVisible()
 })
 
-// NAV-02: Toolbar segmented control + filter tests
-test('Toolbar segmented control switches view (NAV-02)', async ({ page }) => {
-  await page.goto('/')
-  const batchBtn = page.getByTestId('toolbar-view-batch')
-  const compareBtn = page.getByTestId('toolbar-view-compare')
-  await expect(batchBtn).toHaveAttribute('aria-checked', 'true')
-  await compareBtn.click()
-  await expect(compareBtn).toHaveAttribute('aria-checked', 'true')
-  await expect(batchBtn).toHaveAttribute('aria-checked', 'false')
-})
-
+// NAV-02: Toolbar filter tests
 test('Toolbar filter input updates files store (NAV-02)', async ({ page }) => {
   await page.goto('/')
   const filterInput = page.getByTestId('toolbar-input-filter')
@@ -167,10 +153,10 @@ test('Typing filters command list (NAV-04)', async ({ page }) => {
   await expect(page.getByTestId('command-palette')).toBeVisible()
   await page.getByTestId('cmdk-input').fill('opt')
   // The filtered list collapses to the Optimize command; a matching list means option 0
-  // exists and the non-matching "Batch view" entry is gone.
+  // exists and the non-matching "Dark theme" entry is gone.
   await expect(page.getByTestId('cmdk-option-0')).toBeVisible()
   await expect(page.getByTestId('cmdk-option-0')).toContainText(/optimize/i)
-  await expect(page.getByTestId('cmdk-listbox')).not.toContainText('Batch view')
+  await expect(page.getByTestId('cmdk-listbox')).not.toContainText('Dark theme')
 })
 
 test('Arrow keys move selection (NAV-04)', async ({ page }) => {
@@ -185,16 +171,25 @@ test('Arrow keys move selection (NAV-04)', async ({ page }) => {
   await expect(page.getByTestId('cmdk-option-0')).toHaveAttribute('aria-selected', 'false')
 })
 
-test('Enter on Optimize all sets running (NAV-04 + STORE-04)', async ({ page }) => {
+test('Enter on Optimize all runs the optimize path (NAV-04 + STORE-04)', async ({ page }) => {
   await page.goto('/')
   // D-05: inject a queued fixture so Optimize all actually dispatches a job (see above).
   await injectEntries(page, 1, { status: 'queued' })
+  // change:remove-dead-ui-and-fix-a11y — the palette now runs the real runOptimize, so Running is
+  //   transient (it used to stick forever via startRun). Latch it, as the Toolbar test does.
+  await page.evaluate(async (mod: string) => {
+    const { runtimeAtom } = (await import(mod)) as RuntimeModule
+    const w = window as unknown as { __sawRunning?: boolean }
+    w.__sawRunning = runtimeAtom.get().running
+    runtimeAtom.subscribe((s) => { if (s.running) w.__sawRunning = true })
+  }, RUNTIME_MOD)
   await page.keyboard.press('Meta+k')
   await page.getByTestId('cmdk-input').fill('Optimize')
   // Press Enter to execute first (and only) result
   await page.keyboard.press('Enter')
   // Palette should be closed
   await expect(page.getByTestId('command-palette')).not.toBeVisible()
-  // Worker pip should show Running
-  await expect(page.getByTestId('worker-pip')).toHaveAttribute('aria-label', 'Worker status: Running')
+  await page.waitForFunction(() => (window as unknown as { __sawRunning?: boolean }).__sawRunning === true)
+  // …and it ends: the pip returns to Idle once the pool drains.
+  await expect(page.getByTestId('worker-pip')).toHaveAttribute('aria-label', 'Worker status: Idle', { timeout: 15_000 })
 })

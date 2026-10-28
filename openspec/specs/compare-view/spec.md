@@ -8,8 +8,17 @@ Show the selected file's original next to its encoded output so the developer ca
 ### Requirement: Center pane layout
 The system SHALL render `CenterPane` as three vertical sections: a header with breadcrumb and zoom control, the `CompareStage`, and a `DeltaStrip` under the stage.
 
+#### Scenario: User selects a file
+- **WHEN** a file is selected
+- **THEN** the center pane shows the header, the compare stage, and the DeltaStrip stacked top to bottom
+
 ### Requirement: Header breadcrumb and zoom
 The system SHALL render in the header a breadcrumb of the selected file's name, a `type → target` tag, a dimensions tag, and a quality/settings tag — all read from `$selectedFile`. A zoom dropdown SHALL read and write `uiAtom.zoom`.
+
+#### Scenario: User changes zoom from the header
+- **WHEN** the user selects a file and picks a different zoom level from the header dropdown
+- **THEN** the header shows the file's name, type → target, dimensions, and settings tags
+- **AND** the stage re-renders at the chosen zoom level
 
 ### Requirement: Original vs encoded split compare
 The system SHALL render two overlaid layers in the CompareStage — the source on the left, the encoded output on the right — separated by a draggable split handle that writes `uiAtom.split`. A CSS `--split` variable drives the reveal on the DOM.
@@ -49,8 +58,17 @@ The system SHALL render SVG sources and SVG-target outputs in a sandboxed `<ifra
 ### Requirement: Encoded layer switches iframe/img on codec change
 The system SHALL switch the encoded layer element between `<iframe>` (SVG-target) and `<img>` (raster-target) as the output codec changes, so raster targets don't render inside an iframe and SVG targets get their sandbox.
 
+#### Scenario: User switches an SVG entry's output to WebP
+- **WHEN** the output codec of an SVG entry changes from SVG to WebP and the re-encode finishes
+- **THEN** the encoded layer renders as an `<img>` instead of an `<iframe>`
+
 ### Requirement: DeltaStrip metric cards
 The system SHALL render a DeltaStrip under the stage with cards for Original bytes, Optimized bytes, Saved bytes, SSIM, Butteraugli, and Decode time. Values SHALL be read from `$selectedFile` (bytes, decode time, metrics — see `metrics`) and `settingsAtom`. Metric cards SHALL show a neutral placeholder before the metric computes.
+
+#### Scenario: Metrics arrive after encode
+- **WHEN** an entry finishes encoding but SSIM / Butteraugli have not computed yet
+- **THEN** the byte cards show real values while the metric cards show a placeholder
+- **AND** the metric cards update once the metrics compute
 
 ## Non-goals
 

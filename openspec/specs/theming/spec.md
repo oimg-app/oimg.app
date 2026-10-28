@@ -8,8 +8,16 @@ Present a dark-default, light-alternate visual identity built from an oklch toke
 ### Requirement: Dark default, light alternate
 The system SHALL boot in dark theme by default and offer light as an explicit alternate.
 
+#### Scenario: First load
+- **WHEN** the app boots with no user action
+- **THEN** `<html>` has the `dark` class and `data-theme="dark"`
+
 ### Requirement: Theme state in `uiAtom`
 The system SHALL hold the active theme as `uiAtom.theme: 'dark' | 'light'`, mutated through the `setTheme(t)` action.
+
+#### Scenario: Action updates the atom
+- **WHEN** `setTheme('light')` is called
+- **THEN** `uiAtom.get().theme` is `'light'`
 
 ### Requirement: Sun/Moon toggle in the Toolbar
 The system SHALL expose a Sun/Moon icon button in the Toolbar that flips `uiAtom.theme` between `'dark'` and `'light'`.
@@ -21,6 +29,10 @@ The system SHALL expose a Sun/Moon icon button in the Toolbar that flips `uiAtom
 ### Requirement: DOM effect writes both class and data-theme
 The system SHALL, on every theme change, apply both `document.documentElement.classList.toggle('dark', theme === 'dark')` and `document.documentElement.setAttribute('data-theme', theme)` via an `AppShell` `useEffect`. The `.dark` class drives Tailwind `dark:` variants and third-party palettes (e.g. sonner reads `documentElement.classList.contains('dark')`); the `data-theme` attribute scopes the oklch CSS-variable set.
 
+#### Scenario: Switch to light
+- **WHEN** the theme changes from `'dark'` to `'light'`
+- **THEN** `<html>` loses the `dark` class and has `data-theme="light"`
+
 ### Requirement: oklch design tokens
 The system SHALL define the color palette in oklch. The token set (accent green ~145°, surfaces, foregrounds, borders) lives in `src/index.css` / `src/styles/legacy.css` and is locked as the visual identity.
 
@@ -31,8 +43,16 @@ The system SHALL define the color palette in oklch. The token set (accent green 
 ### Requirement: Typography stack
 The system SHALL self-host and use `Inter` (UI), `JetBrains Mono` (code), and `Geist` (`@fontsource-variable/*`).
 
+#### Scenario: Fonts load locally
+- **WHEN** the app renders UI text and code snippets
+- **THEN** the computed font-family is Inter for UI and JetBrains Mono for code, and the font files are served from the app's own origin (no third-party font requests)
+
 ### Requirement: Theme survives across the app
 The system SHALL apply the chosen theme uniformly to the shell, panes, popovers, dialogs, tooltips, toasts, and the command palette. Nothing SHALL render in a mismatched palette.
+
+#### Scenario: Overlays follow the theme
+- **WHEN** the user switches to light and opens the command palette, a tooltip, and triggers a toast
+- **THEN** each overlay renders with the light token set, matching the shell
 
 ## Non-goals
 

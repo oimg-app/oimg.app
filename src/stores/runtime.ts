@@ -1,4 +1,6 @@
 // Phase 03 — STORE-04: runtimeAtom + startRun/stopRun/pushToast/dismissToast. Source: 03-01-PLAN.md
+// change:remove-dead-ui-and-fix-a11y — startRun/stopRun removed: `running` is derived only from
+//   setJobCounts (pool counts), so "Running" always ends when the pool drains.
 // Phase 09 — Plan 03: encodingFileId + setEncodingFile for DeltaStrip in-flight shimmer (UI-SPEC §4)
 // Quick 260603-s2x: watchedFolderAtom — active "Watch folder" state (handle + observer).
 // Phase 13 — DIA-01/DIA-02 (D-05/D-06): retire svgoVersion/codecVersion/wasmInfo strings;
@@ -43,14 +45,6 @@ export const runtimeAtom = map<RuntimeState>({
   encodingFileId: null,
 })
 
-export function startRun(): void {
-  runtimeAtom.setKey('running', true)
-}
-
-export function stopRun(): void {
-  runtimeAtom.setKey('running', false)
-}
-
 export function pushToast(msg: string, meta?: string): void {
   const id = String(Date.now() + Math.random())
   const toast: Toast = { id, msg, ...(meta !== undefined ? { meta } : {}) }
@@ -59,11 +53,6 @@ export function pushToast(msg: string, meta?: string): void {
 
 export function dismissToast(id: string): void {
   runtimeAtom.setKey('toasts', runtimeAtom.get().toasts.filter((t) => t.id !== id))
-}
-
-export function setWorkerCount(n: number): void {
-  // stub — configure worker pool size in v2
-  void n
 }
 
 // Phase 08 — PIPE-04: called by WorkerPool.onCountChange to reflect real running/queued state.

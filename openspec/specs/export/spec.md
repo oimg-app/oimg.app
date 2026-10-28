@@ -15,11 +15,23 @@ The system SHALL let the user save the currently-selected file's encoded bytes t
 ### Requirement: `showSaveFilePicker` primary, `file-saver` fallback
 The system SHALL prefer `window.showSaveFilePicker` when available, falling back to `file-saver`. The dispatcher lives in one place (`src/lib/save-blob.ts`) so callsites do not branch.
 
+#### Scenario: Browser without `showSaveFilePicker`
+- **WHEN** the user saves a file in a browser that lacks `window.showSaveFilePicker` (e.g. Firefox)
+- **THEN** the file downloads through `file-saver` with the same filename and bytes
+
 ### Requirement: Filename rewrite on save
 The system SHALL rewrite the source filename's extension to match the output codec's MIME (e.g. `photo.heic` → `photo.jpg` when JPEG is picked) via `renameExtension`. The base name SHALL be sanitized (`sanitizeBaseName`) before saving.
 
+#### Scenario: PNG source exported as WebP
+- **WHEN** the user saves `logo.png` with WebP as the output codec
+- **THEN** the saved file is named `logo.webp`
+
 ### Requirement: Collision suffixing
 The system SHALL append a numeric collision suffix (`-1`, `-2`, …) when two output entries would otherwise share a filename in the same target scope (individual saves and ZIP entries).
+
+#### Scenario: Two sources map to the same output name
+- **WHEN** `icon.png` and `icon.jpg` are both exported as WebP into one ZIP
+- **THEN** the ZIP contains two distinct entries, the second carrying a numeric collision suffix
 
 ### Requirement: Batch ZIP export
 The system SHALL let the user export all `done` entries as a single ZIP via `jszip`. The archive SHALL use a flat layout (no per-entry subdirectories) and its filename SHALL be `oimg-export-YYYY-MM-DD-HHMM.zip` (`timestampedZipName`).
@@ -31,11 +43,23 @@ The system SHALL let the user export all `done` entries as a single ZIP via `jsz
 ### Requirement: Optimized-only export
 The system SHALL include in ZIP and Save-individually only entries with `status === 'done'`. Queued / processing / error entries SHALL be skipped.
 
+#### Scenario: Batch with one failed file
+- **WHEN** the user exports a ZIP from a batch where one entry is in `error` and the rest are `done`
+- **THEN** the ZIP contains only the `done` entries
+
 ### Requirement: `$hasDone` disable-then-explain gate
 The system SHALL keep the Export split-button, Save individually, and Export All ZIP affordances visible but disabled when no entry has `status === 'done'`. A tooltip SHALL explain "Optimize files first" rather than hiding the affordance.
 
+#### Scenario: Files ingested but not yet optimized
+- **WHEN** files are queued but none has reached `done`
+- **THEN** the Export split-button, Save individually, and Export All ZIP are visible but disabled with an "Optimize files first" tooltip
+
 ### Requirement: Backpressure survives a large batch
 The system SHALL, on Optimize All of a ≥ 20-file batch, keep the worker pool's peak concurrent running count at or below `min(hwConcurrency, 4)` (verified in e2e via a test-only `window.__peakRunning` bridge; see `worker-pool`).
+
+#### Scenario: Optimize All on 20 files
+- **WHEN** the user runs Optimize All on a 20-file batch
+- **THEN** `window.__peakRunning` never exceeds `min(hardwareConcurrency, 4)` and every file reaches `done`
 
 ## Non-goals
 

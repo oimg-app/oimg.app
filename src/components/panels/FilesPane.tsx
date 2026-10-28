@@ -4,7 +4,8 @@ import { useState, useRef } from 'react'
 import { useStore } from '@nanostores/react'
 import { Funnel, Plus, XCircle } from '@phosphor-icons/react'
 import { toast } from 'sonner'
-import { $filteredFiles, $totals, setSortBy, $queueEmpty, clearFiles } from '@/stores'
+import { $filteredFiles, $totals, setSortBy, $queueEmpty, clearFiles, filesAtom, selectFile } from '@/stores'
+import { nextSelection } from '@/lib/next-selection'
 import { runtimeAtom } from '@/stores/runtime'
 import type { SortKey } from '@/stores/files'
 import { fmtBytes } from '@/lib/format'
@@ -33,6 +34,10 @@ export function FilesPane() {
   const files = useStore($filteredFiles)
   const totals = useStore($totals)
   const queueEmpty = useStore($queueEmpty)
+  const { selectedId } = useStore(filesAtom)
+  const listRef = useRef<HTMLUListElement>(null)
+  // The one row in the tab order: the selected row if it is visible, else the first row.
+  const tabStopId = files.some((f) => f.id === selectedId) ? selectedId : (files[0]?.id ?? null)
   const { ingest, openPicker } = useIngest()
   const inputRef = useRef<HTMLInputElement>(null)
   // STORE-08: dragActive is ephemeral UI state — allowed
@@ -84,7 +89,7 @@ export function FilesPane() {
     >
       {/* FILES-01: Pane Header */}
       <div className="h-8 flex items-center justify-between px-3 border-b border-[var(--line)] shrink-0">
-        <span className="font-mono text-[10px] font-semibold tracking-[0.08em] uppercase text-[var(--fg-2)]">
+        <span className="font-mono text-xs font-semibold tracking-[0.08em] uppercase text-[var(--fg-2)]">
           Queue · {files.length} files
         </span>
         <div className="flex items-center gap-1">
@@ -168,21 +173,32 @@ export function FilesPane() {
       >
         <span className="text-[13px] font-semibold text-[var(--fg-0)] block mb-[3px]">Drop images to optimize</span>
         <span className="text-[12px] text-[var(--fg-2)] block">or click to browse · max 200 files</span>
-        <div className="font-mono text-[10px] tracking-[0.05em] text-[var(--fg-3)] mt-[6px]">SVG · PNG · JPEG · WEBP · AVIF · HEIC · JXL</div>
+        <div className="font-mono text-xs tracking-[0.05em] text-[var(--fg-3)] mt-[6px]">SVG · PNG · JPEG · WEBP · AVIF · HEIC</div>
       </div>
 
       {/* FILES-03: File list */}
       {/* change:add-black-box-e2e-suite — emptiness is transient, so it rides on `data-empty`
           rather than a second testid; the list stays addressable in both states. */}
+      {/* change:remove-dead-ui-and-fix-a11y — single-select listbox, one tab stop (design D5).
+          Selection follows focus; arrow keys / Home / End route through nextSelection. */}
       <ul
+        ref={listRef}
+        role="listbox"
         aria-label="File queue"
         data-testid="files-list"
         data-empty={files.length === 0 || undefined}
         className="flex-1 overflow-y-auto"
+        onKeyDown={(e) => {
+          const next = nextSelection(files.map((f) => f.id), selectedId, e.key)
+          if (next === null) return
+          e.preventDefault()
+          selectFile(next)
+          listRef.current?.querySelector<HTMLElement>(`[data-row-id="${CSS.escape(next)}"]`)?.focus()
+        }}
       >
         {files.map(f => (
-          <li key={f.id}>
-            <FileRow file={f} />
+          <li key={f.id} role="none">
+            <FileRow file={f} tabbable={f.id === tabStopId} />
           </li>
         ))}
       </ul>
@@ -196,7 +212,7 @@ export function FilesPane() {
           { label: 'SAVED %', value: `${totals.pct.toFixed(1)}%`,       valueClass: 'text-[var(--primary)]' },
         ].map(({ label, value, valueClass }) => (
           <div key={label} className="flex flex-col">
-            <span className="font-mono text-[10px] tracking-[0.06em] uppercase text-[var(--fg-2)]">{label}</span>
+            <span className="font-mono text-xs tracking-[0.06em] uppercase text-[var(--fg-2)]">{label}</span>
             <span className={cn('font-mono text-[13px] font-semibold tabular-nums', valueClass)}>{value}</span>
           </div>
         ))}

@@ -1,7 +1,11 @@
 // Phase 03 — NAV-04: CommandPalette modal (Dialog + manual keyboard nav). Source: 03-03-PLAN.md
+// change:remove-dead-ui-and-fix-a11y — items with enabled() === false render aria-disabled and are
+//   inert on Enter/click (Optimize all on an empty queue).
 import { useStore } from '@nanostores/react'
 import { MagnifyingGlass } from '@phosphor-icons/react'
 import { uiAtom, $cmdFlat, closeCmdk, setCmdkQuery, setCmdkSel } from '@/stores/ui'
+import { filesAtom } from '@/stores'
+import type { CommandItem } from '@/lib/commands'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { Kbd } from '@/components/ui/kbd'
 import { cn } from '@/lib/utils'
@@ -9,6 +13,14 @@ import { cn } from '@/lib/utils'
 export function CommandPalette() {
   const { cmdkOpen, cmdkQ, cmdkSel } = useStore(uiAtom)
   const cmdFlat = useStore($cmdFlat)
+  // enabled() predicates read the queue — subscribe so they re-evaluate while the palette is open.
+  useStore(filesAtom)
+  const isEnabled = (item: CommandItem | undefined) => !!item && (item.enabled?.() ?? true)
+  const run = (item: CommandItem | undefined) => {
+    if (!item || !isEnabled(item)) return
+    item.do()
+    closeCmdk()
+  }
 
   return (
     <Dialog open={cmdkOpen} onOpenChange={(o) => !o && closeCmdk()}>
@@ -38,8 +50,7 @@ export function CommandPalette() {
                 e.preventDefault()
                 setCmdkSel(Math.max(0, cmdkSel - 1))
               } else if (e.key === 'Enter') {
-                cmdFlat[cmdkSel]?.do?.()
-                closeCmdk()
+                run(cmdFlat[cmdkSel])
               } else if (e.key === 'Escape') {
                 closeCmdk()
               }
@@ -66,19 +77,18 @@ export function CommandPalette() {
                 id={'cmd-item-' + i}
                 role="option"
                 aria-selected={i === cmdkSel}
+                aria-disabled={!isEnabled(item) || undefined}
                 data-testid={`cmdk-option-${i}`}
                 className={cn(
                   'px-4 py-2 text-[13px] text-[var(--color-fg-0)] cursor-default flex justify-between items-center hover:bg-color-bg-2',
                   i === cmdkSel && 'bg-[var(--color-accent-dim)] border-l-2 border-[var(--color-accent)]',
+                  !isEnabled(item) && 'opacity-50',
                 )}
-                onClick={() => {
-                  item.do?.()
-                  closeCmdk()
-                }}
+                onClick={() => run(item)}
               >
                 <span>{item.label}</span>
                 {item.meta && (
-                  <span className="font-mono text-[11px] font-semibold text-[var(--color-fg-2)]">
+                  <span className="font-mono text-xs font-semibold text-[var(--color-fg-2)]">
                     {item.meta}
                   </span>
                 )}
@@ -88,7 +98,7 @@ export function CommandPalette() {
         </ul>
 
         {/* Footer */}
-        <div className="h-8 px-4 flex items-center gap-2 border-t border-[var(--color-line)] bg-[var(--color-bg-0)] text-[11px] text-[var(--color-fg-3)]">
+        <div className="h-8 px-4 flex items-center gap-2 border-t border-[var(--color-line)] bg-[var(--color-bg-0)] text-xs text-[var(--color-fg-3)]">
           <Kbd>↑↓</Kbd>navigate
           <Kbd>Enter</Kbd>select
           <Kbd>Esc</Kbd>close

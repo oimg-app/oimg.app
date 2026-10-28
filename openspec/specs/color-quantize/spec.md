@@ -22,11 +22,23 @@ The system SHALL forward `numColors` (palette size) and `dither` (dithering stre
 ### Requirement: Quantize runs inside the codec worker
 The system SHALL run quantization inside the codec worker on the raw pixels, before handing the (now indexed) pixels to the PNG encoder. Quantize output MUST be transferred to the encode step without a main-thread round trip.
 
+#### Scenario: PNG-8 encode completes off the main thread
+- **WHEN** a PNG-8 encode job is dispatched to the worker pool
+- **THEN** the worker quantizes and encodes in one job and returns only the final PNG buffer to the main thread
+
 ### Requirement: `client`-mode WASM loading
 The system SHALL initialize `@squoosh-kit/imagequant` in `client` mode, not the default `worker` mode. The default `worker` mode spawns a nested worker whose WASM URL breaks under Vite's SPA fallback; the `client`-mode discipline is a required project convention shared with `@squoosh-kit/visdif` (see `metrics`).
 
+#### Scenario: Quantize loads its WASM in production
+- **WHEN** the production build is served and the user encodes a PNG-8
+- **THEN** imagequant initializes without spawning a nested worker and the encode succeeds without a WASM fetch error
+
 ### Requirement: Quantize is skipped for non-PNG output
 The system SHALL bypass quantization when the output codec is anything other than PNG. Palette reduction is a PNG-specific transform in this pipeline.
+
+#### Scenario: User switches PNG-8 output to WebP
+- **WHEN** the user switches an entry's output codec from PNG (PNG-8) to WebP
+- **THEN** the WebP encode runs without quantization and the palette selector is no longer shown
 
 ## Non-goals
 
