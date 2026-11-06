@@ -4,38 +4,11 @@
 
 import { filesAtom, setFileRawBuffer, selectFile } from "@/stores/files";
 import {codecForType, defaultFileSettings} from "@/lib/settings";
+import { ACCEPTED_EXTS, ACCEPTED_MIMES, ACCEPT_ATTR, PICKER_ACCEPT } from "@/lib/formats";
 import { useOptimize } from "@/hooks/useOptimize";
 import type { FileEntry } from "@/lib/settings";
 
-// --- Format gate (D-06) ---
-
-const ACCEPTED_EXTS = new Set([
-  "png",
-  "jpg",
-  "jpeg",
-  "webp",
-  "svg",
-  "avif",
-  "heic",
-  "heif",
-]);
-const ACCEPTED_MIMES = new Set([
-  "image/png",
-  "image/jpeg",
-  "image/webp",
-  "image/svg+xml",
-  "image/avif",
-  // Quick 260610-lby: HEIC/HEIF decode-only input
-  "image/heic",
-  "image/heif",
-]);
-
-// accept="" attribute value for synthesized/native file inputs — single source derived
-// from the gate sets above (ext globs + MIME types).
-const ACCEPT_ATTR = [
-  ...[...ACCEPTED_EXTS].map((e) => `.${e}`),
-  ...ACCEPTED_MIMES,
-].join(",");
+// --- Format gate (D-06) — accepted ext/MIME sets come from the lib/formats registry ---
 
 function getExt(name: string): string {
   return name.split(".").pop()?.toLowerCase() ?? "";
@@ -152,16 +125,7 @@ export function useIngest() {
           types: [
             {
               description: "Images",
-              accept: {
-                "image/png": [".png"],
-                "image/jpeg": [".jpg", ".jpeg"],
-                "image/webp": [".webp"],
-                "image/svg+xml": [".svg"],
-                "image/avif": [".avif"],
-                // Quick 260610-lby: HEIC/HEIF decode-only input
-                "image/heic": [".heic"],
-                "image/heif": [".heif"],
-              },
+              accept: PICKER_ACCEPT,
             },
           ],
         });

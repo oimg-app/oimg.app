@@ -2,21 +2,13 @@
 // Phase 12, Plan 02 — D-01/D-02/D-03/D-04 + T-12-02 attr-escape + chunked base64 (V8 safety)
 // Pure string builders — no DOM, no clipboard, no store reads.
 import type { FileEntry } from '@/lib/settings'
-import { renameExtension } from '@/lib/filename'
+import { mimeFor, renameExtension } from '@/lib/filename'
 import {bufferToBase64} from "@/lib/base64.ts";
 
 /** Parse width and height from dim string like '2400×1600' (U+00D7 multiply sign) */
 function parseDim(dim: string): { w: string; h: string } {
   const parts = dim.split('×')
   return { w: parts[0]?.trim() ?? '', h: parts[1]?.trim() ?? '' }
-}
-
-/** Map output target to canonical image/* MIME type. */
-function mimeForTarget(target: string): string {
-  const t = target.toLowerCase()
-  if (t === 'svg') return 'image/svg+xml'
-  if (t === 'jpg' || t === 'jpeg') return 'image/jpeg'
-  return `image/${t}`
 }
 
 /**
@@ -63,7 +55,7 @@ export async function buildDataUri(file: FileEntry): Promise<string> {
     return buildSvgDataUri(file.encodedBuffer)
   }
   const b64 = bufferToBase64(file.encodedBuffer)
-  return `data:${mimeForTarget(file.target)};base64,${b64}`
+  return `data:${mimeFor(file.target)};base64,${b64}`
 }
 
 /**
@@ -111,7 +103,7 @@ export function buildPictureSnippet(file: FileEntry): string {
   }
   return [
     '<picture>',
-    `  <source srcset="${escapeAttr(targetName)}" type="${mimeForTarget(file.target)}">`,
+    `  <source srcset="${escapeAttr(targetName)}" type="${mimeFor(file.target)}">`,
     `  <img src="${escapeAttr(file.name)}" alt="${alt}"${widthAttr}${heightAttr}>`,
     '</picture>',
   ].join('\n')

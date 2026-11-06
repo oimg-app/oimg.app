@@ -5,6 +5,7 @@ import {useStore} from '@nanostores/react'
 import {setSplit, setZoom, uiAtom} from '@/stores/ui'
 import {$selectedFile} from '@/stores/files'
 import {fmtBytes} from '@/lib/format'
+import {previewSource} from '@/lib/preview'
 
 // Four selectable stage backgrounds — the swatches in CenterHeader mutate uiAtom.stageBg.
 // checker-dark = current default (dark squares on darker base).
@@ -43,31 +44,6 @@ function parseDimRatio(dim: string): string {
   return w > 0 && h > 0 ? `${w} / ${h}` : '4 / 3'
 }
 
-// SVG layers render inside a sandboxed <iframe> (sandbox="allow-scripts", no allow-same-origin)
-// so script-bearing/untrusted SVG is isolated from the app origin. The iframe src must be a
-// real document — a blob: object URL is unreliable here (a sandboxed opaque-origin frame is
-// blocked from fetching the parent's blob URL), so encode inline as a data URI.
-//
-// The iframe body wraps the SVG in an <img> with object-fit: contain so oversize SVGs
-// (e.g. 800x800) fit the stage viewport regardless of viewBox or intrinsic dimensions.
-// object-fit on the iframe itself has no effect (iframe hosts a separate document).
-function svgDataUri(buf: ArrayBuffer): string {
-  const text = new TextDecoder('utf-8').decode(buf)
-  const svgSrc = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(text)
-  const html =
-    '<!doctype html><html><head><meta charset="utf-8"><style>' +
-    'html,body{margin:0;padding:0;width:100%;height:100%;background:transparent;overflow:hidden}' +
-    'img{display:block;width:100%;height:100%;object-fit:contain}' +
-    '</style></head><body><img src="' + svgSrc + '"></body></html>'
-  return 'data:text/html;charset=utf-8,' + encodeURIComponent(html)
-}
-
-async function heicDataArr(buf: ArrayBuffer) {
-  const { heicDecode } = (await import('@/lib/heic/decode'))
-
-  return await heicDecode(buf)
-}
-
 const MIN_SCALE = 0.05
 const MAX_SCALE = 8
 const WHEEL_FACTOR = 0.001
@@ -94,7 +70,6 @@ export function CompareStage() {
   const isFit = zoom === 'fit'
   const isSvg = selectedFile?.type === 'svg'                       // SOURCE is SVG → original layer is an iframe
   const isSvgOutput = selectedFile?.settings?.codec === 'SVG'      // OUTPUT codec is SVG → encoded layer is an iframe (else <img>)
-  const isHeic = selectedFile?.type === 'heic'
 
   const optTarget = selectedFile?.settings?.codec.toUpperCase()
 
@@ -106,93 +81,39 @@ export function CompareStage() {
     frameRef.current.style.transform = `translate(${x}px, ${y}px) scale(${scale})`
   }
 
-  // Build object URL for original layer — revoke on cleanup (T-9-URL)
+  // change:deepen-preview-source — one effect per layer; lib/preview.ts decides data URI vs
+  // object URL vs HEIC decode, and the returned revoke() runs on cleanup (T-9-URL). A stale
+  // async result (selection changed mid-decode) is revoked instead of applied.
   useEffect(() => {
-    if (!selectedFile?.rawBuffer) {
-      setOrigSrc(null)
-      return
-    }
-    // SVG → data URI (rendered in a sandboxed iframe); raster → revocable object URL
-    if (isSvg) {
-      setOrigSrc(svgDataUri(selectedFile.rawBuffer))
-      return
-    }
-    const blob = new Blob([selectedFile.rawBuffer])
-    const url = URL.createObjectURL(blob)
-    setOrigSrc(url)
-    return () => URL.revokeObjectURL(url)
-  }, [selectedFile?.rawBuffer, isSvg])
+    const buf = selectedFile?.rawBuffer
+    if (!buf) { setOrigSrc(null); return }
+    let live = true
+    let revoke = () => {}
+    previewSource(buf, selectedFile.type).then(
+      (p) => { if (live) { revoke = p.revoke; setOrigSrc(p.src) } else p.revoke() },
+      () => { if (live) setOrigSrc(null) },
+    )
+    return () => { live = false; revoke() }
+  }, [selectedFile?.rawBuffer, selectedFile?.type])
 
-  useEffect(() => {
-    if (!selectedFile?.rawBuffer) {
-      setOrigSrc(null)
-      return
-    }
-    // Only the HEIC source path runs here — otherwise this effect would clobber the
-    // origSrc set by the SVG/raster effect above (e.g. overwrite the SVG data URI).
-    if (!isHeic) return
-
-    if (isHeic) {
-      heicDataArr(selectedFile.rawBuffer).then(decoded => {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-
-        if (!ctx) {
-          return null
-        }
-
-        const imageData = new ImageData(new Uint8ClampedArray(decoded.data), decoded.width, decoded.height)
-        canvas.width = imageData.width;
-        canvas.height = imageData.height;
-
-        ctx.putImageData(imageData, 0, 0);
-
-        setOrigSrc(canvas.toDataURL())
-      })
-    }
-    const blob = new Blob([selectedFile.rawBuffer])
-    const url = URL.createObjectURL(blob)
-    setOrigSrc(url)
-    return () => URL.revokeObjectURL(url)
-  }, [selectedFile?.rawBuffer, isHeic])
-
-  // Build object URL for encoded layer — revoke on cleanup (T-9-URL)
-  //
-  // Quick 260726-3cp: also gate on `encodedCodec === settings.codec`. Without this,
-  // when a user picks a raster codec on an SVG source, the 300ms live-encode debounce
-  // leaves `encodedBuffer` holding stale SVG bytes while `isSvgOutput` has already
-  // flipped to false. Rendering those SVG bytes through the raster `<img>` branch
-  // triggers `onError` (which nulls encodedSrc → placeholder), and if the re-encode
-  // ever silently fails the placeholder is sticky forever. Treating any codec mismatch
-  // as "no bytes yet" (placeholder div) fixes both transient flash and the sticky case.
-  //
-  // Legacy entries (no encodedCodec recorded) fall back to the previous behavior so
-  // existing test fixtures that inject encodedBuffer without encodedCodec still render.
+  // Encoded layer. Quick 260726-3cp: gate on `encodedCodec === settings.codec` — during the
+  // 300 ms live-encode debounce `encodedBuffer` still holds the previous codec's bytes while the
+  // output layer type has already flipped; rendering them trips <img onError> and leaves a
+  // sticky placeholder if the re-encode fails. Any mismatch is "no bytes yet". Legacy entries
+  // without encodedCodec (test fixtures) skip the gate.
   useEffect(() => {
     const buf = selectedFile?.encodedBuffer
-    if (!buf) {
-      setEncodedSrc(null)
-      return
-    }
-    // Codec-mismatch gate: only render bytes that the currently-selected codec produced.
-    // If encodedCodec is undefined (legacy caller / test fixture), skip the gate.
     const currentCodec = selectedFile?.settings?.codec
     const producedBy = selectedFile?.encodedCodec
-    if (producedBy && currentCodec && producedBy !== currentCodec) {
-      setEncodedSrc(null)
-      return
-    }
-    // Encoded layer keys on the OUTPUT codec, not the source: SVG output → data URI
-    // (sandboxed iframe); any raster codec (PNG/WebP/JPEG/AVIF) → revocable object URL (<img>).
-    if (isSvgOutput) {
-      setEncodedSrc(svgDataUri(buf))
-      return
-    }
-    const blob = new Blob([buf])
-    const url = URL.createObjectURL(blob)
-    setEncodedSrc(url)
-    return () => URL.revokeObjectURL(url)
-  }, [selectedFile?.encodedBuffer, selectedFile?.encodedCodec, selectedFile?.settings?.codec, isSvgOutput])
+    if (!buf || (producedBy && currentCodec && producedBy !== currentCodec)) { setEncodedSrc(null); return }
+    let live = true
+    let revoke = () => {}
+    previewSource(buf, producedBy ?? currentCodec ?? 'png').then(
+      (p) => { if (live) { revoke = p.revoke; setEncodedSrc(p.src) } else p.revoke() },
+      () => { if (live) setEncodedSrc(null) },
+    )
+    return () => { live = false; revoke() }
+  }, [selectedFile?.encodedBuffer, selectedFile?.encodedCodec, selectedFile?.settings?.codec])
 
   // Zoom dropdown → reset pan + snap scale. Skip when scroll set the zoom (no-op guard).
   useEffect(() => {

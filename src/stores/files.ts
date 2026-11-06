@@ -4,6 +4,7 @@
 import { map, computed } from 'nanostores'
 import type { FileEntry, FileSettings, SortKey, AvifOptions, AvifTune } from '@/lib/settings'
 import { defaultFileSettings, DEFAULT_AVIF_OPTIONS } from '@/lib/settings'
+import { extForCodec } from '@/lib/formats'
 
 // Re-export types so components import from store barrel, not from stub-data directly (STORE-08 convention)
 export type { FileEntry, FileSettings, SortKey, AvifOptions, AvifTune }
@@ -136,6 +137,8 @@ export function setFileSettings<K extends keyof FileSettings>(
 ): void {
   updateEntry(id, (e) => ({
     settings: { ...(e.settings ?? defaultFileSettings(e.type, e.q)), [key]: value },
+    // change:deepen-settings-edit — the output extension follows the codec, whoever edits it.
+    ...(key === 'codec' ? { target: extForCodec(value as Codec) } : {}),
   }))
 }
 

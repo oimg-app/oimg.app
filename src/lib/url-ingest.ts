@@ -6,18 +6,9 @@
 // (T-11-01 chokepoint reused).
 import { toast } from 'sonner'
 import { sanitizeBaseName } from '@/lib/filename'
+import { sourceFormatOf } from '@/lib/formats'
 
 const MAX_URL_BYTES = 100 * 1024 * 1024 // 100 MB hard cap (D-06)
-
-const EXT_FROM_MIME: Record<string, string> = {
-  'image/png': 'png',
-  'image/jpeg': 'jpg',
-  'image/webp': 'webp',
-  'image/avif': 'avif',
-  'image/svg+xml': 'svg',
-  'image/heic': 'heic',
-  'image/heif': 'heif',
-}
 
 export async function pickFromUrl(url: string): Promise<File | null> {
   // Validate scheme — http/https only. Reject data:, blob:, file:, javascript:.
@@ -113,6 +104,6 @@ function deriveFilename(parsed: URL, res: Response, mime: string): string {
   }
 
   // Priority 3: timestamped fallback by MIME.
-  const ext = EXT_FROM_MIME[mime] ?? 'bin'
+  const ext = sourceFormatOf(mime) ?? 'bin'
   return sanitizeBaseName(`pasted-image-${Date.now()}.${ext}`)
 }

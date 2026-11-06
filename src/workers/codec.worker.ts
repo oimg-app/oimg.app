@@ -1,8 +1,11 @@
 // Phase 08 — PIPE-01/02: Comlink codec worker — dynamic codec imports. Source: 08-02-PLAN.md
 // Phase 09 — Plan 02: Real jSquash + svgo adapters (ENC-01..05). WR-02/WR-03 fold-in.
 import * as Comlink from 'comlink'
-import type {FileSettings} from '@/lib/settings'
+import type {Codec, FileSettings} from '@/lib/settings'
+import type {SourceFormat} from '@/lib/formats'
 import {SVGO_PLUGINS, DEFAULT_AVIF_OPTIONS, clampPalette} from '@/lib/settings'
+import {CODECS} from '@/lib/constants'
+import {decodeImage} from './decode'
 
 // Dev guard: warn if crossOriginIsolated is false (OxiPNG MT will be disabled)
 if (import.meta.env.DEV && !crossOriginIsolated) {
@@ -10,8 +13,8 @@ if (import.meta.env.DEV && !crossOriginIsolated) {
 }
 
 export interface EncodeJob {
-  codec: 'PNG' | 'WebP' | 'JPEG' | 'AVIF' | 'SVG'
-  sourceFormat: 'png' | 'jpeg' | 'jpg' | 'webp' | 'avif' | 'svg' | 'heic' | 'heif'  // INPUT — heic/heif decode-only
+  codec: Codec
+  sourceFormat: SourceFormat  // INPUT — heic/heif decode-only
   buffer: ArrayBuffer
   settings: FileSettings  // typed per-file settings (replaces Record<string, unknown>)
 }
@@ -23,55 +26,7 @@ export interface EncodeResult {
 }
 
 // Known codec values for input validation (T-08-03: ASVS V5 Input Validation)
-const KNOWN_CODECS = new Set<string>(['PNG', 'WebP', 'JPEG', 'AVIF', 'SVG'])
-
-// Source-agnostic decode helper — ALL imports inside switch branches (PIPE-02 dynamic-import discipline)
-// Throws on unknown sourceFormat (T-9-SRC mitigation)
-async function decodeSource(buffer: ArrayBuffer, sourceFormat: string): Promise<ImageData | null> {
-  switch (sourceFormat.toLowerCase()) {
-    case 'png': {
-      const { decode } = await import('@jsquash/png')
-      return decode(buffer)
-    }
-    case 'jpeg':
-    case 'jpg': {
-      const { decode } = await import('@jsquash/jpeg')
-      return decode(buffer)
-    }
-    case 'webp': {
-      const { decode } = await import('@jsquash/webp')
-      return decode(buffer)
-    }
-    case 'avif': {
-      const { decode } = await import('@jsquash/avif')
-      return decode(buffer)
-    }
-    // Quick 260610-lby: HEIC/HEIF decode-only input via heic-decode (libheif WASM).
-    // Dynamic import inside branch preserves PIPE-02 discipline (never hoist codec imports).
-    // heic-decode default export: async ({ buffer }) => { width, height, data: Uint8Array RGBA }
-    case 'heic':
-    case 'heif': {
-      try {
-        // heic-decode ships a browser-compatible ESM build; bare specifier resolves via package exports.
-        // If this fails to bundle (esbuild flattens WASM URL), see vite.config.ts optimizeDeps.exclude.
-        const { heicDecode } = (await import('@/lib/heic/decode'))
-        const decoded = await heicDecode(buffer)
-
-        return new ImageData(new Uint8ClampedArray(decoded.data), decoded.width, decoded.height)
-      } catch (err) {
-        // Mirror the AVIF Safari try/catch pattern: rethrow descriptive error so useOptimize/useLiveEncode
-        // convert it to a per-file error + toast, never crashing the worker (D-13 / T-08-01).
-        throw new Error('HEIC decode failed (libheif may not be supported in this browser): ' + String(err))
-      }
-    }
-    // NOTE: SVG → ImageData is handled on the main thread (src/lib/svg-rasterize.ts) because
-    // worker createImageBitmap() is unreliable for SVG blobs (returns 0x0 in Safari/Firefox
-    // when the SVG lacks explicit width/height). Hooks pre-rasterize SVG → PNG buffer and
-    // dispatch here with sourceFormat='png', so this switch never sees 'svg' for raster codecs.
-    default:
-      throw new Error('Unknown source format: ' + sourceFormat)
-  }
-}
+const KNOWN_CODECS = new Set<string>(CODECS)
 
 // Map the inspector Fit mode to jSquash's fitMethod. WR-04: jSquash resize only offers
 // 'stretch' | 'contain' (no native 'cover'); its 'contain' crops to fill the target box, which is
@@ -175,10 +130,9 @@ async function optimize(job: EncodeJob): Promise<EncodeResult> {
       case 'PNG': {
         // WR-02: empty-buffer guard before any await import (T-9-V5)
         if (job.buffer.byteLength === 0) throw new Error('Empty buffer')
-        let imageData = await decodeSource(job.buffer, job.sourceFormat)
-        if (!imageData) throw new Error('Failed to decode source')
-        imageData = imageData && await maybeResize(imageData, job.settings)
-        imageData = imageData && await maybeReduceColors(imageData, job.settings)
+        let imageData = await decodeImage(job.buffer, job.sourceFormat)
+        imageData = await maybeResize(imageData, job.settings)
+        imageData = await maybeReduceColors(imageData, job.settings)
 
         // OxiPNG optimise accepts ArrayBuffer directly for PNG→PNG; no decode needed
         const { optimise } = await import('@jsquash/oxipng')
@@ -196,10 +150,9 @@ async function optimize(job: EncodeJob): Promise<EncodeResult> {
       case 'WebP': {
         // WR-02: empty-buffer guard (T-9-V5)
         if (job.buffer.byteLength === 0) throw new Error('Empty buffer')
-        let imageData = await decodeSource(job.buffer, job.sourceFormat)
-        if (!imageData) throw new Error('Failed to decode source')
-        imageData = imageData && await maybeResize(imageData, job.settings)
-        imageData = imageData && await maybeReduceColors(imageData, job.settings)
+        let imageData = await decodeImage(job.buffer, job.sourceFormat)
+        imageData = await maybeResize(imageData, job.settings)
+        imageData = await maybeReduceColors(imageData, job.settings)
 
         const { encode } = await import('@jsquash/webp')
         const result = await encode(imageData, {
@@ -217,10 +170,9 @@ async function optimize(job: EncodeJob): Promise<EncodeResult> {
       case 'JPEG': {
         // WR-02: empty-buffer guard (T-9-V5)
         if (job.buffer.byteLength === 0) throw new Error('Empty buffer')
-        let imageData = await decodeSource(job.buffer, job.sourceFormat)
-        if (!imageData) throw new Error('Failed to decode source')
+        let imageData = await decodeImage(job.buffer, job.sourceFormat)
         imageData = await maybeResize(imageData, job.settings)
-        imageData = imageData && await maybeReduceColors(imageData, job.settings)
+        imageData = await maybeReduceColors(imageData, job.settings)
 
         const { encode } = await import('@jsquash/jpeg')
         const result = await encode(imageData, {
@@ -238,10 +190,9 @@ async function optimize(job: EncodeJob): Promise<EncodeResult> {
         if (job.buffer.byteLength === 0) throw new Error('Empty buffer')
         // Entire branch in try/catch — Safari <16.4 BigInt failure (Pitfall 2 / T-9-AVIF / D-13)
         try {
-          let imageData = await decodeSource(job.buffer, job.sourceFormat)
-          if (!imageData) throw new Error('Failed to decode source')
+          let imageData = await decodeImage(job.buffer, job.sourceFormat)
           imageData = await maybeResize(imageData, job.settings)
-          imageData = imageData && await maybeReduceColors(imageData, job.settings)
+          imageData = await maybeReduceColors(imageData, job.settings)
 
           // AVIF WASM (~8MB) lazy-loaded ONLY here — protects <200KB initial-route budget (PIPE-02)
           const { encode } = await import('@jsquash/avif')

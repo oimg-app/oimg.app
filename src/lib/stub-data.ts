@@ -10,7 +10,7 @@
 // 1×1 image verified to decode through its jSquash codec (atob-safe at module load — the
 // JPEG differs from the test fixture, whose JPEG base64 is intentionally atob-incompatible).
 // Source types in STUB_FILES are png/jpg/svg/webp only (no avif source).
-import {defaultFileSettings, FileEntry} from "@/lib/settings";
+import {defaultFileSettings, type FileEntry} from "@/lib/settings";
 
 const TINY_PNG_B64 =
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";

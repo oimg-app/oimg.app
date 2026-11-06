@@ -1,28 +1,13 @@
 import { useEffect } from 'react'
 // change:remove-dead-ui-and-fix-a11y — every Switch/Slider2 carries an aria-label matching its visible label.
+// change:deepen-settings-edit — all knobs call one edit(key, value); per-file vs global and the
+// live re-encode trigger are decided in stores/settings.ts editSetting().
 import { useStore } from '@nanostores/react'
-import {$selectedFile, setFileSettings, setFileTarget} from '@/stores/files'
-import {
-  settingsAtom,
-  CODECS,
-  RESIZE_ALGS,
-  FIT_MODES,
-  setCodec,
-  setQuality,
-  setMethod,
-  setLossless,
-  setResizeOn,
-  setResizeDimensions,
-  setFit,
-  setAlg,
-  setColors,
-  setDithering,
-  setColorsOn,
-} from '@/stores/settings'
-import type { Codec } from '@/stores/settings'
-import type { FileSettings, AvifOptions, AvifTune } from '@/stores/files'
+import { $selectedFile } from '@/stores/files'
+import { settingsAtom, editSetting, CODECS, RESIZE_ALGS, FIT_MODES } from '@/stores/settings'
+import type { Codec, FileSettings } from '@/stores/settings'
+import type { AvifOptions, AvifTune } from '@/stores/files'
 import { DEFAULT_AVIF_OPTIONS } from '@/stores/files'
-import { useLiveEncode } from '@/hooks/useLiveEncode'
 import { Slider2 } from '@/components/ui/slider2'
 import { Switch } from '@/components/ui/switch'
 import { Input } from '@/components/ui/input'
@@ -41,10 +26,11 @@ const CODEC_ENGINE: Record<string, string> = {
 export function CodecPanel() {
   const globalSettings = useStore(settingsAtom)
   const selectedFile = useStore($selectedFile)
-  const { trigger } = useLiveEncode()
 
   // D-03: read per-file settings when a file is selected; fall back to global defaults
-  const settings: FileSettings & { codec: Codec } = (selectedFile?.settings ?? globalSettings) as FileSettings & { codec: Codec }
+  const settings: FileSettings = selectedFile?.settings ?? globalSettings
+  const edit = <K extends keyof FileSettings>(key: K, value: FileSettings[K]) =>
+    editSetting(selectedFile?.id ?? null, key, value)
 
   const isSvgFile = selectedFile?.type === 'svg'
   const availableCodecs = isSvgFile ? CODECS : CODECS.filter(c => c !== 'SVG')
@@ -55,140 +41,15 @@ export function CodecPanel() {
   // Auto-switch away from SVG codec when a non-SVG file is selected
   useEffect(() => {
     if (!isSvgFile && settingsAtom.get().codec === 'SVG') {
-      setCodec('WebP')
+      editSetting(null, 'codec', 'WebP')
     }
   }, [isSvgFile])
 
-  // Helper: per-file setter when file selected, global setter when not
-  function handleSetCodec(v: Codec) {
-    if (selectedFile) {
-      setFileSettings(selectedFile.id, 'codec', v)
-      setFileTarget(selectedFile.id,  v)
-
-      trigger(selectedFile.id)
-    } else {
-      setCodec(v)
-    }
-  }
-
-  function handleSetQuality(v: number) {
-    if (selectedFile) {
-      setFileSettings(selectedFile.id, 'q', v)
-      trigger(selectedFile.id)
-    } else {
-      setQuality(v)
-    }
-  }
-
-  function handleSetMethod(v: number) {
-    if (selectedFile) {
-      setFileSettings(selectedFile.id, 'method', v)
-      trigger(selectedFile.id)
-    } else {
-      setMethod(v)
-    }
-  }
-
-  function handleSetLossless(v: boolean) {
-    if (selectedFile) {
-      setFileSettings(selectedFile.id, 'lossless', v)
-      trigger(selectedFile.id)
-    } else {
-      setLossless(v)
-    }
-  }
-
-  function handleSetResizeOn(v: boolean) {
-    if (selectedFile) {
-      setFileSettings(selectedFile.id, 'resizeOn', v)
-      trigger(selectedFile.id)
-    } else {
-      setResizeOn(v)
-    }
-  }
-
-  function handleSetColors(v: number) {
-    if (selectedFile) {
-      setFileSettings(selectedFile.id, 'colors', v)
-      trigger(selectedFile.id)
-    } else {
-      setColors(v)
-    }
-  }
-
-  function handleSetColorsOn(v: boolean) {
-    if (selectedFile) {
-      setFileSettings(selectedFile.id, 'colorsOn', v)
-      trigger(selectedFile.id)
-    } else {
-      setColorsOn(v)
-    }
-  }
-
-  function handleSetDithering(v: number) {
-    if (selectedFile) {
-      setFileSettings(selectedFile.id, 'dithering', v)
-      trigger(selectedFile.id)
-    } else {
-      setDithering(v)
-    }
-  }
-
-  function handleSetResizeDimensions(w: string, h: string) {
-    if (selectedFile) {
-      setFileSettings(selectedFile.id, 'w', w)
-      setFileSettings(selectedFile.id, 'h', h)
-      trigger(selectedFile.id)
-    } else {
-      setResizeDimensions(w, h)
-    }
-  }
-
-  function handleSetFit(v: string) {
-    if (selectedFile) {
-      setFileSettings(selectedFile.id, 'fit', v)
-      trigger(selectedFile.id)
-    } else {
-      setFit(v)
-    }
-  }
-
-  function handleSetAlg(v: string) {
-    if (selectedFile) {
-      setFileSettings(selectedFile.id, 'alg', v)
-      trigger(selectedFile.id)
-    } else {
-      setAlg(v)
-    }
-  }
-
-  // CR-03: stripMeta is always-on and keepIcc is unsupported (no jSquash API), so neither has an
-  // interactive handler anymore — the Metadata section renders them read-only/disabled.
-
-  function handleSetProgressive(v: boolean) {
-    if (selectedFile) {
-      setFileSettings(selectedFile.id, 'progressive', v)
-      trigger(selectedFile.id)
-    }
-    // progressive is JPEG-only — no global setter needed
-  }
-
-  // AVIF advanced knobs — nested under settings.avif so the generic setFileSettings writer
-  // still applies (single key, whole object value). Per-file only: there's no global
-  // AVIF-advanced state on settingsAtom, and global-encode paths use DEFAULT_AVIF_OPTIONS
-  // via the worker fallback.
+  // AVIF advanced knobs — nested under settings.avif so one key carries the whole object.
   const avif: AvifOptions = settings.avif ?? DEFAULT_AVIF_OPTIONS
   const avifAdvancedOn = settings.avifAdvancedOn ?? false
-  function handleSetAvif<K extends keyof AvifOptions>(key: K, value: AvifOptions[K]) {
-    if (!selectedFile) return
-    setFileSettings(selectedFile.id, 'avif', { ...avif, [key]: value })
-    trigger(selectedFile.id)
-  }
-  function handleSetAvifAdvancedOn(v: boolean) {
-    if (!selectedFile) return
-    setFileSettings(selectedFile.id, 'avifAdvancedOn', v)
-    trigger(selectedFile.id)
-  }
+  const editAvif = <K extends keyof AvifOptions>(key: K, value: AvifOptions[K]) =>
+    edit('avif', { ...avif, [key]: value })
   const SUBSAMPLE_LABELS = ['4:4:4', '4:2:2', '4:2:0', '4:0:0'] as const
   const TUNE_OPTIONS: readonly AvifTune[] = ['auto', 'psnr', 'ssim'] as const
 
@@ -200,7 +61,7 @@ export function CodecPanel() {
           <SegControl
             options={availableCodecs}
             value={settings.codec}
-            onChange={(v) => handleSetCodec(v as Codec)}
+            onChange={(v) => edit('codec', v as Codec)}
             aria-label="Output format"
             data-testid="codec-format"
           />
@@ -211,7 +72,7 @@ export function CodecPanel() {
             <Switch
               aria-label="Lossless"
               checked={settings.lossless}
-              onCheckedChange={handleSetLossless}
+              onCheckedChange={(v) => edit('lossless', v)}
               data-testid="codec-switch-lossless"
             />
           </div>
@@ -241,7 +102,7 @@ export function CodecPanel() {
                   aria-label="Quality"
                   min={0} max={100} step={1}
                   value={[settings.q]}
-                  onValueChange={([v]) => handleSetQuality(v)}
+                  onValueChange={([v]) => edit('q', v)}
                   className="w-full"
                   disabled={isPng}
                   data-testid="codec-slider-quality"
@@ -259,7 +120,7 @@ export function CodecPanel() {
                   aria-label="Effort"
                   min={0} max={6} step={1}
                   value={[settings.method]}
-                  onValueChange={([v]) => handleSetMethod(v)}
+                  onValueChange={([v]) => edit('method', v)}
                   className="w-full"
                   data-testid="codec-slider-effort"
                 />
@@ -276,7 +137,7 @@ export function CodecPanel() {
                 <Switch
                   aria-label="Progressive"
                   checked={settings.progressive ?? true}
-                  onCheckedChange={handleSetProgressive}
+                  onCheckedChange={(v) => edit('progressive', v)}
                   data-testid="codec-switch-progressive"
                 />
               </div>
@@ -300,7 +161,7 @@ export function CodecPanel() {
 
           {/* AVIF advanced encoder knobs — mirrors jSquash EncodeOptions surface.
               Per-file only (needs a selectedFile so setFileSettings has an id). */}
-          {settings.codec === 'AVIF' && selectedFile && (
+          {settings.codec === 'AVIF' && (
             <Section title="Advanced (AVIF)">
               {/* Master switch — off by default. When off, the worker skips the entire
                   advanced-knobs branch and jSquash's own defaults fill EncodeOptions,
@@ -310,7 +171,7 @@ export function CodecPanel() {
                 <Switch
                   aria-label="Enable advanced"
                   checked={avifAdvancedOn}
-                  onCheckedChange={handleSetAvifAdvancedOn}
+                  onCheckedChange={(v) => edit('avifAdvancedOn', v)}
                   data-testid="codec-switch-avif-advanced"
                 />
               </div>
@@ -321,7 +182,7 @@ export function CodecPanel() {
                 <SegControl
                   options={SUBSAMPLE_LABELS as unknown as string[]}
                   value={SUBSAMPLE_LABELS[Math.min(3, Math.max(0, avif.subsample))]}
-                  onChange={(v) => handleSetAvif('subsample', SUBSAMPLE_LABELS.indexOf(v as typeof SUBSAMPLE_LABELS[number]))}
+                  onChange={(v) => editAvif('subsample', SUBSAMPLE_LABELS.indexOf(v as typeof SUBSAMPLE_LABELS[number]))}
                   aria-label="Subsample"
                   data-testid="codec-seg-avif-subsample"
                 />
@@ -333,7 +194,7 @@ export function CodecPanel() {
                 <SegControl
                   options={TUNE_OPTIONS as unknown as string[]}
                   value={avif.tune}
-                  onChange={(v) => handleSetAvif('tune', v as AvifTune)}
+                  onChange={(v) => editAvif('tune', v as AvifTune)}
                   aria-label="Tune"
                   data-testid="codec-seg-avif-tune"
                 />
@@ -345,7 +206,7 @@ export function CodecPanel() {
                 <Switch
                   aria-label="Match alpha"
                   checked={avif.qualityAlpha === -1}
-                  onCheckedChange={(v) => handleSetAvif('qualityAlpha', v ? -1 : Math.max(0, settings.q ?? 50))}
+                  onCheckedChange={(v) => editAvif('qualityAlpha', v ? -1 : Math.max(0, settings.q ?? 50))}
                   data-testid="codec-switch-avif-match-alpha"
                 />
               </div>
@@ -357,7 +218,7 @@ export function CodecPanel() {
                       aria-label="Alpha quality"
                       min={0} max={100} step={1}
                       value={[avif.qualityAlpha]}
-                      onValueChange={([v]) => handleSetAvif('qualityAlpha', v)}
+                      onValueChange={([v]) => editAvif('qualityAlpha', v)}
                       className="w-full"
                       data-testid="codec-slider-avif-alpha"
                     />
@@ -376,7 +237,7 @@ export function CodecPanel() {
                     aria-label="Denoise"
                     min={0} max={50} step={1}
                     value={[avif.denoiseLevel]}
-                    onValueChange={([v]) => handleSetAvif('denoiseLevel', v)}
+                    onValueChange={([v]) => editAvif('denoiseLevel', v)}
                     className="w-full"
                     data-testid="codec-slider-avif-denoise"
                   />
@@ -394,7 +255,7 @@ export function CodecPanel() {
                     aria-label="Sharpness"
                     min={0} max={7} step={1}
                     value={[avif.sharpness]}
-                    onValueChange={([v]) => handleSetAvif('sharpness', v)}
+                    onValueChange={([v]) => editAvif('sharpness', v)}
                     className="w-full"
                     data-testid="codec-slider-avif-sharpness"
                   />
@@ -412,7 +273,7 @@ export function CodecPanel() {
                     aria-label="Tile rows"
                     min={0} max={6} step={1}
                     value={[avif.tileRowsLog2]}
-                    onValueChange={([v]) => handleSetAvif('tileRowsLog2', v)}
+                    onValueChange={([v]) => editAvif('tileRowsLog2', v)}
                     className="w-full"
                     data-testid="codec-slider-avif-tile-rows"
                   />
@@ -430,7 +291,7 @@ export function CodecPanel() {
                     aria-label="Tile cols"
                     min={0} max={6} step={1}
                     value={[avif.tileColsLog2]}
-                    onValueChange={([v]) => handleSetAvif('tileColsLog2', v)}
+                    onValueChange={([v]) => editAvif('tileColsLog2', v)}
                     className="w-full"
                     data-testid="codec-slider-avif-tile-cols"
                   />
@@ -446,7 +307,7 @@ export function CodecPanel() {
                 <Switch
                   aria-label="Chroma delta Q"
                   checked={avif.chromaDeltaQ}
-                  onCheckedChange={(v) => handleSetAvif('chromaDeltaQ', v)}
+                  onCheckedChange={(v) => editAvif('chromaDeltaQ', v)}
                   data-testid="codec-switch-avif-chroma-delta"
                 />
               </div>
@@ -457,7 +318,7 @@ export function CodecPanel() {
                 <Switch
                   aria-label="Sharp YUV"
                   checked={avif.enableSharpYUV}
-                  onCheckedChange={(v) => handleSetAvif('enableSharpYUV', v)}
+                  onCheckedChange={(v) => editAvif('enableSharpYUV', v)}
                   data-testid="codec-switch-avif-sharp-yuv"
                 />
               </div>
@@ -472,7 +333,7 @@ export function CodecPanel() {
               <Switch
                 aria-label="Resize"
                 checked={settings.resizeOn}
-                onCheckedChange={handleSetResizeOn}
+                onCheckedChange={(v) => edit('resizeOn', v)}
                 data-testid="codec-switch-resize"
               />
             </div>
@@ -484,7 +345,7 @@ export function CodecPanel() {
                     value={settings.w}
                     data-testid="codec-input-width"
                     aria-label="Width (px)"
-                    onChange={(e) => handleSetResizeDimensions(e.target.value, settings.h)}
+                    onChange={(e) => edit('w', e.target.value)}
                     className="h-6 font-mono text-[12px] bg-color-bg-2 border-[var(--color-line)]"
                   />
                 </div>
@@ -494,7 +355,7 @@ export function CodecPanel() {
                     value={settings.h}
                     data-testid="codec-input-height"
                     aria-label="Height (px)"
-                    onChange={(e) => handleSetResizeDimensions(settings.w, e.target.value)}
+                    onChange={(e) => edit('h', e.target.value)}
                     className="h-6 font-mono text-[12px] bg-color-bg-2 border-[var(--color-line)]"
                   />
                 </div>
@@ -503,7 +364,7 @@ export function CodecPanel() {
                   <SegControl
                     options={FIT_MODES}
                     value={settings.fit}
-                    onChange={handleSetFit}
+                    onChange={(v) => edit('fit', v)}
                     aria-label="Fit"
                     data-testid="codec-seg-fit"
                   />
@@ -513,7 +374,7 @@ export function CodecPanel() {
                   <SegControl
                     options={RESIZE_ALGS}
                     value={settings.alg}
-                    onChange={handleSetAlg}
+                    onChange={(v) => edit('alg', v)}
                     aria-label="Algorithm"
                     data-testid="codec-seg-algorithm"
                   />
@@ -528,7 +389,7 @@ export function CodecPanel() {
               <Switch
                 aria-label="Reduce palette"
                 checked={settings.colorsOn}
-                onCheckedChange={handleSetColorsOn}
+                onCheckedChange={(v) => edit('colorsOn', v)}
                 data-testid="codec-switch-colors"
               />
             </div>
@@ -541,7 +402,7 @@ export function CodecPanel() {
                         aria-label="Colors"
                           min={2} max={256} step={1}
                           value={[settings.colors]}
-                          onValueChange={([v]) => handleSetColors(v)}
+                          onValueChange={([v]) => edit('colors', v)}
                           className="w-full"
                           data-testid="codec-slider-colors"
                       />
@@ -558,7 +419,7 @@ export function CodecPanel() {
                         aria-label="Dithering"
                           min={0} max={1} step={0.001}
                           value={[settings.dithering]}
-                          onValueChange={([v]) => handleSetDithering(v)}
+                          onValueChange={([v]) => edit('dithering', v)}
                           className="w-full"
                           data-testid="codec-slider-dithering"
                       />

@@ -2,9 +2,8 @@
 // Phase 09 — Plan 04: wire to selectedFile.settings (D-03/D-09) + useLiveEncode trigger (D-05)
 // change:remove-dead-ui-and-fix-a11y — static per-plugin "saves" column dropped (never measured).
 import { useStore } from '@nanostores/react'
-import { $selectedFile, setFileSettings } from '@/stores/files'
-import { settingsAtom, setAggressive, togglePlugin } from '@/stores/settings'
-import { useLiveEncode } from '@/hooks/useLiveEncode'
+import { $selectedFile } from '@/stores/files'
+import { settingsAtom, editSetting } from '@/stores/settings'
 import { Switch } from '@/components/ui/switch'
 import { cn } from '@/lib/utils'
 import { Section } from './Section'
@@ -12,32 +11,16 @@ import { Section } from './Section'
 export function SvgoPanel() {
   const globalSettings = useStore(settingsAtom)
   const selectedFile = useStore($selectedFile)
-  const { trigger } = useLiveEncode()
 
   // D-03: read from file's own settings when selected, fall back to global
   const settings = selectedFile?.settings ?? globalSettings
   const onCount = settings.plugins.filter(p => p.on).length
 
-  function handleSetAggressive(v: boolean) {
-    if (selectedFile) {
-      setFileSettings(selectedFile.id, 'aggressive', v)
-      trigger(selectedFile.id)
-    } else {
-      setAggressive(v)
-    }
-  }
-
-  function handleTogglePlugin(pluginId: string) {
-    if (selectedFile) {
-      const updatedPlugins = settings.plugins.map(p =>
-        p.id === pluginId ? { ...p, on: !p.on } : p
-      )
-      setFileSettings(selectedFile.id, 'plugins', updatedPlugins)
-      trigger(selectedFile.id)
-    } else {
-      togglePlugin(pluginId)
-    }
-  }
+  // change:deepen-settings-edit — per-file vs global + live re-encode decided in editSetting().
+  const fileId = selectedFile?.id ?? null
+  const handleSetAggressive = (v: boolean) => editSetting(fileId, 'aggressive', v)
+  const handleTogglePlugin = (pluginId: string) =>
+    editSetting(fileId, 'plugins', settings.plugins.map(p => (p.id === pluginId ? { ...p, on: !p.on } : p)))
 
   return (
     <div>

@@ -21,10 +21,12 @@ export class WorkerPool {
   get active() { return this._active }
   get queued() { return this.queue.length }
 
-  constructor(
-    size: number,
-    private readonly onCountChange: (active: number, queued: number) => void,
-  ) {
+  // Plain field (not a TS parameter property) so Node --experimental-strip-types can load this
+  // module for unit tests of lib/encode-entry.ts.
+  private readonly onCountChange: (active: number, queued: number) => void
+
+  constructor(size: number, onCountChange: (active: number, queued: number) => void) {
+    this.onCountChange = onCountChange
     for (let i = 0; i < size; i++) {
       // CRITICAL: literal URL string — no template literals; Vite static analysis requires this form
       /* @vite-ignore */

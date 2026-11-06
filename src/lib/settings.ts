@@ -1,3 +1,4 @@
+import { codecFor } from "@/lib/formats";
 
 export type FileStatus = "done" | "processing" | "queued" | "error";
 export type Codec = "SVG" | "PNG" | "WebP" | "JPEG" | "AVIF";
@@ -146,30 +147,8 @@ export function clampPalette(colors: unknown, dithering: unknown): { numColors: 
 }
 
 // Map a raw FileEntry.type (lowercase, e.g. 'png'/'jpg'/'svg') to its natural output Codec.
-// Used to seed per-file defaults so a freshly-seeded entry encodes to a sane target before
-// the user touches the inspector (CR-01).
-export function codecForType(type: string): Codec {
-    switch (type.toLowerCase()) {
-        case "svg":
-            return "SVG";
-        case "png":
-            return "PNG";
-        case "jpg":
-        case "jpeg":
-            return "JPEG";
-        case "webp":
-            return "WebP";
-        case "avif":
-            return "AVIF";
-        // Quick 260610-lby: HEIC/HEIF are INPUT-only — map to JPEG (universal raster output for photos).
-        // DO NOT add 'HEIC' to the Codec union or CODECS array — that would create a forbidden inspector tab.
-        case "heic":
-        case "heif":
-            return "JPEG";
-        default:
-            return "WebP";
-    }
-}
+// change:deepen-format-registry — the table lives in lib/formats.ts; this name is kept for callers.
+export const codecForType: (type: string) => Codec = codecFor;
 
 // CR-01: build a complete, self-contained FileSettings for a seeded/uploaded entry. Without this,
 // entries had no `settings` field and the first inspector edit spread `undefined` — collapsing the

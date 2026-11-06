@@ -120,8 +120,8 @@ test.describe('reduce palette', () => {
   test('changing default dithering leaves the default palette size alone', async ({ page }) => {
     await page.goto('/')
     const after = await page.evaluate(async (mod: string) => {
-      const { settingsAtom, setDithering } = (await import(mod)) as SettingsModule
-      setDithering(0.5)
+      const { settingsAtom, editSetting } = (await import(mod)) as SettingsModule
+      editSetting(null, 'dithering', 0.5)
       const { colors, dithering } = settingsAtom.get()
       return { colors, dithering }
     }, SETTINGS_STORE_MOD)

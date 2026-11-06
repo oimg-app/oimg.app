@@ -1,14 +1,5 @@
 // Phase 11 — filename + extension + collision-suffix + ZIP timestamp + MIME lookup + base-name sanitation. Source: 11-RESEARCH.md § Code Examples
-
-const EXT_TO_MIME: Record<string, string> = {
-  png: 'image/png',
-  jpg: 'image/jpeg',
-  jpeg: 'image/jpeg',
-  webp: 'image/webp',
-  avif: 'image/avif',
-  svg: 'image/svg+xml',
-  zip: 'application/zip',
-}
+import { mimeForFormat } from '@/lib/formats'
 
 /** D-05: replace final extension on a filename. Idempotent if equal. Case-insensitive on incoming ext. */
 export function renameExtension(originalName: string, targetExt: string): string {
@@ -47,7 +38,8 @@ export function timestampedZipName(now: Date = new Date()): string {
 /** MIME lookup by extension (case-insensitive). Unknown → `application/octet-stream`. */
 export function mimeFor(ext: string): string {
   const key = ext.toLowerCase().replace(/^\./, '')
-  return EXT_TO_MIME[key] ?? 'application/octet-stream'
+  if (key === 'zip') return 'application/zip'
+  return mimeForFormat(key) ?? 'application/octet-stream'
 }
 
 /** T-11-01 zip-slip mitigation: replace `/`, `\`, and NUL with `_`. */

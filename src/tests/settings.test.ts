@@ -12,6 +12,7 @@ try {
   const mod = await import('../stores/settings.ts')
 
   const DEFAULT_STATE = {
+    ...mod.settingsAtom.get(),
     codec: 'WebP' as const,
     q: 82,
     method: 4,
@@ -41,71 +42,38 @@ try {
 
   assert('default plugins.length === 22', mod.settingsAtom.get().plugins.length === 22)
 
-  // ── setCodec ──────────────────────────────────────────────────────────────
+  // ── editSetting(null, key, value) edits the global defaults ───────────────
   mod.settingsAtom.set({ ...DEFAULT_STATE, plugins: mod.settingsAtom.get().plugins })
-  mod.setCodec('PNG')
-  assert('setCodec("PNG") → codec === "PNG"', mod.settingsAtom.get().codec === 'PNG')
+  mod.editSetting(null, 'codec', 'PNG')
+  assert('editSetting(null,"codec","PNG") → codec === "PNG"', mod.settingsAtom.get().codec === 'PNG')
+  mod.editSetting(null, 'q', 60)
+  assert('editSetting(null,"q",60) → q === 60', mod.settingsAtom.get().q === 60)
+  mod.editSetting(null, 'w', '800')
+  mod.editSetting(null, 'h', '600')
+  assert('editSetting w/h → w === "800" && h === "600"', mod.settingsAtom.get().w === '800' && mod.settingsAtom.get().h === '600')
+  mod.editSetting(null, 'fit', 'cover')
+  assert('editSetting(null,"fit","cover") → fit === "cover"', mod.settingsAtom.get().fit === 'cover')
 
-  // ── setQuality ────────────────────────────────────────────────────────────
+  // Global defaults carry the full FileSettings shape (progressive / avif no longer dropped)
   mod.settingsAtom.set({ ...DEFAULT_STATE, plugins: mod.settingsAtom.get().plugins })
-  mod.setQuality(60)
-  assert('setQuality(60) → q === 60', mod.settingsAtom.get().q === 60)
+  const g = mod.settingsAtom.get()
+  assert('global defaults include progressive', 'progressive' in g)
+  assert('global defaults include avif', 'avif' in g && 'avifAdvancedOn' in g)
 
-  // ── setMethod ─────────────────────────────────────────────────────────────
-  mod.settingsAtom.set({ ...DEFAULT_STATE, plugins: mod.settingsAtom.get().plugins })
-  mod.setMethod(6)
-  assert('setMethod(6) → method === 6', mod.settingsAtom.get().method === 6)
-
-  // ── setLossless ───────────────────────────────────────────────────────────
-  mod.settingsAtom.set({ ...DEFAULT_STATE, plugins: mod.settingsAtom.get().plugins })
-  mod.setLossless(true)
-  assert('setLossless(true) → lossless === true', mod.settingsAtom.get().lossless === true)
-
-  // ── setResizeOn ───────────────────────────────────────────────────────────
-  mod.settingsAtom.set({ ...DEFAULT_STATE, plugins: mod.settingsAtom.get().plugins })
-  mod.setResizeOn(true)
-  assert('setResizeOn(true) → resizeOn === true', mod.settingsAtom.get().resizeOn === true)
-
-  // ── setResizeDimensions ───────────────────────────────────────────────────
-  mod.settingsAtom.set({ ...DEFAULT_STATE, plugins: mod.settingsAtom.get().plugins })
-  mod.setResizeDimensions('800', '600')
-  assert('setResizeDimensions("800","600") → w === "800" && h === "600"',
-    mod.settingsAtom.get().w === '800' && mod.settingsAtom.get().h === '600')
-
-  // ── setFit ────────────────────────────────────────────────────────────────
-  mod.settingsAtom.set({ ...DEFAULT_STATE, plugins: mod.settingsAtom.get().plugins })
-  mod.setFit('cover')
-  assert('setFit("cover") → fit === "cover"', mod.settingsAtom.get().fit === 'cover')
-
-  // ── setAlg ────────────────────────────────────────────────────────────────
-  mod.settingsAtom.set({ ...DEFAULT_STATE, plugins: mod.settingsAtom.get().plugins })
-  mod.setAlg('mitchell')
-  assert('setAlg("mitchell") → alg === "mitchell"', mod.settingsAtom.get().alg === 'mitchell')
-
-  // ── setStripMeta ──────────────────────────────────────────────────────────
-  mod.settingsAtom.set({ ...DEFAULT_STATE, plugins: mod.settingsAtom.get().plugins })
-  mod.setStripMeta(false)
-  assert('setStripMeta(false) → stripMeta === false', mod.settingsAtom.get().stripMeta === false)
-
-  // ── setKeepIcc ────────────────────────────────────────────────────────────
-  mod.settingsAtom.set({ ...DEFAULT_STATE, plugins: mod.settingsAtom.get().plugins })
-  mod.setKeepIcc(true)
-  assert('setKeepIcc(true) → keepIcc === true', mod.settingsAtom.get().keepIcc === true)
-
-  // ── setAggressive ─────────────────────────────────────────────────────────
-  mod.settingsAtom.set({ ...DEFAULT_STATE, plugins: mod.settingsAtom.get().plugins })
-  mod.setAggressive(true)
-  assert('setAggressive(true) → aggressive === true', mod.settingsAtom.get().aggressive === true)
-
-  // ── togglePlugin ──────────────────────────────────────────────────────────
-  mod.settingsAtom.set({ ...DEFAULT_STATE, plugins: mod.settingsAtom.get().plugins })
-  // removeDoctype starts on:true per SVGO_PLUGINS
-  mod.togglePlugin('removeDoctype')
-  const pluginsAfterToggle = mod.settingsAtom.get().plugins
-  const removeDoctype = pluginsAfterToggle.find((p: { id: string; on: boolean }) => p.id === 'removeDoctype')
-  const cleanupAttrs = pluginsAfterToggle.find((p: { id: string; on: boolean }) => p.id === 'cleanupAttrs')
-  assert('togglePlugin("removeDoctype") flips that plugin on → false', removeDoctype?.on === false)
-  assert('togglePlugin("removeDoctype") leaves "cleanupAttrs" unchanged (still on:true)', cleanupAttrs?.on === true)
+  // ── applyToAll copies every key (incl. AVIF) and keeps target in step ───────
+  const files = await import('../stores/files.ts')
+  files.filesAtom.setKey('entries', [{
+    id: 'a', name: 'a.png', type: 'png', orig: 1, opt: 1, status: 'queued', target: 'png', dim: '1×1', q: 82,
+  } as never])
+  mod.editSetting(null, 'codec', 'AVIF')
+  mod.editSetting(null, 'avifAdvancedOn', true)
+  mod.editSetting(null, 'avif', { ...g.avif!, denoiseLevel: 7 })
+  await mod.applyToAll()
+  const e = files.filesAtom.get().entries[0]
+  assert('applyToAll: avifAdvancedOn survives', e.settings?.avifAdvancedOn === true)
+  assert('applyToAll: avif.denoiseLevel survives', e.settings?.avif?.denoiseLevel === 7)
+  assert('applyToAll: target follows codec', e.target === 'avif')
+  assert('applyToAll: plugins deep-copied', e.settings?.plugins !== mod.settingsAtom.get().plugins)
 
 } catch (err) {
   if (err instanceof Error && (err.message.includes('settings.ts') || (err as NodeJS.ErrnoException).code === 'ERR_MODULE_NOT_FOUND')) {
